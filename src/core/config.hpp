@@ -39,7 +39,7 @@ class Config
 		typedef std::list<location_struct>			locations_type;
 		typedef locations_type::iterator			location_type;
 
-		struct 								config_struct
+		struct 								configuration_struct
 		{
 			std::string 						server_name;
 			std::string 						port;
@@ -57,17 +57,20 @@ class Config
 			locations_type 					locations;
 		};
 
-		typedef std::list<config_struct>			configs_type;
-		typedef configs_type::iterator			config_type;
+		typedef std::list<configuration_struct>		configurations_type;
+		typedef configurations_type::iterator		configuration_type;
 
-		configs_type							conf;
+		configurations_type						configuration;
 
 	private:
 		std::string		_filename;
 
 		int				_parseConfiguration(void);
 		void				_parseConfigurationLine(int &brakets, std::string const line, std::string &result);
+		void				_parseServer(std::string const parsed_file);
+
 		void				_addSpaceAfterLimiter(int i, std::string &result);
+		std::string 		_extractWord(std::string &str, std::string::iterator &it);
 
 		bool				_isLimiter(int &brackets, char character);
 		bool				_isSpace(char character);
