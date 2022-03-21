@@ -77,7 +77,7 @@ void			ConfigLocation::_parseMethods(location_struct &location) {
 }
 
 void			ConfigLocation::_parseRoot(location_struct &location) {
-	if (location.root != "")
+	if (!location.root.empty())
 		Message::error("'root' already assigned.");
 
 	location.root = this->_extractWord();
@@ -89,7 +89,7 @@ void			ConfigLocation::_parseRoot(location_struct &location) {
 void			ConfigLocation::_parseIndex(location_struct &location) {
 	std::string path;
 
-	if (location.index.front() != "")
+	if (!location.index.empty())
 		Message::error("Index already assigned.");
 
 	while ((path = this->_extractWord()) != "}" && path != ";")
@@ -116,7 +116,7 @@ void			ConfigLocation::_parseAutoIndex(location_struct &location) {
 }
 
 void			ConfigLocation::_parseClientMaxBodySize(location_struct &location) {
-	if (location.client_max_body_size != "")
+	if (!location.client_max_body_size.empty())
 		Message::error("'client_max_body_size' already assigned.");
 
 	location.client_max_body_size = this->_extractWord();
@@ -126,7 +126,7 @@ void			ConfigLocation::_parseClientMaxBodySize(location_struct &location) {
 }
 
 void			ConfigLocation::_parseRedirect(location_struct &location) {
-	if (location.redirect != "")
+	if (!location.redirect.empty())
 		Message::error("'redirect' already assigned.");
 
 	location.redirect = this->_extractWord();
@@ -165,7 +165,7 @@ void			ConfigLocation::_parseErrorPage(location_struct &location) {
 }
 
 void		ConfigLocation::_parseCGIPath(location_struct &location) {
-	if (location.cgi_path != "")
+	if (!location.cgi_path.empty())
 		Message::error("'cgi_path' already assigned.");
 
 	location.cgi_path = this->_extractWord();
@@ -177,7 +177,7 @@ void		ConfigLocation::_parseCGIPath(location_struct &location) {
 void		ConfigLocation::_parseCGIExtentions(location_struct &location) {
 	std::string	parameter;
 
-	if (location.cgi_extentions.front() != "")
+	if (!location.cgi_extentions.empty())
 		Message::error("cgi_extentions already assigned.");
 
 	while ((parameter = this->_extractWord()) != "}" && parameter != ";")

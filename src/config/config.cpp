@@ -57,8 +57,7 @@ int			Config::load(char *filename)
 { return this->load(std::string(filename)); }
 
 int			Config::_parseConfiguration(void) {
-	// int				result;
-	int				brakets;
+	int				brakets = 0;
 	std::string		line;
 	std::ifstream		file(this->_filename.c_str(), std::ios::in);
 

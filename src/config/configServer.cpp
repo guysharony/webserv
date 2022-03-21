@@ -15,7 +15,7 @@ void			ConfigServer::parseServer(void) {
 
 	this->compressed_configuration_file_iterator = this->compressed_configuration_file.begin();
 
-	while ((word = this->_extractWord()) != "") {
+	while (!(word = this->_extractWord()).empty()) {
 		if (word != "server" || (this->_extractWord() != "{")) {
 			Message::error("Configuration file corrupted.");
 		}
@@ -69,7 +69,7 @@ std::string 	ConfigServer::_extractWord(void) {
 }
 
 void			ConfigServer::_parseListen(configuration_struct &config) {
-	if (config.port != "")
+	if (!config.port.empty())
 		Message::error("'port' already assigned.");
 
 	std::string			authority = this->_extractWord();
@@ -86,7 +86,7 @@ void			ConfigServer::_parseListen(configuration_struct &config) {
 }
 
 void			ConfigServer::_parseServerName(configuration_struct &config) {
-	if (config.server_name != "")
+	if (!config.server_name.empty())
 		Message::error("'server_name' already assigned.");
 
 	config.server_name = this->_extractWord();
@@ -96,7 +96,7 @@ void			ConfigServer::_parseServerName(configuration_struct &config) {
 }
 
 void			ConfigServer::_parseRoot(configuration_struct &config) {
-	if (config.root != "")
+	if (!config.root.empty())
 		Message::error("'root' already assigned.");
 
 	config.root = this->_extractWord();
@@ -108,7 +108,7 @@ void			ConfigServer::_parseRoot(configuration_struct &config) {
 void			ConfigServer::_parseIndex(configuration_struct &config) {
 	std::string word;
 
-	if (config.index.front() != "")
+	if (!config.index.empty())
 		Message::error("'index' already assigned.");
 
 	while ((word = this->_extractWord()) != "}" && word != ";")
@@ -135,7 +135,7 @@ void			ConfigServer::_parseAutoIndex(configuration_struct &config) {
 }
 
 void			ConfigServer::_parseClientMaxBodySize(configuration_struct &config) {
-	if (config.client_max_body_size != "")
+	if (!config.client_max_body_size.empty())
 		Message::error("'client_max_body_size' already assigned.");
 
 	config.client_max_body_size = this->_extractWord();
@@ -145,7 +145,7 @@ void			ConfigServer::_parseClientMaxBodySize(configuration_struct &config) {
 }
 
 void			ConfigServer::_parseRedirect(configuration_struct &config) {
-	if (config.redirect != "")
+	if (!config.redirect.empty())
 		Message::error("'redirect' already assigned.");
 
 	config.redirect = this->_extractWord();
@@ -184,7 +184,7 @@ void			ConfigServer::_parseErrorPage(configuration_struct &config) {
 }
 
 void		ConfigServer::_parseCGIPath(configuration_struct &config) {
-	if (config.cgi_path != "")
+	if (!config.cgi_path.empty())
 		Message::error("'cgi_path' already assigned.");
 
 	config.cgi_path = this->_extractWord();
@@ -196,7 +196,7 @@ void		ConfigServer::_parseCGIPath(configuration_struct &config) {
 void		ConfigServer::_parseCGIExtentions(configuration_struct &config) {
 	std::string	parameter;
 
-	if (config.cgi_extentions.front() != "")
+	if (!config.cgi_extentions.empty())
 		Message::error("cgi_extentions already assigned.");
 
 	while ((parameter = this->_extractWord()) != "}" && parameter != ";")
