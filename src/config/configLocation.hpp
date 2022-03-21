@@ -1,5 +1,5 @@
-#ifndef CONFIG_HPP
-# define CONFIG_HPP
+#ifndef CONFIG_LOCATION_HPP
+# define CONFIG_LOCATION_HPP
 
 # include <iostream>
 # include <string>
@@ -8,17 +8,14 @@
 # include <list>
 # include <vector>
 # include <map>
-# include "message.hpp"
+# include "../core/message.hpp"
 
-class Config
+class ConfigLocation
 {
 	public:
-		Config(void);
-		Config(Config const & src);
-		~Config();
-
-		int		load(char *filename);
-		int		load(std::string filename);
+		ConfigLocation(void);
+		ConfigLocation(ConfigLocation const & src);
+		~ConfigLocation();
 
 		struct 								location_struct
 		{
@@ -61,20 +58,25 @@ class Config
 		typedef configurations_type::iterator		configuration_type;
 
 		configurations_type						configuration;
+		std::string							compressed_configuration_file;
+		std::string::iterator					compressed_configuration_file_iterator;
+
+	protected:
+		void									parseLocation(configuration_struct &config);
 
 	private:
-		std::string		_filename;
+		// Directives
+		void									_parseMethods(location_struct &location);
+		void									_parseRoot(location_struct &location);
+		void									_parseIndex(location_struct &location);
+		void									_parseAutoIndex(location_struct &location);
+		void									_parseClientMaxBodySize(location_struct &location);
+		void									_parseRedirect(location_struct &location);
+		void									_parseErrorPage(location_struct &location);
+		void									_parseCGIPath(location_struct &location);
+		void									_parseCGIExtentions(location_struct &location);
 
-		int				_parseConfiguration(void);
-		void				_parseConfigurationLine(int &brakets, std::string const line, std::string &result);
-		void				_parseServer(std::string const parsed_file);
-
-		void				_addSpaceAfterLimiter(int i, std::string &result);
-		std::string 		_extractWord(std::string &str, std::string::iterator &it);
-
-		bool				_isLimiter(int &brackets, char character);
-		bool				_isSpace(char character);
-		bool				_isComment(char character);
+		std::string 							_extractWord(void);
 };
 
 #endif

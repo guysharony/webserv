@@ -1,7 +1,7 @@
 #ifndef WEBSERV_HPP
 # define WEBSERV_HPP
 
-# include "config.hpp"
+# include "../config/config.hpp"
 
 
 class Webserv
