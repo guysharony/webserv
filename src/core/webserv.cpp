@@ -1,7 +1,7 @@
 #include "webserv.hpp"
 
 Webserv::Webserv(void)
-{ signal(SIGPIPE, SIG_IGN); }
+{ }
 
 Webserv::Webserv(Webserv const & src)
 { *this = src; }

@@ -1,7 +1,7 @@
 #include "config.hpp"
 
 Config::Config(void)
-{ signal(SIGPIPE, SIG_IGN); }
+{ }
 
 Config::Config(Config const & src)
 { *this = src; }
@@ -12,6 +12,7 @@ Config::~Config()
 int			Config::load(std::string filename)
 {
 	this->_filename = filename;
+
 	int result = this->_parseConfiguration();
 
 	#ifdef DEBUG
@@ -56,28 +57,27 @@ int			Config::load(char *filename)
 { return this->load(std::string(filename)); }
 
 int			Config::_parseConfiguration(void) {
-	int					file_descriptor;
-	int					result;
-	int					brakets;
-	std::string			line;
+	// int				result;
+	int				brakets;
+	std::string		line;
+	std::ifstream		file(this->_filename.c_str(), std::ios::in);
 
-	if ((file_descriptor = open(this->_filename.c_str(), O_RDONLY)) < 0)
+	if (file) {
+		while (getline(file, line, '\n')) {
+			this->_parseConfigurationLine(brakets, line);
+		}
+		file.close();
+	} else {
 		Message::error("Configuration file corrupted.");
+	}
 
 	brakets = 0;
-
-	while ((result = readFileLines(file_descriptor, line)) != -1) {
-		this->_parseConfigurationLine(brakets, line);
-
-		if (!result)
-			break;
-	}
 
 	if (brakets > 0) {
 		Message::error("'}' is expected.");
 	}
 
-	close(file_descriptor);
+	file.close();
 
 	this->parseServer();
 

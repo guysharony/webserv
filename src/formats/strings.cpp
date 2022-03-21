@@ -56,7 +56,7 @@ std::string 	toString(char * str, bool uppercase)
 
 char 		*toChar(std::string src)
 {
-	char	*tmp;
+	char *tmp;
 
 	if (!(tmp = (char *)malloc((sizeof(char) * (src.length() + 1)))))
 		return (NULL);
@@ -180,10 +180,10 @@ int		getFirstLine(std::string source, std::string & line, std::string separator,
 
 int		readFileLines(int fd, std::string & line, std::string separator, bool withseparator)
 {
-	int						output;
+	int					output;
 	char					buffer[BUFFER_SIZE + 1];
-	std::string				temporary;
-	static std::string 		content;
+	std::string			temporary;
+	static std::string  	content;
 
 	if (read(fd, buffer, 0) < 0)
 		return (-1);

@@ -1,7 +1,7 @@
 #include "configServer.hpp"
 
 ConfigServer::ConfigServer(void)
-{ signal(SIGPIPE, SIG_IGN); }
+{ }
 
 ConfigServer::ConfigServer(ConfigServer const & src)
 { *this = src; }
