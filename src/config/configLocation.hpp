@@ -23,14 +23,14 @@ class ConfigLocation
 			std::string 						location;
 			std::string						redirect;
 			std::string						cgi_path;
-			std::list<std::string>				cgi_extentions;
+			std::vector<std::string>				cgi_extentions;
 
-			std::list<std::string> 				index;
+			std::vector<std::string> 			index;
 			int								auto_index;
-			std::map<std::string, std::string> 	error_page;
-			std::list<std::string> 				methods;
+			std::map<int, std::string> 			error_page;
+			std::vector<int> 					methods;
 
-			std::string 						client_max_body_size;
+			ssize_t 							client_max_body_size;
 		};
 
 		typedef std::list<location_struct>			locations_type;
@@ -42,14 +42,14 @@ class ConfigLocation
 			std::string 						port;
 			std::string 						host;
 			std::string 						root;
-			std::string 						client_max_body_size;
+			ssize_t 							client_max_body_size;
 			std::string						redirect;
 			std::string						cgi_path;
-			std::list<std::string>				cgi_extentions;
+			std::vector<std::string>				cgi_extentions;
 
-			std::list<std::string> 				index;
+			std::vector<std::string> 			index;
 			int								auto_index;
-			std::map<std::string, std::string> 	error_page;
+			std::map<int, std::string> 			error_page;
 
 			locations_type 					locations;
 		};

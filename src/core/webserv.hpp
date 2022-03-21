@@ -15,6 +15,12 @@ class Webserv
 		int			load(std::string filename);
 
 	private:
+		bool			_run;
+		int			_socket;
+
+		bool			_is_read;
+		bool			_is_write;
+
 		Config		_config;
 };
 

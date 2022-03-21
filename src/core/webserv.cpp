@@ -1,7 +1,12 @@
 #include "webserv.hpp"
 
 Webserv::Webserv(void)
-{ }
+:
+	_run(true),
+	_socket(0),
+	_is_read(false),
+	_is_write(false)
+{ signal(SIGPIPE, SIG_IGN); }
 
 Webserv::Webserv(Webserv const & src)
 { *this = src; }
@@ -16,12 +21,6 @@ int			Webserv::load(std::string filename)
 {
 	if (!this->_config.load(filename))
 		return (0);
-
-	/*
-
-	CREATING SERVER
-	
-	*/
 
 	return (1);
 }
