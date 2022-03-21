@@ -6,7 +6,7 @@ Webserv::Webserv(void)
 	_socket(0),
 	_is_read(false),
 	_is_write(false)
-{ signal(SIGPIPE, SIG_IGN); }
+{ }
 
 Webserv::Webserv(Webserv const & src)
 { *this = src; }
