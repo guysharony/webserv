@@ -9,6 +9,10 @@
 # include <vector>
 # include <map>
 # include "../core/message.hpp"
+# include "../formats/strings.hpp"
+# include "../formats/units.hpp"
+# include "../formats/http.hpp"
+# include "../formats/files.hpp"
 
 class ConfigLocation
 {
@@ -16,6 +20,9 @@ class ConfigLocation
 		ConfigLocation(void);
 		ConfigLocation(ConfigLocation const & src);
 		~ConfigLocation();
+
+		typedef std::map<int, std::string>			error_pages_type;
+		typedef std::vector<int>					methods_type;
 
 		struct 								location_struct
 		{
@@ -27,8 +34,8 @@ class ConfigLocation
 
 			std::vector<std::string> 			index;
 			int								auto_index;
-			std::map<int, std::string> 			error_page;
-			std::vector<int> 					methods;
+			error_pages_type 					error_page;
+			methods_type 						methods;
 
 			ssize_t 							client_max_body_size;
 		};
@@ -49,7 +56,7 @@ class ConfigLocation
 
 			std::vector<std::string> 			index;
 			int								auto_index;
-			std::map<int, std::string> 			error_page;
+			error_pages_type 					error_page;
 
 			locations_type 					locations;
 		};

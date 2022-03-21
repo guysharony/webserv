@@ -1,11 +1,6 @@
 #include "webserv.hpp"
 
 Webserv::Webserv(void)
-:
-	_run(true),
-	_socket(0),
-	_is_read(false),
-	_is_write(false)
 { }
 
 Webserv::Webserv(Webserv const & src)
@@ -19,8 +14,11 @@ int			Webserv::load(char *filename)
 
 int			Webserv::load(std::string filename)
 {
-	if (!this->_config.load(filename))
-		return (0);
+	try {
+		return this->_config.load(filename);
+	} catch (const std::exception& e) {
+		std::cout << e.what() << std::endl;
+	}
 
-	return (1);
+	return 0;
 }
