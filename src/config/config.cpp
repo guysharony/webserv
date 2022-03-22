@@ -28,7 +28,7 @@ int			Config::load(std::string filename)
 			std::cout << "[ cgi_path => (" << it->cgi_path << ") ]" << std::endl;
 
 			std::cout << "[ cgi_extentions: => (";
-			for (std::list<std::string>::iterator it2 = it->cgi_extentions.begin(); it2 != it->cgi_extentions.end(); it2++)
+			for (std::vector<std::string>::iterator it2 = it->cgi_extentions.begin(); it2 != it->cgi_extentions.end(); it2++)
 				std::cout << *it2 << ", ";
 			std::cout << ") ]" << std::endl;
 
@@ -36,14 +36,14 @@ int			Config::load(std::string filename)
 
 			if (it->index.size()) {
 				std::cout << "[ index: ]" << std::endl;
-				for (std::list<std::string>::iterator it2 = it->index.begin(); it2 != it->index.end(); it2++) {
+				for (std::vector<std::string>::iterator it2 = it->index.begin(); it2 != it->index.end(); it2++) {
 					std::cout << "[    " << *it2 << "]" << std::endl;
 				}
 			}
 
 			if (it->error_page.size()) {
 				std::cout << "[ error_page: ]" << std::endl;
-				for (std::map<std::string, std::string>::iterator it2 = it->error_page.begin(); it2 != it->error_page.end(); it2++) {
+				for (error_pages_type::iterator it2 = it->error_page.begin(); it2 != it->error_page.end(); it2++) {
 					std::cout << "[    (" << it2->first << " => " << it2->second << ") ]" << std::endl;
 				}
 			}

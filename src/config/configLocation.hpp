@@ -9,6 +9,10 @@
 # include <vector>
 # include <map>
 # include "../core/message.hpp"
+# include "../formats/strings.hpp"
+# include "../formats/units.hpp"
+# include "../formats/http.hpp"
+# include "../formats/files.hpp"
 
 class ConfigLocation
 {
@@ -17,20 +21,23 @@ class ConfigLocation
 		ConfigLocation(ConfigLocation const & src);
 		~ConfigLocation();
 
+		typedef std::map<int, std::string>			error_pages_type;
+		typedef std::vector<int>					methods_type;
+
 		struct 								location_struct
 		{
 			std::string 						root;
 			std::string 						location;
 			std::string						redirect;
 			std::string						cgi_path;
-			std::list<std::string>				cgi_extentions;
+			std::vector<std::string>				cgi_extentions;
 
-			std::list<std::string> 				index;
+			std::vector<std::string> 			index;
 			int								auto_index;
-			std::map<std::string, std::string> 	error_page;
-			std::list<std::string> 				methods;
+			error_pages_type 					error_page;
+			methods_type 						methods;
 
-			std::string 						client_max_body_size;
+			ssize_t 							client_max_body_size;
 		};
 
 		typedef std::list<location_struct>			locations_type;
@@ -42,14 +49,14 @@ class ConfigLocation
 			std::string 						port;
 			std::string 						host;
 			std::string 						root;
-			std::string 						client_max_body_size;
+			ssize_t 							client_max_body_size;
 			std::string						redirect;
 			std::string						cgi_path;
-			std::list<std::string>				cgi_extentions;
+			std::vector<std::string>				cgi_extentions;
 
-			std::list<std::string> 				index;
+			std::vector<std::string> 			index;
 			int								auto_index;
-			std::map<std::string, std::string> 	error_page;
+			error_pages_type 					error_page;
 
 			locations_type 					locations;
 		};

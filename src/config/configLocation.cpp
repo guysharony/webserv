@@ -13,6 +13,9 @@ void			ConfigLocation::parseLocation(configuration_struct &config) {
 	location_struct	location;
 	std::string		word;
 
+	location.auto_index = -1;
+	location.client_max_body_size = -1;
+
 	word = this->_extractWord();
 
 	if (word[0] != '/')
@@ -65,14 +68,15 @@ std::string 	ConfigLocation::_extractWord(void) {
 }
 
 void			ConfigLocation::_parseMethods(location_struct &location) {
-	std::string method;
+	std::string 	method_string;
+	int			method_code;
 
-	while ((method = this->_extractWord()) != ";")
+	while ((method_string = this->_extractWord()) != ";")
 	{
-		if (method != "GET" && method != "HEAD" && method != "POST" && method != "PUT" && method != "DELETE" && method != "CONNECT" && method != "OPTIONS" && method != "TRACE" && method != "PATCH")
-			Message::error("Unknown method '" + method + "'.");
+		if (!isHttpMethod(method_string, method_code))
+			Message::error("Unknown method '" + method_string + "'.");
 
-		location.methods.push_back(method);
+		location.methods.push_back(method_code);
 	}
 }
 
@@ -116,13 +120,17 @@ void			ConfigLocation::_parseAutoIndex(location_struct &location) {
 }
 
 void			ConfigLocation::_parseClientMaxBodySize(location_struct &location) {
-	if (!location.client_max_body_size.empty())
+	std::string	size_unit;
+
+	if (location.client_max_body_size > -1)
 		Message::error("'client_max_body_size' already assigned.");
 
-	location.client_max_body_size = this->_extractWord();
+	size_unit = this->_extractWord();
 
 	if (this->_extractWord() != ";")
 		Message::error("'client_max_body_size' already assigned.");
+
+	location.client_max_body_size = fromSizeUnit(size_unit);
 }
 
 void			ConfigLocation::_parseRedirect(location_struct &location) {
@@ -138,17 +146,22 @@ void			ConfigLocation::_parseRedirect(location_struct &location) {
 void			ConfigLocation::_parseErrorPage(location_struct &location) {
 	int			argument;
 	std::string	parameter;
-	std::string	error_code;
+	int			error_code;
 	std::string	error_page;
 
 	argument = 0;
 
-	while ((parameter = this->_extractWord()) != "}" && parameter != ";")
-	{
+	while ((parameter = this->_extractWord()) != "}" && parameter != ";") {
 		if (argument >= 2)
 			Message::error("Too many arguments for error page.");
-		if (argument == 0)
-			error_code = parameter;
+
+		if (argument == 0) {
+			error_code = toInteger(parameter);
+
+			if (!isHttpStatus(error_code))
+				Message::error("Unknown error '" + parameter + "'.");
+		}
+
 		if (argument == 1)
 			error_page = parameter;
 
@@ -159,7 +172,7 @@ void			ConfigLocation::_parseErrorPage(location_struct &location) {
 		Message::error("';' is expacted.");
 
 	if (location.error_page.find(error_code) != location.error_page.end())
-		Message::error("Error '" + error_code + "' has already been declared.");
+		Message::error("Error '" + toString(error_code) + "' has already been declared.");
 
 	location.error_page[error_code] = error_page;
 }
