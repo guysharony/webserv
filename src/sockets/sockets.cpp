@@ -31,8 +31,21 @@ void		Sockets::initialize(void) {
 	}
 }
 
+bool		Sockets::isListener(int fd) {
+	size_t	i;
+
+	i = 0;
+	while (i < this->_listener.size()) {
+		if (this->_listener[i] == fd)
+			return true;
+		i++;
+	}
+
+	return false;
+}
+
 int		Sockets::listen(void) {
-	int rc = poll(this->sockets_poll.fds.data(), this->sockets_poll.fds.size(), 3 * 60 * 1000);
+	int rc = poll(this->sockets_poll.fds.data(), this->sockets_poll.nfds, 3 * 60 * 1000);
 
 	if (rc < 0) {
 		Message::error("poll() failed.");
@@ -45,13 +58,16 @@ int		Sockets::listen(void) {
 	return rc;
 }
 
-void		Sockets::accept(void) {
+void		Sockets::accept(int fd) {
 	int new_client = -1;
 
 	do {
-		new_client = ::accept(this->current->fd, NULL, NULL);
+		new_client = ::accept(fd, NULL, NULL);
 		if (new_client < 0)
 			break;
+
+		if (fcntl(new_client, F_SETFL, O_NONBLOCK) < 0)
+			close(new_client);
 
 		std::cout << "New incoming connection " << new_client << std::endl;
 
@@ -112,4 +128,5 @@ void		Sockets::_initializeSocket(socketsListenerType::iterator socket_iterator) 
 	}
 
 	this->sockets_poll.append(socketfd, POLLIN);
+	this->_listener.push_back(socketfd);
 }

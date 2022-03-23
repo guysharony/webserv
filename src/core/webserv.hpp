@@ -10,18 +10,22 @@ class Webserv
 		Webserv(Webserv const & src);
 		~Webserv();
 
-		int			load(char *filename);
-		int			load(std::string filename);
+		int							load(char *filename);
+		int							load(std::string filename);
 
-		bool			run(void);
+		bool							run(void);
 
-		int			current_size;
+		int							current_size;
+		int							current_index;
+		std::vector<pollfd>::iterator		current_iterator;
 
 	private:
-		Config		_config;
-		Sockets		_sockets;
+		Config						_config;
+		Sockets						_sockets;
 
-		bool			_run;
+		bool							_run;
+
+		void							_compress(void);
 };
 
 #endif

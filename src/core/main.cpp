@@ -14,7 +14,7 @@ int		main(int argc, char **argv)
 
 	webserv.load(argc > 1 ? argv[1] : "./config/webserv.conf");
 
-	while (webserv.run());
+	webserv.run();
 
 	return (0);
 }

@@ -34,7 +34,9 @@ class Sockets
 
 		void		initialize(void);
 		int		listen(void);
-		void		accept(void);
+		void		accept(int fd);
+
+		bool		isListener(int fd);
 
 		SocketsPoll::pollfd_type::iterator		current;
 
@@ -45,6 +47,7 @@ class Sockets
 
 	private:
 		socketsListenerType					_sockets;
+		std::vector<int>					_listener;
 
 		void		_initializeSocket(socketsListenerType::iterator socket_iterator);
 };

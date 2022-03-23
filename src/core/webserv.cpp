@@ -33,10 +33,94 @@ int			Webserv::load(std::string filename)
 }
 
 bool		Webserv::run(void) {
-	std::cout << "Waiting on poll()..." << std::endl;
+	int	rc;
+	int	len;
+	bool	close_connection;
+	bool compress_array;
+	char	buffer[2048];
 
-	if (this->_sockets.listen() <= 0)
-		return false;
+	while (this->_run) {
+		if (this->_sockets.listen() <= 0) {
+			this->_run = false;
+			break;
+		}
 
-	return this->_run;
+		this->current_size = this->_sockets.sockets_poll.nfds;
+
+		for (this->current_index = 0; this->current_index != this->current_size; ++this->current_index) {
+			this->current_iterator = this->_sockets.sockets_poll.fds.begin() + this->current_index;
+
+			if (this->current_iterator->revents == 0)
+				continue;
+
+			if (this->_sockets.isListener(this->current_iterator->fd)) {
+				this->_sockets.accept(this->current_iterator->fd);
+			}
+			else
+			{
+				if (this->current_iterator->revents & POLLIN) {
+					close_connection = false;
+
+					for (size_t bf = 0; bf <= 2048; bf++)
+						buffer[bf] = 0;
+
+					rc = recv(this->current_iterator->fd, buffer, sizeof(buffer), 0);
+					if (rc < 0)
+						break;
+
+					std::cout << "=== [" << this->current_iterator->fd << "] ===" << std::endl;
+					std::cout << buffer << std::endl;
+
+					if (rc == 0) {
+						close(this->current_iterator->fd);
+						this->current_iterator->fd = -1;
+						close_connection = true;
+						break;
+					}
+				}
+				else if (this->current_iterator->revents & POLLOUT)
+				{
+					len = rc;
+
+					rc = send(this->current_iterator->fd, buffer, len, 0);
+					if (rc < 0)
+					{
+						Message::error("send() failed.");
+						close_connection = true;
+						break;
+					}
+				}
+
+				if (close_connection)
+				{
+					close(this->current_iterator->fd);
+					this->current_iterator->fd = -1;
+					compress_array = true;
+				}
+			}
+		}
+
+		if (compress_array) {
+			this->_compress();
+		}
+	}
+
+	return true;
+}
+
+void		Webserv::_compress(void) {
+	int	i;
+	int	j;
+
+	for (i = 0; i < this->_sockets.sockets_poll.nfds; i++) {
+		if (this->_sockets.sockets_poll.fds[i].fd == -1) {
+			for (j = i; j < this->_sockets.sockets_poll.nfds - 1; j++) {
+				this->_sockets.sockets_poll.fds[j].fd = this->_sockets.sockets_poll.fds[j+1].fd;
+			}
+
+			i--;
+			this->_sockets.sockets_poll.nfds--;
+			this->_sockets.sockets_poll.fds.pop_back();
+		}
+	}
 }
