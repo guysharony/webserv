@@ -36,18 +36,12 @@ class Sockets
 		int		listen(void);
 		void		accept(void);
 
-		// SocketsPoll::pollfd_type::iterator	current(int index = -1);
 		SocketsPoll::pollfd_type::iterator		current;
 
 		typedef std::vector<SocketsListener>	socketsListenerType;
 
 		SocketsPoll						sockets_poll;
 		int								index;
-		std::set<int> 						to_listen;
-		std::set<int> 						to_accept;
-		std::set<int> 						to_recv;
-		std::set<int> 						to_remove;
-		std::map<int, std::queue<std::string> > to_send;
 
 	private:
 		socketsListenerType					_sockets;

@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 #include <sys/time.h>
 #include <netinet/in.h>
+#include <fcntl.h>
 #include <string.h>
 #include <errno.h>
 
@@ -104,6 +105,7 @@ int	main(int argc, char *argv[])
 	new_pollfd.fd = listen_sd;
 	new_pollfd.events = POLLIN;
 	fds.push_back(new_pollfd);
+	fcntl(listen_sd, F_SETFL, O_NONBLOCK);
 
 	/*************************************************************/
 	/* Initialize the timeout to 3 minutes. If no                */
@@ -116,12 +118,12 @@ int	main(int argc, char *argv[])
 	/* Loop waiting for incoming connects or for incoming data   */
 	/* on any of the connected sockets.                          */
 	/*************************************************************/
-	do {
+	while (end_server == FALSE) {
 		/***********************************************************/
 		/* Call poll() and wait 3 minutes for it to complete.      */
 		/***********************************************************/
 		printf("Waiting on poll()...\n");
-		rc = poll(fds.data(), nfds, timeout);
+		rc = poll(fds.data(), fds.size(), timeout);
 
 		/***********************************************************/
 		/* Check to see if the poll call failed.                   */
@@ -145,32 +147,29 @@ int	main(int argc, char *argv[])
 		/* One or more descriptors are readable.  Need to          */
 		/* determine which ones they are.                          */
 		/***********************************************************/
-		current_size = nfds;
-
-		std::cout << "test: " << current_size << std::endl;
-
-		for (i = 0; i < current_size; i++)
-		{
+		for (std::vector<pollfd>::iterator it = fds.begin(); it != fds.end(); ++it) {
 			/*********************************************************/
 			/* Loop through to find the descriptors that returned    */
 			/* POLLIN and determine whether it's the listening       */
 			/* or the active connection.                             */
 			/*********************************************************/
-			if (fds[i].revents == 0)
+			if (it->revents == 0)
 				continue;
 
 			/*********************************************************/
 			/* If revents is not POLLIN, it's an unexpected result,  */
 			/* log and end the server.                               */
 			/*********************************************************/
-			if(fds[i].revents != POLLIN)
+			if(it->revents != POLLIN)
 			{
-				printf("  Error! revents = %d\n", fds[i].revents);
+				printf("  Error! revents = %d\n", it->revents);
 				end_server = TRUE;
 				break;
 			}
 
-			if (fds[i].fd == listen_sd)
+			std::cout << std::endl << "pollfd#" << it->fd << "->revents: " << it->revents << std::endl;
+
+			if (it->fd == listen_sd)
 			{
 				/*******************************************************/
 				/* Listening descriptor is readable.                   */
@@ -194,11 +193,6 @@ int	main(int argc, char *argv[])
 					new_sd = accept(listen_sd, NULL, NULL);
 					if (new_sd < 0)
 					{
-						if (errno != EWOULDBLOCK)
-						{
-							perror("  accept() failed");
-							end_server = TRUE;
-						}
 						break;
 					}
 
@@ -206,10 +200,13 @@ int	main(int argc, char *argv[])
 					/* Add the new incoming connection to the            */
 					/* pollfd structure                                  */
 					/*****************************************************/
-					printf("  New incoming connection - %d\n", new_sd);
-					fds[nfds].fd = new_sd;
-					fds[nfds].events = POLLIN;
-					nfds++;
+					printf("  New incoming connection - %d\n", new_sd);;
+
+					struct pollfd new_pollfd;
+					new_pollfd.fd = new_sd;
+					new_pollfd.events = POLLIN;
+					fds.push_back(new_pollfd);
+					fcntl(new_sd, F_SETFL, O_NONBLOCK);
 
 					/*****************************************************/
 					/* Loop back up and accept another incoming          */
@@ -239,14 +236,9 @@ int	main(int argc, char *argv[])
 					/* failure occurs, we will close the                 */
 					/* connection.                                       */
 					/*****************************************************/
-					rc = recv(fds[i].fd, buffer, sizeof(buffer), 0);
+					rc = recv(it->fd, buffer, sizeof(buffer), 0);
 					if (rc < 0)
 					{
-						if (errno != EWOULDBLOCK)
-						{
-							perror("  recv() failed");
-							close_conn = TRUE;
-						}
 						break;
 					}
 
@@ -270,7 +262,7 @@ int	main(int argc, char *argv[])
 					/*****************************************************/
 					/* Echo the data back to the client                  */
 					/*****************************************************/
-					rc = send(fds[i].fd, buffer, len, 0);
+					rc = send(it->fd, buffer, len, 0);
 					if (rc < 0)
 					{
 						perror("  send() failed");
@@ -288,8 +280,8 @@ int	main(int argc, char *argv[])
 				/*******************************************************/
 				if (close_conn)
 				{
-					close(fds[i].fd);
-					fds[i].fd = -1;
+					close(it->fd);
+					it->fd = -1;
 					compress_array = TRUE;
 				}
 
@@ -306,22 +298,22 @@ int	main(int argc, char *argv[])
 		if (compress_array)
 		{
 			compress_array = FALSE;
-			for (i = 0; i < nfds; i++)
+			for (i = 0; i < fds.size(); i++)
 			{
 				if (fds[i].fd == -1)
 				{
-					for (j = i; j < nfds-1; j++)
+					for (j = i; j < fds.size() - 1; j++)
 					{
 						fds[j].fd = fds[j+1].fd;
 					}
 
 					i--;
-					nfds--;
+					fds.pop_back();
 				}
 			}
 		}
 
-	} while (end_server == FALSE); /* End of serving running.    */
+	} /* End of serving running.    */
 
 	/*************************************************************/
 	/* Clean up all of the sockets that are open                 */

@@ -32,7 +32,7 @@ void		Sockets::initialize(void) {
 }
 
 int		Sockets::listen(void) {
-	int rc = poll(this->sockets_poll.fds.data(), this->sockets_poll.nfds, 3 * 60 * 1000);
+	int rc = poll(this->sockets_poll.fds.data(), this->sockets_poll.fds.size(), 3 * 60 * 1000);
 
 	if (rc < 0) {
 		Message::error("poll() failed.");
@@ -69,8 +69,6 @@ void		Sockets::_initializeSocket(socketsListenerType::iterator socket_iterator) 
 		Message::error("socket() failed.");
 		return;
 	}
-
-	std::cout << "test: " << socketfd << std::endl;
 
 	int enable = 1;
 	if (setsockopt(socketfd, SOL_SOCKET,  SO_REUSEADDR, (char *)&enable, sizeof(enable)) < 0)
@@ -114,6 +112,4 @@ void		Sockets::_initializeSocket(socketsListenerType::iterator socket_iterator) 
 	}
 
 	this->sockets_poll.append(socketfd, POLLIN);
-	this->to_listen.insert(socketfd);
-	fcntl(socketfd, F_SETFL, O_NONBLOCK);
 }
