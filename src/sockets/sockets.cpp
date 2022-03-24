@@ -59,22 +59,18 @@ int		Sockets::listen(void) {
 }
 
 void		Sockets::accept(int fd) {
-	int new_client = -1;
+	int new_client = ::accept(fd, NULL, NULL);
+	if (new_client < 0)
+		return;
 
-	do {
-		new_client = ::accept(fd, NULL, NULL);
-		if (new_client < 0)
-			break;
+	if (fcntl(new_client, F_SETFL, O_NONBLOCK) < 0)
+		close(new_client);
 
-		if (fcntl(new_client, F_SETFL, O_NONBLOCK) < 0)
-			close(new_client);
+	std::cout << "New incoming connection " << new_client << std::endl;
 
-		std::cout << "New incoming connection " << new_client << std::endl;
-
-		this->sockets_poll.fds[this->sockets_poll.nfds].fd = new_client;
-		this->sockets_poll.fds[this->sockets_poll.nfds].events = POLLIN;
-		this->sockets_poll.nfds++;
-	} while (new_client != -1);
+	this->sockets_poll.fds[this->sockets_poll.nfds].fd = new_client;
+	this->sockets_poll.fds[this->sockets_poll.nfds].events = POLLIN;
+	this->sockets_poll.nfds++;
 }
 
 void		Sockets::_initializeSocket(socketsListenerType::iterator socket_iterator) {
