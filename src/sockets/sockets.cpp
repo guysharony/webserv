@@ -57,7 +57,7 @@ void		Sockets::accept(int fd) {
 	if (fcntl(new_client, F_SETFL, O_NONBLOCK) < 0)
 		close(new_client);
 
-	std::cout << "New incoming connection " << new_client << std::endl;
+	std::cout <<"New incoming connection " << new_client << std::endl;
 
 	this->sockets_poll.fds[this->sockets_poll.nfds].fd = new_client;
 	this->sockets_poll.fds[this->sockets_poll.nfds].events = POLLIN;

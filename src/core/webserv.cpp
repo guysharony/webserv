@@ -48,6 +48,7 @@ bool		Webserv::run(void) {
 	compress_array = false;
 
 	while (this->_run) {
+		std::cout<< YELLOW << "waiting for a connection..."<< RESET<<std::endl;
 		if (this->_sockets.listen() <= 0) {
 			this->_run = false;
 			break;
@@ -75,12 +76,12 @@ bool		Webserv::run(void) {
 				if (rc < 0)
 					break;
 
-				std::cout << "=== [" << this->current_iterator->fd << "] ===" << std::endl;
+				std::cout <<RESET<< "=== [" << this->current_iterator->fd << "] ===" << std::endl;
 				//std::cout << buffer << std::endl;
 				//parsing the request
 				request req;
 				req.parseRequest(buffer);
-				std::cout<<req<<std::endl;
+				std::cout<< GREEN <<req<<std::endl;
 				if (rc == 0) {
 					close(this->current_iterator->fd);
 					this->current_iterator->fd = -1;

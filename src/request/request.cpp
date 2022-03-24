@@ -60,7 +60,7 @@ void request::firstLineParsing(std::string request_buffer){
 
     i = request_buffer.find_first_of('\n');
     if ( i == std::string::npos ){
-        std::cerr<< "no newline found!!"<< std::endl;
+        std::cerr<< RED<<"no newline found!!"<< std::endl;
         _ret = -1;
         request_clear();
         return ;
@@ -68,7 +68,7 @@ void request::firstLineParsing(std::string request_buffer){
     line = request_buffer.substr(0, i);
     i = line.find_first_of(' ');
     if ( i == std::string::npos ){
-        std::cerr << "no space found!!" << std::endl;
+        std::cerr <<RED<< "no space found!!" << std::endl;
         _ret = -1;
         request_clear();
         return ;
@@ -106,7 +106,7 @@ size_t request::headerParsing(std::string request_buffer){
     header_length = request_buffer.find("\r\n\r\n");
     if (header_length == std::string::npos){
         _ret = -1;
-        std::cerr<<"no header is found!!"<<std::endl;
+        std::cerr<<RED<<"no header is found!!"<<std::endl;
         request_clear();
         return -1;
     }
@@ -151,7 +151,7 @@ void request::checkMethod(){
     if (_method.compare("GET") != 0 && _method.compare("POST") != 0 && _method.compare("DELETE") != 0 ){
         _ret = -1;
         request_clear();
-        std::cerr<< "unknown method !!"<<std::endl;
+        std::cerr<<RED<< "unknown method !!"<<std::endl;
     }
     return ;
 }
@@ -171,7 +171,7 @@ void request::checkPort(){
         else{
             _ret = -1;
             request_clear();
-            std::cerr<<"unknown port !"<<std::endl;
+            std::cerr<<RED<<"unknown port !"<<std::endl;
             return ;
         }      
 	}
@@ -186,7 +186,7 @@ void request::checkVersion(){
     if (str.compare("HTTP") != 0){
         _ret = -1;
         request_clear();
-        std::cerr<<"this is not a HTTP version"<<std::endl;
+        std::cerr<<RED<<"this is not a HTTP version"<<std::endl;
         return ;
     }
     str = _version.substr(i + 1, _version.size() - i - 1);
@@ -194,7 +194,7 @@ void request::checkVersion(){
     if(str.compare("1.1") != 0){
         _ret = -1;
         request_clear();
-        std::cerr<<"wrong HTTP version"<<std::endl;
+        std::cerr<<RED<<"wrong HTTP version"<<std::endl;
         return ;
     }
 }

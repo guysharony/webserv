@@ -3,6 +3,7 @@
 # include <iostream>
 # include <map>
 # include <string>
+# include "../../include/constants.hpp"
 
 class request{
     private:
