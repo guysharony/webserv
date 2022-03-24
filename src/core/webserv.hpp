@@ -2,6 +2,7 @@
 # define WEBSERV_HPP
 
 # include "../sockets/sockets.hpp"
+# include "../request/request.hpp"
 
 class Webserv
 {
