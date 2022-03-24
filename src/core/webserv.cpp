@@ -1,6 +1,8 @@
 #include "webserv.hpp"
 
 Webserv::Webserv(void)
+:
+	_run(true)
 { }
 
 Webserv::Webserv(Webserv const & src)
@@ -38,6 +40,11 @@ bool		Webserv::run(void) {
 	bool	close_connection;
 	bool compress_array;
 	char	buffer[2048];
+
+	rc = 0;
+	len = 0;
+	close_connection = false;
+	compress_array = false;
 
 	while (this->_run) {
 		if (this->_sockets.listen() <= 0) {
