@@ -32,16 +32,7 @@ void		Sockets::initialize(void) {
 }
 
 bool		Sockets::isListener(int fd) {
-	size_t	i;
-
-	i = 0;
-	while (i < this->_listener.size()) {
-		if (this->_listener[i] == fd)
-			return true;
-		i++;
-	}
-
-	return false;
+	return this->_listener.count(fd);
 }
 
 int		Sockets::listen(void) {
@@ -124,5 +115,5 @@ void		Sockets::_initializeSocket(socketsListenerType::iterator socket_iterator) 
 	}
 
 	this->sockets_poll.append(socketfd, POLLIN);
-	this->_listener.push_back(socketfd);
+	this->_listener.insert(socketfd);
 }

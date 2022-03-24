@@ -39,6 +39,7 @@ bool		Webserv::run(void) {
 	int	len;
 	bool	close_connection;
 	bool compress_array;
+	bool	is_server;
 	char	buffer[2048];
 
 	rc = 0;
@@ -60,50 +61,48 @@ bool		Webserv::run(void) {
 			if (this->current_iterator->revents == 0)
 				continue;
 
-			if (this->_sockets.isListener(this->current_iterator->fd)) {
+			is_server = this->_sockets.isListener(this->current_iterator->fd);
+
+			if (is_server && (this->current_iterator->revents & POLLIN)) {
 				this->_sockets.accept(this->current_iterator->fd);
-			}
-			else
-			{
-				if (this->current_iterator->revents & POLLIN) {
-					close_connection = false;
+			} else if (!is_server && (this->current_iterator->revents & POLLIN)) {
+				close_connection = false;
 
-					for (size_t bf = 0; bf <= 2048; bf++)
-						buffer[bf] = 0;
+				for (size_t bf = 0; bf <= 2048; bf++)
+					buffer[bf] = 0;
 
-					rc = recv(this->current_iterator->fd, buffer, sizeof(buffer), 0);
-					if (rc < 0)
-						break;
+				rc = recv(this->current_iterator->fd, buffer, sizeof(buffer), 0);
+				if (rc < 0)
+					break;
 
-					std::cout << "=== [" << this->current_iterator->fd << "] ===" << std::endl;
-					std::cout << buffer << std::endl;
+				std::cout << "=== [" << this->current_iterator->fd << "] ===" << std::endl;
+				std::cout << buffer << std::endl;
 
-					if (rc == 0) {
-						close(this->current_iterator->fd);
-						this->current_iterator->fd = -1;
-						close_connection = true;
-						break;
-					}
-				}
-				else if (this->current_iterator->revents & POLLOUT)
-				{
-					len = rc;
-
-					rc = send(this->current_iterator->fd, buffer, len, 0);
-					if (rc < 0)
-					{
-						Message::error("send() failed.");
-						close_connection = true;
-						break;
-					}
-				}
-
-				if (close_connection)
-				{
+				if (rc == 0) {
 					close(this->current_iterator->fd);
 					this->current_iterator->fd = -1;
-					compress_array = true;
+					close_connection = true;
+					break;
 				}
+			}
+			else if (!is_server && (this->current_iterator->revents & POLLOUT))
+			{
+				len = rc;
+
+				rc = send(this->current_iterator->fd, buffer, len, 0);
+				if (rc < 0)
+				{
+					Message::error("send() failed.");
+					close_connection = true;
+					break;
+				}
+			}
+
+			if (close_connection)
+			{
+				close(this->current_iterator->fd);
+				this->current_iterator->fd = -1;
+				compress_array = true;
 			}
 		}
 

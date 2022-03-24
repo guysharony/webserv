@@ -47,7 +47,7 @@ class Sockets
 
 	private:
 		socketsListenerType					_sockets;
-		std::vector<int>					_listener;
+		std::set<int>						_listener;
 
 		void		_initializeSocket(socketsListenerType::iterator socket_iterator);
 };
