@@ -1,13 +1,19 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
+#include <iostream>
 #include <string>
 #include <map>
 #include <queue>
 #include <utility> // pair
+# include <sys/types.h>	// socket - included for portability
+# include <sys/socket.h> // socket, AF_LOCAL, SOCK_STREAM, inet_addr
+# include <netinet/in.h> // sockaddr_in, inet_addr
+# include <arpa/inet.h>	// htons, inet_addr
 
 #include "../request/request.hpp"
 // # include "response.hpp"
+#include "../core/message.hpp"
 
 class Client
 {
@@ -20,6 +26,7 @@ public:
 	typedef std::queue<pair_type> request_container;
 
 	Client(void);
+	Client(int socket_fd);
 	Client(int socket_fd, std::string server_addr, int server_port, std::string client_addr, int client_port);
 	Client(Client const &src);
 	~Client(void);
@@ -44,6 +51,11 @@ public:
 	void updateRequest(std::string const &raw_request); // Update the last request if more data is received by the server
 	void deleteRequest();								// Delete a request after response has been sent
 	pair_type &getRequest();							// Get next request from queue
+
+	Client generateClient(int socket_fd);
+
+	// Debug functions
+	void print();
 
 private:
 	std::string _client_addr;	 // The IP address of the client
