@@ -10,7 +10,6 @@ OBJS			= $(patsubst $(SRCS_DIR)%.cpp, $(OBJS_DIR)%.o, $(SRCS))
 
 INCLUDES 		= -I$(INCLUDE_DIR)
 DEPS 			= $(OBJS:.o=.d)
-VALGRIND_LOG 	= $(addprefix $(LOGS_DIR), val.log)
 
 CC_OVERRIDE 	?= c++
 CC				:= $(CC_OVERRIDE)
