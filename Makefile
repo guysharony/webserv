@@ -1,48 +1,51 @@
-ROOT						=	$(realpath .)
+NAME 			= webserv
 
-SOURCE					=	$(ROOT)/src
-OBJECT					=	$(ROOT)/obj
-INCLUDE					=	$(ROOT)/include
-WWW						=	$(ROOT)/www
+SRCS_DIR 		= src/
+INCLUDE_DIR 	= includes/
+OBJS_DIR 		= obj/
+LOGS_DIR 		= logs/
 
-SRCS						=	$(wildcard $(SOURCE)/*/*.cpp)
-OBJS						=	$(patsubst $(SOURCE)/%.cpp, $(OBJECT)/%.o, $(SRCS))
+SRCS			= $(wildcard $(SRCS_DIR)*/*.cpp)
+OBJS			= $(patsubst $(SRCS_DIR)%.cpp, $(OBJS_DIR)%.o, $(SRCS))
 
-CXX						=	c++
-CXXFLAGS					=	-g -Wall -Wextra -Werror --std=c++98
+INCLUDES 		= -I$(INCLUDE_DIR)
+DEPS 			= $(OBJS:.o=.d)
+VALGRIND_LOG 	= $(addprefix $(LOGS_DIR), val.log)
 
-HIDE						=	@
-MAKEDIR					=	mkdir -p
-REMOVE					=	rm -rf
+CC_OVERRIDE 	?= c++
+CC				:= $(CC_OVERRIDE)
+FLAGS 			= -MMD -g -Wall -Wextra -Werror -std=c++98 #-pedantic
 
-BIN						=	webserv
+$(NAME): $(OBJS) | $(OBJS_DIR)
+	$(CC) $(FLAGS) $(OBJS) $(INCLUDES) -o $(NAME)
 
+all: $(NAME)
 
-.PHONY:					all
-all:
-						$(HIDE)$(MAKEDIR) $(WWW)
-all:						CXXFLAGS += -DWWW=\"$(WWW)\"
-all:						$(BIN)
+$(OBJS_DIR):
+	@mkdir -p $(OBJS_DIR)
 
-.PHONY:					debug
-debug:					CXXFLAGS += -DDEBUG
-debug:					all
+$(LOGS_DIR):
+	@mkdir -p $(LOGS_DIR)
 
-.PHONY:					$(BIN)
-$(BIN):					$(OBJS)
-						$(HIDE)$(CXX) $(CXXFLAGS) $(OBJS) -o $@
+$(OBJS): $(OBJS_DIR)%.o : $(SRCS_DIR)%.cpp | $(OBJS_DIR)
+	@mkdir -p $(dir $@)
+	$(CC) $(FLAGS) -c $(INCLUDES) $< -o $@
 
-$(OBJECT)/%.o:				$(SOURCE)/%.cpp
-						$(HIDE)$(MAKEDIR) $(dir $@)
-						$(HIDE)$(CXX) $(CXXFLAGS) -I$(INCLUDE) -c $< -o $@
+debug: fclean
+debug: FLAGS += -DDEBUG
+debug: all
 
-.PHONY:					clean
 clean:
-						$(HIDE)$(REMOVE) $(OBJECT)
+	rm -rf $(OBJS_DIR)
+	rm -rf $(LOGS_DIR)
 
-.PHONY:					fclean
-fclean:					clean
-						$(HIDE)$(REMOVE) $(BIN)
+fclean: clean
+	rm -f $(NAME)
 
-.PHONY:					re
-re:						fclean all
+re: fclean all | $(OBJS_DIR)
+
+test: all | $(LOGS_DIR)
+	
+-include $(DEPS)
+
+.PHONY: all clean fclean re test debug
