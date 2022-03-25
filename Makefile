@@ -8,7 +8,7 @@ WWW						=	$(ROOT)/www
 SRCS						=	$(wildcard $(SOURCE)/*/*.cpp)
 OBJS						=	$(patsubst $(SOURCE)/%.cpp, $(OBJECT)/%.o, $(SRCS))
 
-CXX						=	clang++
+CXX						=	c++
 CXXFLAGS					=	-g -Wall -Wextra -Werror --std=c++98
 
 HIDE						=	@
