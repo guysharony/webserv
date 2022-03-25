@@ -23,23 +23,33 @@ class Client
 	~Client(void);
 	Client &operator=(Client const & rhs);
 
-	std::string const	&getIpAddr(void);
-	int					getPort(void);
+	// Getters and Setters
+	std::string const	&getClientAddr(void);
+	int					getClientPort(void);
+	void				setClientAddr(std::string const &addr);
+	void				setClientPort(int port);
+	
 	int					getSocketFd(void);
-	void				setIpAddr(std::string const &ip_addr);
-	void				setPort(int port);
 	void				setSocketFd(int socket_fd);
 
+	std::string const	&getServerAddr(void);
+	int					getServerPort(void);
+	void				setServerAddr(std::string const &addr);
+	void				setServerPort(int port);
+
+	// Add, update, and delete the requests
 	void				addRequest(std::string const & raw_request);		// Add a new request that has just been received by the server
 	void				updateRequest(std::string const & raw_request);		// Update the last request if more data is received by the server
 	void				deleteRequest();									// Delete a request after response has been sent
 	pair_type			&getRequest();										// Get next request from queue
 
 	private:
-	std::string			_ip_addr;	// The IP address of the client
-	int					_port;		// The port of the server which is connected to the client (the one created by accept, not the one on which the server is listening)
-	int					_socket_fd;	// The socket which is used to communicate between client and server
-	request_container	_requests;	// All of the request/response pairs associated with this client
+	std::string			_client_addr;	// The IP address of the client
+	int					_client_port;	// The port of the server which is connected to the client (the one created by accept, not the one on which the server is listening)
+	int					_socket_fd;		// The socket which is used to communicate between client and server
+	std::string			_server_addr;	// The IP address of the server
+	int					_server_port;	// The port of the server FROM which the client connected (the one on which the server is listening)
+	request_container	_requests;		// All of the request/response pairs associated with this client
 };
 
 
