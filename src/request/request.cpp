@@ -11,6 +11,31 @@ request::request(void)
 	this->_ret = 0;
 }
 
+request::request(request const &src){
+	*this = src;
+}
+
+request::request(Config& conf){
+	request();
+	this->_config = conf;
+}
+
+
+request &request::operator=(request const &rhs){
+	if (this != &rhs)
+	{
+		this->_body = rhs._body;
+		this->_port = rhs._port;
+		this->_header = rhs._header;
+		this->_method = rhs._method;
+		this->_path = rhs._path;
+		this->_ret = rhs._ret;
+		this->_version = rhs._version;
+		this->_config = rhs._config;
+	}
+	return (*this);
+}
+
 void request::request_clear()
 {
 	this->_method = "";
@@ -23,22 +48,22 @@ void request::request_clear()
 
 request::~request(void) {}
 
-std::string request::getMethod()
+std::string request::getMethod(void)
 {
 	return (this->_method);
 }
 
-std::string request::getVersion()
+std::string request::getVersion(void)
 {
 	return (this->_version);
 }
 
-std::string request::getPath()
+std::string request::getPath(void)
 {
 	return (this->_path);
 }
 
-int request::getPort()
+int request::getPort(void)
 {
 	return (this->_port);
 }
@@ -48,9 +73,14 @@ const std::map<std::string, std::string> &request::getHeader() const
 	return (this->_header);
 }
 
-std::string request::getBody()
+std::string request::getBody(void)
 {
 	return (this->_body);
+}
+
+int request::getRet(void)
+{
+	return (this->_ret);
 }
 
 void request::parsePathAndVersion(std::string line)
@@ -72,7 +102,7 @@ void request::firstLineParsing(std::string request_buffer)
 	if (i == std::string::npos)
 	{
 		std::cerr << RED << "no newline found!!" << std::endl;
-		_ret = -1;
+		_ret = STATUS_BAD_REQUEST;
 		request_clear();
 		return;
 	}
@@ -81,7 +111,7 @@ void request::firstLineParsing(std::string request_buffer)
 	if (i == std::string::npos)
 	{
 		std::cerr << RED << "no space found!!" << std::endl;
-		_ret = -1;
+		_ret = STATUS_BAD_REQUEST;
 		request_clear();
 		return;
 	}
@@ -119,13 +149,13 @@ size_t request::headerParsing(std::string request_buffer)
 	header_length = request_buffer.find("\r\n\r\n");
 	if (header_length == std::string::npos)
 	{
-		_ret = -1;
+		_ret = STATUS_BAD_REQUEST;
 		std::cerr << RED << "no header is found!!" << std::endl;
 		request_clear();
 		return -1;
 	}
 	i = request_buffer.find_first_of('\n') + 1;
-	while (_ret != -1 && (line = getNextLine(request_buffer, &i)) != "" && i < header_length)
+	while (_ret != STATUS_BAD_REQUEST && (line = getNextLine(request_buffer, &i)) != "" && i < header_length)
 	{
 		key = line.substr(0, line.find_first_of(':'));
 		value = line.substr(line.find_first_of(':') + 1, line.size() - (line.find_first_of(':') + 1) - 1);
@@ -140,12 +170,13 @@ size_t request::headerParsing(std::string request_buffer)
 void request::parseRequest(std::string request_buffer)
 {
 	size_t i;
-	if (_ret != -1)
+	if (_ret < STATUS_BAD_REQUEST)
 		firstLineParsing(request_buffer);
-	if (_ret != -1)
+	if (_ret < STATUS_BAD_REQUEST)
 		i = headerParsing(request_buffer);
-	if (_ret != -1)
+	if (_ret < STATUS_BAD_REQUEST)
 		this->_body = trim(request_buffer.substr(i, request_buffer.size() - i));
+	displayAllLocations();
 }
 
 std::ostream &operator<<(std::ostream &os, request &req)
@@ -166,7 +197,7 @@ void request::checkMethod()
 {
 	if (_method.compare("GET") != 0 && _method.compare("POST") != 0 && _method.compare("DELETE") != 0)
 	{
-		_ret = -1;
+		_ret = STATUS_NOT_ALLOWED;
 		request_clear();
 		std::cerr << RED << "unknown method !!" << std::endl;
 	}
@@ -186,13 +217,6 @@ void request::checkPort()
 		tmp = _header["Host"].substr(i + 1, _header["Host"].size() - i);
 		if (tmp.size() > 0 && ft_atoi(tmp.c_str()) >= 0 && ft_isalpha(tmp.c_str()) != 1)
 			_port = ft_atoi(tmp.c_str());
-		else
-		{
-			_ret = -1;
-			request_clear();
-			std::cerr << RED << "unknown port !" << std::endl;
-			return;
-		}
 	}
 }
 
@@ -205,7 +229,7 @@ void request::checkVersion()
 	str = _version.substr(0, i);
 	if (str.compare("HTTP") != 0)
 	{
-		_ret = -1;
+		_ret = STATUS_BAD_REQUEST;
 		request_clear();
 		std::cerr << RED << "this is not a HTTP version" << std::endl;
 		return;
@@ -214,9 +238,19 @@ void request::checkVersion()
 	_version = str;
 	if (str.compare("1.1") != 0)
 	{
-		_ret = -1;
+		_ret = STATUS_BAD_REQUEST;
 		request_clear();
 		std::cerr << RED << "wrong HTTP version" << std::endl;
 		return;
 	}
+}
+
+void request::displayAllLocations(void){
+	for (Config::configuration_type it = this->_config.configuration.begin(); it != this->_config.configuration.end(); it++) {
+			std::cout<<it->server_name<<std::endl;
+		for(Config::location_type it_locations = it->locations.begin(); it_locations != it->locations.end(); it_locations++){
+			std::cout<<it_locations->location<<std::endl;
+		}
+	}
+
 }

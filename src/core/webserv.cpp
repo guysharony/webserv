@@ -79,7 +79,7 @@ bool		Webserv::run(void) {
 				std::cout <<RESET<< "=== [" << this->current_iterator->fd << "] ===" << std::endl;
 				//std::cout << buffer << std::endl;
 				//parsing the request
-				request req;
+				request req(this->_config);
 				req.parseRequest(buffer);
 				std::cout<< GREEN <<req<<std::endl;
 				if (rc == 0) {

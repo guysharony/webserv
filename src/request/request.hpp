@@ -4,6 +4,7 @@
 # include <map>
 # include <string>
 # include "../../include/constants.hpp"
+# include "../config/config.hpp"
 
 class request{
     private:
@@ -14,6 +15,7 @@ class request{
         int                                 _ret;
         std::string                         _path;
         int                                 _port;
+		Config						        _config;
         void                                 firstLineParsing(std::string request_buffer);
         std::string		                     getNextLine(std::string str, size_t *i);
         size_t                               headerParsing(std::string request_buffer);
@@ -25,14 +27,19 @@ class request{
 
     public:
         request(void);
+        request(Config& conf);
         ~request(void);
-        std::string getMethod();
-        std::string getVersion();
-        std::string getPath();
-        int getPort();
+        request &operator=(request const &rhs);
+        request(request const &src);
+        std::string getMethod(void);
+        std::string getVersion(void);
+        std::string getPath(void);
+        int getPort(void);
+        int getRet(void);
         const std::map<std::string, std::string>& getHeader() const;
-        std::string getBody();
+        std::string getBody(void);
         void parseRequest(std::string request_buffer);
+        void displayAllLocations(void);
         
 
 
@@ -41,10 +48,5 @@ std::ostream&		operator<<(std::ostream& os, request& re);
 std::string trim(const std::string& str);
 int	ft_atoi(const char *nptr);
 int	ft_isalpha(const char * str);
-
-
-
-
-
 
 #endif
