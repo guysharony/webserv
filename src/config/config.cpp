@@ -3,7 +3,7 @@
 Config::Config(void)
 { }
 
-Config::Config(Config const & src)
+Config::Config(Config const & src) : ConfigServer()
 { *this = src; }
 
 Config::~Config()

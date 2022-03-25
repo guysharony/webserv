@@ -3,7 +3,7 @@
 ConfigServer::ConfigServer(void)
 { }
 
-ConfigServer::ConfigServer(ConfigServer const & src)
+ConfigServer::ConfigServer(ConfigServer const & src) : ConfigLocation()
 { *this = src; }
 
 ConfigServer::~ConfigServer()

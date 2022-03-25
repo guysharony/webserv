@@ -143,7 +143,7 @@ int				trim(std::string & value)
 		}
 	}
 
-	for (size_t i = tmp.length(); i >= 0; i--) {
+	for (size_t i = tmp.length(); i != 0; i--) {
 		char tmp_char = value[i];
 
 		if (tmp_char > 32) {
