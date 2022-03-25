@@ -1,2 +1,8 @@
+# Environment Files
 .DS_Store
 .vscode
+
+# Binaries
+*.o
+webserv
+*.d
