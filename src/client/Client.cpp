@@ -18,7 +18,22 @@ Client::Client(int socket_fd)
 	  _server_port(-1),
 	  _requests()
 {
-	*this = this->generateClient(socket_fd);
+	struct sockaddr_in sock_addr;
+	struct sockaddr_in peer_addr;
+	
+	socklen_t sock_addr_size = sizeof(sock_addr);
+	if (getsockname(socket_fd, (struct sockaddr *)&sock_addr, &sock_addr_size) < 0)
+		Message::error("getsockname() failed");
+	
+	socklen_t peer_addr_size = sizeof(peer_addr);
+	if (getpeername(socket_fd, (struct sockaddr *)&peer_addr, &peer_addr_size) < 0)
+		Message::error("getpeername() failed");
+
+	this->_client_addr = inet_ntoa(peer_addr.sin_addr);
+	this->_client_port = ntohs(peer_addr.sin_port);
+	this->_socket_fd = socket_fd;
+	this->_server_addr = inet_ntoa(sock_addr.sin_addr);
+	this->_server_port = ntohs(sock_addr.sin_port);
 }
 
 Client::Client(int socket_fd, std::string server_addr, int server_port, std::string client_addr, int client_port)
@@ -127,24 +142,6 @@ void Client::deleteRequest() // Delete a request after response has been sent
 Client::pair_type &Client::getRequest() // Get next request from queue
 {
 	return (this->_requests.front());
-}
-
-Client Client::generateClient(int socket_fd)
-{
-	struct sockaddr_in sock_addr;
-	struct sockaddr_in peer_addr;
-
-	
-	socklen_t sock_addr_size = sizeof(sock_addr);
-	if (getsockname(socket_fd, (struct sockaddr *)&sock_addr, &sock_addr_size) < 0)
-		Message::error("getsockname() failed");
-	
-	socklen_t peer_addr_size = sizeof(peer_addr);
-	if (getpeername(socket_fd, (struct sockaddr *)&peer_addr, &peer_addr_size) < 0)
-		Message::error("getpeername() failed");
-
-	return (Client(socket_fd, inet_ntoa(sock_addr.sin_addr), ntohs(sock_addr.sin_port),
-					inet_ntoa(peer_addr.sin_addr), ntohs(peer_addr.sin_port)));
 }
 
 void Client::print()

@@ -52,8 +52,6 @@ public:
 	void deleteRequest();								// Delete a request after response has been sent
 	pair_type &getRequest();							// Get next request from queue
 
-	Client generateClient(int socket_fd);
-
 	// Debug functions
 	void print();
 
