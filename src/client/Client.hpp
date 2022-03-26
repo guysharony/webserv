@@ -48,7 +48,7 @@ public:
 	void setServerPort(int port);
 
 	// Add, update, and delete the requests
-	void addRequest(std::string const &raw_request);	// Add a new request that has just been received by the server
+	void addRequest(request_type new_request);	// Add a new request that has just been received by the server
 	void updateRequest(std::string const &raw_request); // Update the last request if more data is received by the server
 	void deleteRequest();								// Delete a request after response has been sent
 	pair_type &getRequest();							// Get next request from queue

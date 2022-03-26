@@ -133,10 +133,8 @@ void Client::setServerPort(int port)
 }
 
 // Add, update, and delete the requests
-void Client::addRequest(std::string const &raw_request) // Add a new request that has just been received by the server
+void Client::addRequest(request_type new_request) // Add a new request that has just been received by the server
 {
-	request_type new_request;
-	new_request.parseRequest(raw_request);
 	pair_type new_pair = std::make_pair<request_type, response_type>(new_request, response_type());
 	this->_requests.push(new_pair);
 }

@@ -99,13 +99,15 @@ bool		Webserv::run(void) {
 				client_id.print();
 				Client *client;
 				client = this->updateClient(client_id);
-				client->addRequest(buffer);
 
 				std::cout <<RESET<< "=== [" << this->current_iterator->fd << "] ===" << std::endl;
 				//std::cout << buffer << std::endl;
 				//parsing the request
-				request req = client->getRequest().first;
+				request req;
+				req.parseRequest(buffer);
 				std::cout<< GREEN <<req<<std::endl;
+
+				client->addRequest(req);
 				if (rc == 0) {
 					close(this->current_iterator->fd);
 					this->current_iterator->fd = -1;
