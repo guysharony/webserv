@@ -20,11 +20,11 @@ Client::Client(int socket_fd)
 {
 	struct sockaddr_in sock_addr;
 	struct sockaddr_in peer_addr;
-	
+
 	socklen_t sock_addr_size = sizeof(sock_addr);
 	if (getsockname(socket_fd, (struct sockaddr *)&sock_addr, &sock_addr_size) < 0)
 		Message::error("getsockname() failed");
-	
+
 	socklen_t peer_addr_size = sizeof(peer_addr);
 	if (getpeername(socket_fd, (struct sockaddr *)&peer_addr, &peer_addr_size) < 0)
 		Message::error("getpeername() failed");
@@ -67,6 +67,19 @@ Client &Client::operator=(Client const &rhs)
 		this->_requests = rhs._requests;
 	}
 	return (*this);
+}
+
+bool Client::operator==(Client const &rhs)
+{
+	if (this == &rhs)
+		return (true);
+	if (this->_client_addr == rhs._client_addr &&
+		this->_client_port == rhs._client_port &&
+		this->_socket_fd == rhs._socket_fd &&
+		this->_server_addr == rhs._server_addr &&
+		this->_server_port == rhs._server_port)
+		return (true);
+	return (false);
 }
 
 std::string const &Client::getClientAddr(void)
@@ -146,7 +159,7 @@ Client::pair_type &Client::getRequest() // Get next request from queue
 
 void Client::print()
 {
-	std::cout << "Socket FD: " << this->_socket_fd << "\nServer Addr: " << this->_server_addr \
-		<< "\tPort: " << this->_server_port << "\nClient Addr: " << this->_client_addr \
-		<< "\tPort: " << this->_client_port << std::endl;
+	std::cout << "Socket FD: " << this->_socket_fd << "\nServer Addr: " << this->_server_addr
+			  << "\tPort: " << this->_server_port << "\nClient Addr: " << this->_client_addr
+			  << "\tPort: " << this->_client_port << std::endl;
 }

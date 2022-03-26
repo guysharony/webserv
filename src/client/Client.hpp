@@ -31,6 +31,7 @@ public:
 	Client(Client const &src);
 	~Client(void);
 	Client &operator=(Client const &rhs);
+	bool	operator==(Client const &rhs);
 
 	// Getters and Setters
 	std::string const &getClientAddr(void);
