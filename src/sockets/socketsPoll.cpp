@@ -11,10 +11,12 @@ SocketsPoll::~SocketsPoll()
 { }
 
 void			SocketsPoll::append(int fd, short events) {
-	struct pollfd new_pollfd;
-	new_pollfd.fd = fd;
-	new_pollfd.events = events;
+	pollfd* new_pollfd = new pollfd;
+	new_pollfd->fd = fd;
+	new_pollfd->events = events;
 
-	this->fds.push_back(new_pollfd);
+	this->fds.push_back(*new_pollfd);
 	this->nfds++;
+
+	delete new_pollfd;
 }

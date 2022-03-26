@@ -11,9 +11,7 @@ Config::~Config()
 
 int			Config::load(std::string filename)
 {
-	this->_filename = filename;
-
-	int result = this->_parseConfiguration();
+	int result = this->_parseConfiguration(filename);
 
 	#ifdef DEBUG
 		for (configuration_type it = this->configuration.begin(); it != this->configuration.end(); it++)
@@ -54,16 +52,19 @@ int			Config::load(std::string filename)
 }
 
 int			Config::load(char *filename)
-{ return this->load(std::string(filename)); }
+{
+	std::string tmp(filename);
+	return this->load(tmp);
+}
 
-int			Config::_parseConfiguration(void) {
+int			Config::_parseConfiguration(std::string filename) {
 	int				brakets = 0;
 	std::string		line;
-	std::ifstream		file(this->_filename.c_str(), std::ios::in);
+	std::ifstream		file(filename.c_str(), std::ios::in);
 
 	if (file) {
 		while (getline(file, line, '\n')) {
-			this->_parseConfigurationLine(brakets, line);
+			this->_parseConfigurationLine(brakets, line.c_str());
 		}
 		file.close();
 	} else {
@@ -83,7 +84,7 @@ int			Config::_parseConfiguration(void) {
 	return 1;
 }
 
-void			Config::_parseConfigurationLine(int &brakets, std::string const line) {
+void			Config::_parseConfigurationLine(int &brakets, char const *line) {
 	int		i;
 
 	i = 0;

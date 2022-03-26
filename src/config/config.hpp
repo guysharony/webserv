@@ -22,10 +22,8 @@ class Config: public ConfigServer
 		int		load(std::string filename);
 
 	private:
-		std::string		_filename;
-
-		int				_parseConfiguration(void);
-		void				_parseConfigurationLine(int &brakets, std::string const line);
+		int				_parseConfiguration(std::string filename);
+		void				_parseConfigurationLine(int &brakets, char const *line);
 
 		void				_addSpaceAfterLimiter(int i);
 

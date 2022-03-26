@@ -19,7 +19,7 @@ class ConfigLocation
 	public:
 		ConfigLocation(void);
 		ConfigLocation(ConfigLocation const & src);
-		~ConfigLocation();
+		virtual ~ConfigLocation();
 
 		typedef std::map<int, std::string>			error_pages_type;
 		typedef std::vector<int>					methods_type;

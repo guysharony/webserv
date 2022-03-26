@@ -1,6 +1,8 @@
 #include "configLocation.hpp"
 
 ConfigLocation::ConfigLocation(void)
+:
+	compressed_configuration_file("")
 { }
 
 ConfigLocation::ConfigLocation(ConfigLocation const & src)

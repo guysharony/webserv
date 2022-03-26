@@ -14,7 +14,7 @@ Webserv::~Webserv()
 int			Webserv::load(char *filename)
 { return this->load(std::string(filename)); }
 
-int			Webserv::load(std::string filename)
+int			Webserv::load(std::string const filename)
 {
 	try {
 		if (!this->_config.load(filename))
