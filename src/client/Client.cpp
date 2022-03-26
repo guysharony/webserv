@@ -137,7 +137,8 @@ void Client::addRequest(std::string const &raw_request) // Add a new request tha
 {
 	request_type new_request;
 	new_request.parseRequest(raw_request);
-	std::make_pair<request_type, response_type>(new_request, response_type());
+	pair_type new_pair = std::make_pair<request_type, response_type>(new_request, response_type());
+	this->_requests.push(new_pair);
 }
 
 /* NOT IMPLEMENTED YET
