@@ -1,5 +1,14 @@
 #include "webserv.hpp"
 
+static int g_sigint = 0;
+
+void signalHandler(int sig)
+{
+	if (sig == SIGINT)
+		g_sigint = 1;
+	signal(SIGINT, SIG_DFL); // If user sends signal twice, program will exit immediately
+}
+
 Webserv::Webserv(void)
 :
 	_run(true)
@@ -47,11 +56,13 @@ bool		Webserv::run(void) {
 	close_connection = false;
 	compress_array = false;
 
+	signal(SIGINT, &signalHandler);
 	while (this->_run) {
+		if (g_sigint == 1)
+			break; // Perhaps we need to shutdown/send messages to active clients first
 		std::cout<< YELLOW << "waiting for a connection..."<< RESET<<std::endl;
 		if (this->_sockets.listen() <= 0) {
-			this->_run = false;
-			break;
+			continue ; // Allow server to continue after a failure or timeout in poll
 		}
 
 		this->current_size = this->_sockets.sockets_poll.nfds;
