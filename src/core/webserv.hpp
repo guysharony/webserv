@@ -1,6 +1,7 @@
 #ifndef WEBSERV_HPP
 # define WEBSERV_HPP
 
+# include <csignal> // signal, SIGINT, SIG_DFL
 # include "../sockets/sockets.hpp"
 # include "../request/request.hpp"
 
