@@ -3,6 +3,7 @@
 # include <iostream>
 # include <map>
 # include <string>
+# include <stddef.h>
 # include "../../include/constants.hpp"
 # include "../config/config.hpp"
 
@@ -14,7 +15,8 @@ class request{
         std::string                         _body;
         int                                 _ret;
         std::string                         _path;
-        int                                 _port;
+        std::string                         _port;
+        std::string                         _host;
 		Config						        _config;
         void                                 firstLineParsing(std::string request_buffer);
         std::string		                     getNextLine(std::string str, size_t *i);
@@ -24,6 +26,9 @@ class request{
         void                                 checkVersion();
         void                                 checkPort();
         void                                 request_clear();
+        Config::configuration_struct        &selectServer();
+        Config::location_struct             &selectLocation(Config::configuration_struct &server);
+
 
     public:
         request(void);
@@ -34,7 +39,8 @@ class request{
         std::string getMethod(void);
         std::string getVersion(void);
         std::string getPath(void);
-        int getPort(void);
+        std::string getHost(void);
+        std::string getPort(void);
         int getRet(void);
         const std::map<std::string, std::string>& getHeader() const;
         std::string getBody(void);
@@ -45,7 +51,7 @@ class request{
 
 };
 std::ostream&		operator<<(std::ostream& os, request& re);
-std::string trim(const std::string& str);
+std::string trim2(const std::string& str);
 int	ft_atoi(const char *nptr);
 int	ft_isalpha(const char * str);
 

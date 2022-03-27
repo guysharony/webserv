@@ -1,6 +1,6 @@
 #include "request.hpp"
 
-std::string trim(const std::string& str)
+std::string trim2(const std::string& str)
 {
     const char* t = " \t\n\r\f\v";
     size_t first = str.find_first_not_of(t);

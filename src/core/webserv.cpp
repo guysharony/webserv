@@ -77,11 +77,11 @@ bool		Webserv::run(void) {
 					break;
 
 				std::cout <<RESET<< "=== [" << this->current_iterator->fd << "] ===" << std::endl;
-				//std::cout << buffer << std::endl;
+				std::cout<< GREEN << buffer<<RESET << std::endl;
 				//parsing the request
 				request req(this->_config);
 				req.parseRequest(buffer);
-				std::cout<< GREEN <<req<<std::endl;
+				//std::cout<<req<<std::endl; check request parsing
 				if (rc == 0) {
 					close(this->current_iterator->fd);
 					this->current_iterator->fd = -1;
