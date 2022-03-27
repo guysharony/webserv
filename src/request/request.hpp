@@ -24,6 +24,7 @@ class request{
         void                                 parsePathAndVersion(std::string line);
         void                                 checkMethod();
         void                                 checkVersion();
+        void                                 checkBody(Config::configuration_struct &server);
         void                                 checkPort();
         void                                 request_clear();
         Config::configuration_struct        &selectServer();
@@ -54,5 +55,6 @@ std::ostream&		operator<<(std::ostream& os, request& re);
 std::string trim2(const std::string& str);
 int	ft_atoi(const char *nptr);
 int	ft_isalpha(const char * str);
+void print_buffer(std::string buffer, size_t max_size, std::string color);
 
 #endif

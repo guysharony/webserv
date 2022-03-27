@@ -58,3 +58,14 @@ int	ft_isalpha(const char * str)
 	}
 	return 0;
 }
+
+void print_buffer(std::string buffer, size_t max_size, std::string color){
+	if (buffer.size() > max_size + 50){
+		std::cout<<color<<buffer.substr(0, max_size)<< "..."<<std::endl;
+		std::cout<<color<<buffer.substr(buffer.size() - 50, buffer.size())<<RESET<<std::endl;
+	}
+	else{
+		std::cout<<color<<buffer<<RESET<<std::endl;
+	}
+	
+}

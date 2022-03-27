@@ -57,7 +57,9 @@ void request::request_clear()
 	this->_header.clear();
 }
 
-request::~request(void) {}
+request::~request(void) {
+	request_clear();
+}
 
 std::string request::getMethod(void)
 {
@@ -119,7 +121,6 @@ void request::firstLineParsing(std::string request_buffer)
 	{
 		std::cerr << RED << "no newline found!!" << std::endl;
 		_ret = STATUS_BAD_REQUEST;
-		request_clear();
 		return;
 	}
 	line = request_buffer.substr(0, i);
@@ -128,7 +129,6 @@ void request::firstLineParsing(std::string request_buffer)
 	{
 		std::cerr << RED << "no space found!!" << std::endl;
 		_ret = STATUS_BAD_REQUEST;
-		request_clear();
 		return;
 	}
 	_method = trim2(line.substr(0, i));
@@ -167,7 +167,6 @@ size_t request::headerParsing(std::string request_buffer)
 	{
 		_ret = STATUS_BAD_REQUEST;
 		std::cerr << RED << "no header is found!!" << std::endl;
-		request_clear();
 		return -1;
 	}
 	i = request_buffer.find_first_of('\n') + 1;
@@ -190,10 +189,13 @@ void request::parseRequest(std::string request_buffer)
 		firstLineParsing(request_buffer);
 	if (_ret < STATUS_BAD_REQUEST)
 		i = headerParsing(request_buffer);
-	if (_ret < STATUS_BAD_REQUEST)
+	if (_ret < STATUS_BAD_REQUEST){
 		this->_body = trim2(request_buffer.substr(i, request_buffer.size() - i));
-	Config::configuration_struct server = selectServer();
-	std::cout<<YELLOW<< "location = "<<selectLocation(server).location<<RESET<<std::endl;
+		Config::configuration_struct server = selectServer();
+		checkBody(server);
+		if (_ret < STATUS_BAD_REQUEST)
+			std::cout<<YELLOW<< "location = "<<selectLocation(server).location<<RESET<<std::endl;
+	}
 }
 
 std::ostream &operator<<(std::ostream &os, request &req)
@@ -216,7 +218,6 @@ void request::checkMethod()
 	if (_method.compare("GET") != 0 && _method.compare("POST") != 0 && _method.compare("DELETE") != 0)
 	{
 		_ret = STATUS_NOT_ALLOWED;
-		request_clear();
 		std::cerr << RED << "unknown method !!" << std::endl;
 	}
 	return;
@@ -249,7 +250,6 @@ void request::checkVersion()
 	if (str.compare("HTTP") != 0)
 	{
 		_ret = STATUS_BAD_REQUEST;
-		request_clear();
 		std::cerr << RED << "this is not a HTTP version" << std::endl;
 		return;
 	}
@@ -258,7 +258,6 @@ void request::checkVersion()
 	if (str.compare("1.1") != 0)
 	{
 		_ret = STATUS_BAD_REQUEST;
-		request_clear();
 		std::cerr << RED << "wrong HTTP version" << std::endl;
 		return;
 	}
@@ -296,5 +295,15 @@ Config::location_struct &request::selectLocation(Config::configuration_struct &s
 	}
 	return (*ret);
 }
+
+void  request::checkBody(Config::configuration_struct &server){
+	if (_body.size() > (size_t)server.client_max_body_size){
+		_ret = STATUS_REQUEST_ENTITY_TOO_LARGE;
+		std::cerr << RED << "body too large !!" << std::endl;
+		return;
+	}
+
+}
+
 
 
