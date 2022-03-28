@@ -68,7 +68,7 @@ bool		Webserv::run(void) {
 	bool	close_connection;
 	bool compress_array;
 	bool	is_server;
-	char	buffer[2048];
+	char	buffer[BUFFER_SIZE];
 
 	rc = 0;
 	len = 0;
@@ -99,10 +99,9 @@ bool		Webserv::run(void) {
 			} else if (!is_server && (this->current_iterator->revents & POLLIN)) {
 				close_connection = false;
 
-				for (size_t bf = 0; bf <= 2048; bf++)
-					buffer[bf] = 0;
+				memset(buffer, 0, BUFFER_SIZE);
 
-				rc = recv(this->current_iterator->fd, buffer, sizeof(buffer), 0);
+				rc = recv(this->current_iterator->fd, buffer, BUFFER_SIZE, 0);
 				if (rc < 0)
 					break;
 

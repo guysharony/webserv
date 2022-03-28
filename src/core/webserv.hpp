@@ -2,6 +2,7 @@
 # define WEBSERV_HPP
 
 # include <csignal> // signal, SIGINT, SIG_DFL
+# include <cstring> // memset
 # include "../sockets/sockets.hpp"
 # include "../request/request.hpp"
 # include "../client/Client.hpp"
