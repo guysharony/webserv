@@ -97,6 +97,21 @@ bool		Webserv::run(void) {
 			if (is_server && (this->current_iterator->revents & POLLIN)) {
 				this->_sockets.accept(this->current_iterator->fd);
 				break ;
+			} else if (this->_sockets.sockets_poll.pipe_fds.count(this->current_iterator->fd)) {
+				Message::debug("Reading from CGI pipe\n");
+				memset(buffer, 0, BUFFER_SIZE);
+				rc = read(pipefd, buffer, BUFFER_SIZE);
+				if(rc < 0)
+					Message::error("read() failed");
+				Message::debug(buffer);
+				Message::debug("\n");
+
+				if (rc == 0) {
+					close(this->current_iterator->fd);
+					this->current_iterator->fd = -1;
+					close_connection = true;
+					break;
+				}
 			} else if (!is_server && (this->current_iterator->revents & POLLIN)) {
 				close_connection = false;
 

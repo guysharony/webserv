@@ -29,9 +29,11 @@ class SocketsPoll
 		typedef size_t					size_type;
 
 		void			append(int fd, short events);
+		void			append_pipe(int fd, short events);
 
 		int			nfds;
 		pollfd_type	fds;
+		std::set<int> pipe_fds;
 };
 
 #endif

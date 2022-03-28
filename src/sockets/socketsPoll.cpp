@@ -20,3 +20,14 @@ void			SocketsPoll::append(int fd, short events) {
 
 	delete new_pollfd;
 }
+
+void			SocketsPoll::append_pipe(int fd, short events) {
+	pollfd new_pollfd = pollfd();
+	new_pollfd.fd = fd;
+	new_pollfd.events = events;
+
+	this->fds.push_back(new_pollfd);
+	this->nfds++;
+	this->pipe_fds.insert(fd);
+
+}
