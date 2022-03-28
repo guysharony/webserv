@@ -15,7 +15,7 @@ class Webserv
 		~Webserv();
 
 		int							load(char *filename);
-		int							load(std::string filename);
+		int							load(std::string const filename);
 
 		bool							run(void);
 

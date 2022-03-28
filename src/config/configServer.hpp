@@ -8,7 +8,7 @@ class ConfigServer: public ConfigLocation
 	public:
 		ConfigServer(void);
 		ConfigServer(ConfigServer const & src);
-		~ConfigServer();
+		virtual ~ConfigServer();
 
 	protected:
 		void				parseServer(void);
