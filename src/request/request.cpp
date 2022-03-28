@@ -193,8 +193,18 @@ void request::parseRequest(std::string request_buffer)
 		this->_body = trim2(request_buffer.substr(i, request_buffer.size() - i));
 		Config::configuration_struct server = selectServer();
 		checkBody(server);
-		if (_ret < STATUS_BAD_REQUEST)
-			std::cout<<YELLOW<< "location = "<<selectLocation(server).location<<RESET<<std::endl;
+		if (_ret < STATUS_BAD_REQUEST){
+			Config::location_type loc = selectLocation(server);
+			if (loc != server.locations.end()){
+				std::cout<<YELLOW<< "location = "<< selectLocation(server)->location<<RESET<<std::endl;	
+			}
+			else
+			{
+				_ret = STATUS_NOT_FOUND;
+				std::cerr<<RED <<"location not found"<<RESET<<std::endl;
+			}
+			
+		}
 	}
 }
 
@@ -292,27 +302,48 @@ Config::configuration_struct &request::selectServer(){
 	return (*default_server);
 }
 
-Config::location_struct &request::selectLocation(Config::configuration_struct &server){
+bool request::checkMethodBylocation(std::vector<int> methods_type){
+	if (std::find(methods_type.begin(), methods_type.end(), convertMethodToValue(this->_method)) != methods_type.end()){
+		return true;
+	}
+	return false;
+}
+
+Config::location_type request::selectLocation(Config::configuration_struct &server){
 	Config::location_type it_location;
-	Config::location_type ret;
+	Config::location_type ret = server.locations.end();
 	bool  				firstTime = true;
 
 	for(it_location = server.locations.begin(); it_location != server.locations.end(); it_location++){
-		if (this->_path.find(it_location->location) == 0 && (firstTime || it_location->location.size() > ret->location.size())){
+		if (this->_path.find(it_location->location) == 0 && (firstTime || it_location->location.size() > ret->location.size())
+			&& checkMethodBylocation(it_location->methods)){
 			ret = it_location;			
 			firstTime = false;
 		}
 	}
-	return (*ret);
+	return (ret);
 }
 
 void  request::checkBody(Config::configuration_struct &server){
 	if (_body.size() > (size_t)server.client_max_body_size){
 		_ret = STATUS_REQUEST_ENTITY_TOO_LARGE;
 		std::cerr << RED << "body too large !!" << std::endl;
-		return;
 	}
 
+}
+
+int 	request::convertMethodToValue(std::string method){
+	if (method.compare("GET") == 0)
+		return METHOD_GET;
+	if (method.compare("HEAD") == 0)
+		return METHOD_HEAD;
+	if (method.compare("POST") == 0)
+		return METHOD_POST;
+	if (method.compare("PUT") == 0)
+		return METHOD_PUT;
+	if (method.compare("DELETE") == 0)
+		return METHOD_DELETE;
+	return 0;
 }
 
 

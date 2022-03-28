@@ -69,3 +69,19 @@ void print_buffer(std::string buffer, size_t max_size, std::string color){
 	}
 	
 }
+
+int		isFile(const std::string& path)
+{
+	struct stat status;
+	if (stat(path.c_str(), &status) == 0 )
+	{
+		if (status.st_mode & S_IFDIR)
+			return 0;
+		else if (status.st_mode & S_IFREG)
+			return 1;
+		else
+			return 0;
+	}
+	else
+		return 0;
+}
