@@ -10,12 +10,13 @@ ConfigServer::~ConfigServer()
 { }
 
 void			ConfigServer::parseServer(void) {
-	configuration_struct	config;
 	std::string			word;
 
 	this->compressed_configuration_file_iterator = this->compressed_configuration_file.begin();
 
 	while (!(word = this->_extractWord()).empty()) {
+		configuration_struct	config;
+
 		if (word != "server" || (this->_extractWord() != "{")) {
 			Message::error("Configuration file corrupted.");
 		}
@@ -54,11 +55,11 @@ void			ConfigServer::parseServer(void) {
 				Message::error("Unknown directive: " + word);
 			}
 		}
+
+		this->_adjustConfiguration(config);
+
+		this->configuration.push_back(config);
 	}
-
-	this->_adjustConfiguration(config);
-
-	this->configuration.push_back(config);
 }
 
 std::string 	ConfigServer::_extractWord(void) {
