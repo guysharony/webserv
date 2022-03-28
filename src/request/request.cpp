@@ -3,44 +3,87 @@
 request::request(void)
 {
 	this->_method = "";
+	this->_host = "";
 	this->_path = "";
 	this->_version = "";
 	this->_body = "";
-	this->_port = 80;
+	this->_port = "80";
 	this->_header.clear();
-	this->_ret = 0;
+	this->_ret = STATUS_OK;
+}
+
+request::request(request const &src){
+	*this = src;
+}
+
+request::request(Config& conf){
+	this->_method = "";
+	this->_host = "";
+	this->_path = "";
+	this->_version = "";
+	this->_body = "";
+	this->_port = "80";
+	this->_header.clear();
+	this->_ret = STATUS_OK;
+	this->_config = conf;
+}
+
+
+request &request::operator=(request const &rhs){
+	if (this != &rhs)
+	{
+		this->_body = rhs._body;
+		this->_port = rhs._port;
+		this->_host = rhs._host;
+		this->_header = rhs._header;
+		this->_method = rhs._method;
+		this->_path = rhs._path;
+		this->_ret = rhs._ret;
+		this->_version = rhs._version;
+		this->_config = rhs._config;
+	}
+	return (*this);
 }
 
 void request::request_clear()
 {
 	this->_method = "";
 	this->_path = "";
+	this->_host = "";
 	this->_version = "";
 	this->_body = "";
-	this->_port = 80;
+	this->_port = "80";
+	this->_ret = STATUS_OK;
 	this->_header.clear();
 }
 
-request::~request(void) {}
+request::~request(void) {
+	request_clear();
+}
 
-std::string request::getMethod()
+std::string request::getMethod(void)
 {
 	return (this->_method);
 }
 
-std::string request::getVersion()
+std::string request::getVersion(void)
 {
 	return (this->_version);
 }
 
-std::string request::getPath()
+std::string request::getPath(void)
 {
 	return (this->_path);
 }
 
-int request::getPort()
+std::string request::getPort(void)
 {
 	return (this->_port);
+}
+
+std::string request::getHost(void)
+{
+	return (this->_host);
 }
 
 const std::map<std::string, std::string> &request::getHeader() const
@@ -48,9 +91,14 @@ const std::map<std::string, std::string> &request::getHeader() const
 	return (this->_header);
 }
 
-std::string request::getBody()
+std::string request::getBody(void)
 {
 	return (this->_body);
+}
+
+int request::getRet(void)
+{
+	return (this->_ret);
 }
 
 void request::parsePathAndVersion(std::string line)
@@ -59,7 +107,7 @@ void request::parsePathAndVersion(std::string line)
 
 	i = line.find_first_of(' ');
 	_path = line.substr(0, i);
-	_version = trim(line.substr(i + 1, line.size() - i - 2));
+	_version = trim2(line.substr(i + 1, line.size() - i - 2));
 	checkVersion();
 }
 
@@ -72,8 +120,7 @@ void request::firstLineParsing(std::string request_buffer)
 	if (i == std::string::npos)
 	{
 		std::cerr << RED << "no newline found!!" << std::endl;
-		_ret = -1;
-		request_clear();
+		_ret = STATUS_BAD_REQUEST;
 		return;
 	}
 	line = request_buffer.substr(0, i);
@@ -81,13 +128,12 @@ void request::firstLineParsing(std::string request_buffer)
 	if (i == std::string::npos)
 	{
 		std::cerr << RED << "no space found!!" << std::endl;
-		_ret = -1;
-		request_clear();
+		_ret = STATUS_BAD_REQUEST;
 		return;
 	}
-	_method = trim(line.substr(0, i));
+	_method = trim2(line.substr(0, i));
 	checkMethod();
-	line = trim(line.substr(i, line.size()));
+	line = trim2(line.substr(i, line.size()));
 	parsePathAndVersion(line);
 }
 
@@ -119,18 +165,17 @@ size_t request::headerParsing(std::string request_buffer)
 	header_length = request_buffer.find("\r\n\r\n");
 	if (header_length == std::string::npos)
 	{
-		_ret = -1;
+		_ret = STATUS_BAD_REQUEST;
 		std::cerr << RED << "no header is found!!" << std::endl;
-		request_clear();
 		return -1;
 	}
 	i = request_buffer.find_first_of('\n') + 1;
-	while (_ret != -1 && (line = getNextLine(request_buffer, &i)) != "" && i < header_length)
+	while (_ret != STATUS_BAD_REQUEST && (line = getNextLine(request_buffer, &i)) != "" && i < header_length)
 	{
 		key = line.substr(0, line.find_first_of(':'));
 		value = line.substr(line.find_first_of(':') + 1, line.size() - (line.find_first_of(':') + 1) - 1);
-		key = trim(key);
-		value = trim(value);
+		key = trim2(key);
+		value = trim2(value);
 		this->_header[key] = value;
 	}
 	checkPort();
@@ -140,12 +185,17 @@ size_t request::headerParsing(std::string request_buffer)
 void request::parseRequest(std::string request_buffer)
 {
 	size_t i;
-	if (_ret != -1)
+	if (_ret < STATUS_BAD_REQUEST)
 		firstLineParsing(request_buffer);
-	if (_ret != -1)
+	if (_ret < STATUS_BAD_REQUEST)
 		i = headerParsing(request_buffer);
-	if (_ret != -1)
-		this->_body = trim(request_buffer.substr(i, request_buffer.size() - i));
+	if (_ret < STATUS_BAD_REQUEST){
+		this->_body = trim2(request_buffer.substr(i, request_buffer.size() - i));
+		Config::configuration_struct server = selectServer();
+		checkBody(server);
+		if (_ret < STATUS_BAD_REQUEST)
+			std::cout<<YELLOW<< "location = "<<selectLocation(server).location<<RESET<<std::endl;
+	}
 }
 
 std::ostream &operator<<(std::ostream &os, request &req)
@@ -155,6 +205,7 @@ std::ostream &operator<<(std::ostream &os, request &req)
 	os << "Method : [" << req.getMethod() << "]" << std::endl;
 	os << "path : [" << req.getPath() << "]" << std::endl;
 	os << "port : [" << req.getPort() << "]" << std::endl;
+	os << "host : [" << req.getHost() << "]" << std::endl;
 	os << "version : [" << req.getVersion() << "]" << std::endl;
 	for (it = req.getHeader().begin(); it != req.getHeader().end(); it++)
 		os << "[" << it->first << "] : [" << it->second << "]" << std::endl;
@@ -166,8 +217,7 @@ void request::checkMethod()
 {
 	if (_method.compare("GET") != 0 && _method.compare("POST") != 0 && _method.compare("DELETE") != 0)
 	{
-		_ret = -1;
-		request_clear();
+		_ret = STATUS_NOT_ALLOWED;
 		std::cerr << RED << "unknown method !!" << std::endl;
 	}
 	return;
@@ -180,19 +230,13 @@ void request::checkPort()
 
 	i = this->_header["Host"].find_first_of(':');
 	if (i == std::string::npos)
-		this->_port = 80;
+		this->_port = "80";
 	else
 	{
-		tmp = _header["Host"].substr(i + 1, _header["Host"].size() - i);
-		if (tmp.size() > 0 && ft_atoi(tmp.c_str()) >= 0 && ft_isalpha(tmp.c_str()) != 1)
-			_port = ft_atoi(tmp.c_str());
-		else
-		{
-			_ret = -1;
-			request_clear();
-			std::cerr << RED << "unknown port !" << std::endl;
-			return;
-		}
+		_host = _header["Host"].substr(0, i);
+		_port = _header["Host"].substr(i + 1, _header["Host"].size() - i);
+//		if (tmp.size() > 0 && ft_atoi(tmp.c_str()) >= 0 && ft_isalpha(tmp.c_str()) != 1)    si on le veut comme int le port
+//			_port = ft_atoi(tmp.c_str());
 	}
 }
 
@@ -205,8 +249,7 @@ void request::checkVersion()
 	str = _version.substr(0, i);
 	if (str.compare("HTTP") != 0)
 	{
-		_ret = -1;
-		request_clear();
+		_ret = STATUS_BAD_REQUEST;
 		std::cerr << RED << "this is not a HTTP version" << std::endl;
 		return;
 	}
@@ -214,9 +257,65 @@ void request::checkVersion()
 	_version = str;
 	if (str.compare("1.1") != 0)
 	{
-		_ret = -1;
-		request_clear();
+		_ret = STATUS_BAD_REQUEST;
 		std::cerr << RED << "wrong HTTP version" << std::endl;
 		return;
 	}
 }
+
+void request::displayAllLocations(void){
+	for (Config::configuration_type it = this->_config.configuration.begin(); it != this->_config.configuration.end(); it++) {
+			std::cout<<it->server_name<<std::endl;
+		for(Config::location_type it_locations = it->locations.begin(); it_locations != it->locations.end(); it_locations++){
+			std::cout<<it_locations->location<<std::endl;
+		}
+	}
+
+}
+
+Config::configuration_struct &request::selectServer(){
+	Config::configuration_type it;
+	Config::configuration_type default_server = this->_config.configuration.end();
+	std::cout << "THIS: "<<this->_host << ":" << this->_port << std::endl;
+	for (it = this->_config.configuration.begin(); it != this->_config.configuration.end(); it++) {
+		if (it->port.compare(this->_port) == 0)
+		{
+			if (default_server == this->_config.configuration.end())
+			{
+				default_server = it;
+			}
+			if (it->server_name.compare(this->_host) == 0)
+			{
+				return (*it);
+			}
+		}
+		std::cout << it->host << ":" << it->port << std::endl;	
+	}
+	return (*default_server);
+}
+
+Config::location_struct &request::selectLocation(Config::configuration_struct &server){
+	Config::location_type it_location;
+	Config::location_type ret;
+	bool  				firstTime = true;
+
+	for(it_location = server.locations.begin(); it_location != server.locations.end(); it_location++){
+		if (this->_path.find(it_location->location) == 0 && (firstTime || it_location->location.size() > ret->location.size())){
+			ret = it_location;			
+			firstTime = false;
+		}
+	}
+	return (*ret);
+}
+
+void  request::checkBody(Config::configuration_struct &server){
+	if (_body.size() > (size_t)server.client_max_body_size){
+		_ret = STATUS_REQUEST_ENTITY_TOO_LARGE;
+		std::cerr << RED << "body too large !!" << std::endl;
+		return;
+	}
+
+}
+
+
+

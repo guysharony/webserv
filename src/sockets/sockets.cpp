@@ -39,11 +39,11 @@ int		Sockets::listen(void) {
 	int rc = poll(this->sockets_poll.fds.data(), this->sockets_poll.nfds, 3 * 60 * 1000);
 
 	if (rc < 0) {
-		Message::error("poll() failed.");
+		std::cout << "poll() failed with error code: " << rc << std::endl;
 	}
 
 	if (rc == 0) {
-		Message::error("poll() timed out.");
+		std::cout << "poll() timed out." << std::endl;
 	}
 
 	return rc;
@@ -90,10 +90,10 @@ void		Sockets::_initializeSocket(socketsListenerType::iterator socket_iterator) 
 		return;
 	}
 
-	if (ioctl(socketfd, FIONBIO, (char *)&enable) < 0)
+	if (fcntl(socketfd, F_SETFL, O_NONBLOCK) < 0)
 	{
 		close(socketfd);
-		Message::error("ioctl() failed.");
+		Message::error("fnctl() failed.");
 		return;
 	}
 

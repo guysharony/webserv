@@ -43,6 +43,25 @@ int			Webserv::load(std::string const filename)
 	return 0;
 }
 
+Client *Webserv::updateClient(Client const &client_id)
+{
+	Webserv::clients_container::iterator it = this->_clients.begin();
+	Webserv::clients_container::iterator ite = this->_clients.end();
+	while (it != ite)
+	{
+		if (*it == client_id)
+		{
+			std::cout << "Client already exists" << std::endl;
+			return (&(*it));
+		}
+		++it;
+	}
+	std::cout << "Adding Client" << std::endl;
+	this->_clients.push_back(client_id);
+	it = this->_clients.end() - 1;
+	return (&(*it));
+}
+
 bool		Webserv::run(void) {
 	int	rc;
 	int	len;
@@ -62,7 +81,6 @@ bool		Webserv::run(void) {
 			break; // Perhaps we need to shutdown/send messages to active clients first
 		std::cout<< YELLOW << "waiting for a connection..."<< RESET<<std::endl;
 		if (this->_sockets.listen() <= 0) {
-			this->_run = false;
 			continue ; // Allow server to continue after a failure or timeout in poll
 		}
 
@@ -88,12 +106,20 @@ bool		Webserv::run(void) {
 				if (rc < 0)
 					break;
 
+				Client client_id(this->current_iterator->fd);
+				client_id.print();
+				Client *client;
+				client = this->updateClient(client_id);
+
 				std::cout <<RESET<< "=== [" << this->current_iterator->fd << "] ===" << std::endl;
-				//std::cout << buffer << std::endl;
+				print_buffer(buffer, 1000, GREEN);
 				//parsing the request
-				request req;
+				request req(this->_config);
 				req.parseRequest(buffer);
+        
 				std::cout<< GREEN <<req<<std::endl;
+
+				client->addRequest(req);
 				if (rc == 0) {
 					close(this->current_iterator->fd);
 					this->current_iterator->fd = -1;
