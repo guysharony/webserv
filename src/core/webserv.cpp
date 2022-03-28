@@ -75,6 +75,10 @@ bool		Webserv::run(void) {
 	close_connection = false;
 	compress_array = false;
 
+	CGI new_cgi;
+	int pipefd = new_cgi.launch_cgi("www/php/index.php");
+	this->_sockets.sockets_poll.append_pipe(pipefd, POLLIN);
+
 	signal(SIGINT, &signalHandler);
 	while (this->_run) {
 		if (g_sigint == 1)
