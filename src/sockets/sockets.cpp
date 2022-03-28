@@ -88,10 +88,10 @@ void		Sockets::_initializeSocket(socketsListenerType::iterator socket_iterator) 
 		return;
 	}
 
-	if (ioctl(socketfd, FIONBIO, (char *)&enable) < 0)
+	if (fcntl(socketfd, F_SETFL, O_NONBLOCK) < 0)
 	{
 		close(socketfd);
-		Message::error("ioctl() failed.");
+		Message::error("fnctl() failed.");
 		return;
 	}
 
