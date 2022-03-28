@@ -4,7 +4,7 @@
 # define SERVER_NAME					"webserv/1.0"
 # define DEFAULT_INDEX 					"index.html"
 
-# define BUFFER_SIZE 					1024
+# define BUFFER_SIZE 					2048
 
 # define CRLF 							"\r\n"
 # define D_CRLF						"\r\n\r\n"
