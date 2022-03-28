@@ -96,6 +96,7 @@ bool		Webserv::run(void) {
 
 			if (is_server && (this->current_iterator->revents & POLLIN)) {
 				this->_sockets.accept(this->current_iterator->fd);
+				break ;
 			} else if (!is_server && (this->current_iterator->revents & POLLIN)) {
 				close_connection = false;
 
