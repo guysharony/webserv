@@ -116,7 +116,14 @@ bool		Webserv::run(void) {
 				//parsing the request
 				request req(this->_config);
 				req.parseRequest(buffer);
-				std::cout<< RED <<req<<RESET<<std::endl;
+				//std::cout<< RED <<req<<RESET<<std::endl;
+				//response
+				if(req.selectServer() != _config.configuration.end()){
+					response res(req);
+					res.createResponse();
+					std::cout<<YELLOW<<res.getResponse()<<RESET<<std::endl;
+				}
+
 
 				client->addRequest(req);
 				if (rc == 0) {

@@ -70,7 +70,7 @@ void print_buffer(std::string buffer, size_t max_size, std::string color){
 	
 }
 
-int		isFile(const std::string& path)
+int		isFiley(std::string path)
 {
 	struct stat status;
 	if (stat(path.c_str(), &status) == 0 )
@@ -84,4 +84,29 @@ int		isFile(const std::string& path)
 	}
 	else
 		return 0;
+}
+
+std::string		readHtmlFile(std::string path)
+{
+	std::ofstream		file;
+	std::stringstream	buffer;
+
+	if (isFiley(path))
+	{
+		file.open(path.c_str(), std::ifstream::in);
+		if (file.is_open() == false)
+			return ("<html>\n<html><title>40404</title><body>error : error page not found</body></html>\n");
+		buffer << file.rdbuf();
+		file.close();
+		return (buffer.str());
+	}
+	else
+		return ("<html>\n<html><title>40404</title><body>error : error page not found</body></html>\n");
+}
+
+std::string	intToStr(int a){
+	std::stringstream ss;
+    ss << a;
+    std::string str = ss.str();
+	return (str);
 }
