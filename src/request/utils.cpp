@@ -1,6 +1,6 @@
 #include "request.hpp"
 
-std::string trim(const std::string& str)
+std::string trim2(const std::string& str)
 {
     const char* t = " \t\n\r\f\v";
     size_t first = str.find_first_not_of(t);
@@ -57,4 +57,15 @@ int	ft_isalpha(const char * str)
 			str++;
 	}
 	return 0;
+}
+
+void print_buffer(std::string buffer, size_t max_size, std::string color){
+	if (buffer.size() > max_size + 50){
+		std::cout<<color<<buffer.substr(0, max_size)<< "..."<<std::endl;
+		std::cout<<color<<buffer.substr(buffer.size() - 50, buffer.size())<<RESET<<std::endl;
+	}
+	else{
+		std::cout<<color<<buffer<<RESET<<std::endl;
+	}
+	
 }

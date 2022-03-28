@@ -112,10 +112,11 @@ bool		Webserv::run(void) {
 				client = this->updateClient(client_id);
 
 				std::cout <<RESET<< "=== [" << this->current_iterator->fd << "] ===" << std::endl;
-				//std::cout << buffer << std::endl;
+				print_buffer(buffer, 1000, GREEN);
 				//parsing the request
-				request req;
+				request req(this->_config);
 				req.parseRequest(buffer);
+        
 				std::cout<< GREEN <<req<<std::endl;
 
 				client->addRequest(req);
