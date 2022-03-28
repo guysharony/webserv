@@ -275,11 +275,23 @@ void request::displayAllLocations(void){
 
 Config::configuration_struct &request::selectServer(){
 	Config::configuration_type it;
+	Config::configuration_type default_server = this->_config.configuration.end();
+	std::cout << "THIS: "<<this->_host << ":" << this->_port << std::endl;
 	for (it = this->_config.configuration.begin(); it != this->_config.configuration.end(); it++) {
-			if (it->host.compare(this->_host) == 0 && it->port.compare(this->_port) == 0)
-				break;
+		if (it->port.compare(this->_port) == 0)
+		{
+			if (default_server == this->_config.configuration.end())
+			{
+				default_server = it;
 			}
-	return (*it);
+			if (it->server_name.compare(this->_host) == 0)
+			{
+				return (*it);
+			}
+		}
+		std::cout << it->host << ":" << it->port << std::endl;	
+	}
+	return (*default_server);
 }
 
 Config::location_struct &request::selectLocation(Config::configuration_struct &server){
