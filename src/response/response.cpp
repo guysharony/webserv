@@ -30,7 +30,7 @@ response::response(request & request){
     this->_response = "";
     this->_server = request.selectServer();
     this->_path = request.getPath();
-    this->_autoIndex = request.selectLocation(_server->locations)->auto_index;
+    this->_autoIndex = request.selectLocation(_server)->auto_index;
 
 }
 
@@ -46,7 +46,7 @@ std::string			response::findDate()
 
 void    response::create_headers(int body_length){
    
-    _headers["server_name"] = _server->server_name;
+    _headers["server_name"] = _server.server_name;
     _headers["date"] = findDate();
     _headers["content-length"] = intToStr(body_length);
     _headers["content-location"] = _path;
@@ -77,7 +77,7 @@ std::string			response::findContentType()
 
 std::string   response::createBody(){
     if (_codeDeRetour == STATUS_NOT_FOUND){
-        return (readHtmlFile(_server->error_page[404]));
+        return (readHtmlFile(_server.error_page[404]));
     }
     return "hello there !!";
 }

@@ -3,6 +3,7 @@
 # include <iostream>
 # include <map>
 # include <algorithm>
+# include <sstream>
 # include <string>
 # include <stddef.h>
 # include <sys/types.h>
@@ -64,5 +65,7 @@ std::string trim2(const std::string& str);
 int	ft_atoi(const char *nptr);
 int	ft_isalpha(const char * str);
 void print_buffer(std::string buffer, size_t max_size, std::string color);
+std::string	intToStr(int a);
+std::string		readHtmlFile(std::string path);
 
 #endif

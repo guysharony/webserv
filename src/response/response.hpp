@@ -27,7 +27,7 @@ public:
 
 
 private:
-	Config::configuration_type    _server;
+	Config::configuration_struct    _server;
 	std::string					_response;
 	std::string					_path;
 	int							_codeDeRetour;

@@ -118,11 +118,11 @@ bool		Webserv::run(void) {
 				req.parseRequest(buffer);
 				//std::cout<< RED <<req<<RESET<<std::endl;
 				//response
-				if(req.selectServer() != _config.configuration.end()){
+	//			if(req.selectServer() != _config.configuration.end()){  // how can i check this please 
 					response res(req);
 					res.createResponse();
 					std::cout<<YELLOW<<res.getResponse()<<RESET<<std::endl;
-				}
+	//			}
 
 
 				client->addRequest(req);
