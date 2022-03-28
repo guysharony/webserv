@@ -100,7 +100,7 @@ bool		Webserv::run(void) {
 			} else if (this->_sockets.sockets_poll.pipe_fds.count(this->current_iterator->fd)) {
 				Message::debug("Reading from CGI pipe\n");
 				memset(buffer, 0, BUFFER_SIZE);
-				rc = read(pipefd, buffer, BUFFER_SIZE);
+				rc = read(this->current_iterator->fd, buffer, BUFFER_SIZE);
 				if(rc < 0)
 					Message::error("read() failed");
 				Message::debug(buffer);
