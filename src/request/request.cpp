@@ -107,7 +107,7 @@ void request::parsePathAndVersion(std::string line)
 
 	i = line.find_first_of(' ');
 	_path = line.substr(0, i);
-	_version = trim2(line.substr(i + 1, line.size() - i - 2));
+	_version = trim2(line.substr(i + 1, line.size() - i - 1));
 	checkVersion();
 }
 
@@ -116,7 +116,7 @@ void request::firstLineParsing(std::string request_buffer)
 	std::string line;
 	size_t i;
 
-	i = request_buffer.find_first_of('\n');
+	i = request_buffer.find(CRLF);
 	if (i == std::string::npos)
 	{
 		std::cerr << RED << "no newline found!!" << std::endl;
@@ -144,7 +144,7 @@ std::string request::getNextLine(std::string str, size_t *i)
 
 	if (*i == std::string::npos)
 		return "";
-	j = str.find_first_of('\n', *i);
+	j = str.find(CRLF, *i);
 	ret = str.substr(*i, j - *i);
 	if (j == std::string::npos)
 		*i = j;
@@ -162,18 +162,18 @@ size_t request::headerParsing(std::string request_buffer)
 	std::string value;
 	size_t header_length;
 
-	header_length = request_buffer.find("\r\n\r\n");
+	header_length = request_buffer.find(D_CRLF);
 	if (header_length == std::string::npos)
 	{
 		_ret = STATUS_BAD_REQUEST;
 		std::cerr << RED << "no header is found!!" << std::endl;
 		return -1;
 	}
-	i = request_buffer.find_first_of('\n') + 1;
+	i = request_buffer.find(CRLF) + 1;
 	while (_ret != STATUS_BAD_REQUEST && (line = getNextLine(request_buffer, &i)) != "" && i < header_length)
 	{
 		key = line.substr(0, line.find_first_of(':'));
-		value = line.substr(line.find_first_of(':') + 1, line.size() - (line.find_first_of(':') + 1) - 1);
+		value = line.substr(line.find_first_of(':') + 1, line.size() - (line.find_first_of(':') + 1));
 		key = trim2(key);
 		value = trim2(value);
 		this->_header[key] = value;
@@ -253,7 +253,7 @@ void request::checkVersion()
 		std::cerr << RED << "this is not a HTTP version" << std::endl;
 		return;
 	}
-	str = _version.substr(i + 1, _version.size() - i - 1);
+	str = _version.substr(i + 1, _version.size() - i);
 	_version = str;
 	if (str.compare("1.1") != 0)
 	{
@@ -276,7 +276,6 @@ void request::displayAllLocations(void){
 Config::configuration_struct &request::selectServer(){
 	Config::configuration_type it;
 	Config::configuration_type default_server = this->_config.configuration.end();
-	std::cout << "THIS: "<<this->_host << ":" << this->_port << std::endl;
 	for (it = this->_config.configuration.begin(); it != this->_config.configuration.end(); it++) {
 		if (it->port.compare(this->_port) == 0)
 		{
@@ -289,7 +288,6 @@ Config::configuration_struct &request::selectServer(){
 				return (*it);
 			}
 		}
-		std::cout << it->host << ":" << it->port << std::endl;	
 	}
 	return (*default_server);
 }
