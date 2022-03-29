@@ -191,7 +191,19 @@ void request::parseRequest(std::string request_buffer)
 		i = headerParsing(request_buffer);
 	if (_ret < STATUS_BAD_REQUEST){
 		this->_body = trim2(request_buffer.substr(i, request_buffer.size() - i));
-		Config::configuration_struct server = selectServer();
+		
+		Config::configuration_struct server;
+		try
+		{
+			server = selectServer();
+		}
+		catch(const Config::ServerNotFoundException & e)
+		{
+			Message::debug("Server wasn't found: handling error\n");
+			// Handle error here
+			throw e; // delete this once error is handled properly
+		}
+
 		checkBody(server);
 		if (_ret < STATUS_BAD_REQUEST){
 			Config::location_type loc = selectLocation(server);
@@ -299,6 +311,8 @@ Config::configuration_struct &request::selectServer(){
 			}
 		}
 	}
+	if (default_server == this->_config.configuration.end())
+		throw Config::ServerNotFoundException();
 	return (*default_server);
 }
 
