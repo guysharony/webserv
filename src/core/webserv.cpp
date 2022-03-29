@@ -123,9 +123,12 @@ bool		Webserv::run(void) {
 					req.selectServer();
 					response res(req);
 					res.createResponse();
+					char buffer[4000]={0};
+				//	std::cout<<YELLOW<<res.getResponse()<<RESET<<std::endl;
 					send(this->current_iterator->fd, res.getResponse().c_str(), res.getResponse().size(), 0);
-					std::cout<<YELLOW<< "Response :"<<std::endl<<res.getResponse()<<RESET<<std::endl;
-
+					read(this->current_iterator->fd, buffer, 4095);
+					std::cout <<RED<< "Response :" <<RESET<< std::endl;
+					std::cout << "[" << GREEN << std::string(buffer) << RESET << "]" << std::endl << std::endl;
 				}
 				catch(const Config::ServerNotFoundException& e){
 					Message::debug("Server wasn't found: handling error\n");
