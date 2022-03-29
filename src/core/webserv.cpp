@@ -112,6 +112,7 @@ bool		Webserv::run(void) {
 
 				if (rc == 0) {
 					close(this->current_iterator->fd);
+					this->_sockets.sockets_poll.pipe_fds.erase(this->current_iterator->fd);
 					this->current_iterator->fd = -1;
 					close_connection = true;
 					break;
