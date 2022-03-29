@@ -118,11 +118,22 @@ bool		Webserv::run(void) {
 				req.parseRequest(buffer);
 				//std::cout<< RED <<req<<RESET<<std::endl;
 				//response
-	//			if(req.selectServer() != _config.configuration.end()){  // how can i check this please 
+				try
+				{
+					req.selectServer();
 					response res(req);
 					res.createResponse();
 					std::cout<<YELLOW<<res.getResponse()<<RESET<<std::endl;
-	//			}
+				}
+				catch(const Config::ServerNotFoundException& e)
+				{
+					Message::debug("Server wasn't found: handling error\n");
+					// Handle error here
+
+					throw e; // delete this once error is handled properly
+				}
+				
+				
 
 
 				client->addRequest(req);
