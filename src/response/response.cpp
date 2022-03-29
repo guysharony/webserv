@@ -28,15 +28,11 @@ response::~response(void){}
 response::response(request & request){
     this->_codeDeRetour = request.getRet();
     this->_response = "";
-	try
-	{
+	try{
 		this->_server = request.selectServer();
 	}
-	catch(const Config::ServerNotFoundException & e)
-	{
+	catch(const Config::ServerNotFoundException & e){
 		Message::debug("Server wasn't found: handling error\n");
-		// Handle error here
-		throw e; // delete this once error is handled properly
 	}
     this->_path = request.getPath();
     this->_autoIndex = request.selectLocation(_server)->auto_index;

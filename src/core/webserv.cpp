@@ -125,12 +125,8 @@ bool		Webserv::run(void) {
 					res.createResponse();
 					std::cout<<YELLOW<<res.getResponse()<<RESET<<std::endl;
 				}
-				catch(const Config::ServerNotFoundException& e)
-				{
+				catch(const Config::ServerNotFoundException& e){
 					Message::debug("Server wasn't found: handling error\n");
-					// Handle error here
-
-					throw e; // delete this once error is handled properly
 				}
 				
 				
