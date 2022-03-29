@@ -123,15 +123,14 @@ bool		Webserv::run(void) {
 					req.selectServer();
 					response res(req);
 					res.createResponse();
-					std::cout<<YELLOW<<res.getResponse()<<RESET<<std::endl;
+					send(this->current_iterator->fd, res.getResponse().c_str(), res.getResponse().size(), 0);
+					std::cout<<YELLOW<< "Response :"<<std::endl<<res.getResponse()<<RESET<<std::endl;
+
 				}
 				catch(const Config::ServerNotFoundException& e){
 					Message::debug("Server wasn't found: handling error\n");
 				}
 				
-				
-
-
 				client->addRequest(req);
 				if (rc == 0) {
 					close(this->current_iterator->fd);

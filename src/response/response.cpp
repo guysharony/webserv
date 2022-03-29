@@ -127,6 +127,8 @@ void response::createResponse(){
     }
     _response.append(D_CRLF);
     _response.append(body);
+    _response.append(CRLF);
+
 }
 
 
