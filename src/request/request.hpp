@@ -56,6 +56,7 @@ class request{
         void displayAllLocations(void);
         Config::configuration_struct        &selectServer();
         Config::location_type             selectLocation(Config::configuration_struct &server);
+        void                        setRet(int code);
         
 
 

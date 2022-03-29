@@ -7,6 +7,7 @@ std::string		response::getResponse(void){
 
 response & response::operator=(const response & src)
 {
+    _req = src._req;
 	_response = src._response;
 	_path = src._path;
 	_codeDeRetour = src._codeDeRetour;
@@ -26,6 +27,7 @@ response::response(const response & src)
 response::~response(void){}
 
 response::response(request & request){
+    this->_req = request;
     this->_codeDeRetour = request.getRet();
     this->_response = "";
 	try{
@@ -33,6 +35,7 @@ response::response(request & request){
 	}
 	catch(const Config::ServerNotFoundException & e){
 		Message::debug("Server wasn't found: handling error\n");
+        this->_codeDeRetour = STATUS_INTERNAL_SERVER_ERROR;
 	}
     this->_path = request.getPath();
     this->_autoIndex = request.selectLocation(_server)->auto_index;
@@ -50,10 +53,10 @@ std::string			response::findDate()
 }
 
 void    response::create_headers(int body_length){
-   
-    _headers["server_name"] = _server.server_name;
+   if (this->_codeDeRetour < STATUS_INTERNAL_SERVER_ERROR)
+        _headers["server_name"] = _server.server_name;
     _headers["date"] = findDate();
-    _headers["content-length"] = intToStr(body_length);
+    _headers["content-length"] = intToStr(body_length + 2);
     _headers["content-location"] = _path;
     _headers["content-type"] = findContentType();
 
@@ -77,14 +80,30 @@ std::string			response::findContentType()
 	else if (type == "bmp")
 		return("image/bmp");
 	else
-		return("text/plain");
+		return("text/html"); //normalment text/plain mais je veux tester la page d'erreur 404 --> to check
 }
 
 std::string   response::createBody(){
+    Config::location_type loc = _req.selectLocation(_server);
     if (_codeDeRetour == STATUS_NOT_FOUND){
-        return (readHtmlFile(_server.error_page[404]));
+        return (readHtmlFile("www/errors/404.html"));// normalement c _server.error_page[404] mais error_page c toujours vide
     }
-    return "hello there !!";
+    if (_codeDeRetour == STATUS_OK){
+        if (_server.root.size() > 0){
+            if (_req.getPath().compare(loc->location) == 0){
+                if (this->_autoIndex == 1){
+                    std::string path = loc->root.append((*(loc->index.begin()))); // root is not complete it returns only www/ without static
+                    return(readHtmlFile(path));
+                }
+                else{
+                    return("all files..");
+                }
+            }
+            
+        }
+    }
+    return "this response is not handled yet!!";
+    
 }
 
 std::string response::getStat(){
@@ -128,7 +147,6 @@ void response::createResponse(){
     _response.append(D_CRLF);
     _response.append(body);
     _response.append(CRLF);
-
 }
 
 

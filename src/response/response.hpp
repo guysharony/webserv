@@ -27,6 +27,7 @@ public:
 
 
 private:
+	request						_req;
 	Config::configuration_struct    _server;
 	std::string					_response;
 	std::string					_path;

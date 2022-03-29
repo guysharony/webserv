@@ -196,15 +196,16 @@ void request::parseRequest(std::string request_buffer)
 		try
 		{
 			server = selectServer();
+			checkBody(server);
+
 		}
 		catch(const Config::ServerNotFoundException & e)
 		{
 			Message::debug("Server wasn't found: handling error\n");
 			// Handle error here
-			throw e; // delete this once error is handled properly
+			//throw e; // delete this once error is handled properly
 		}
 
-		checkBody(server);
 		if (_ret < STATUS_BAD_REQUEST){
 			Config::location_type loc = selectLocation(server);
 			if (loc != server.locations.end()){
@@ -361,4 +362,6 @@ int 	request::convertMethodToValue(std::string method){
 }
 
 
-
+void    request::setRet(int code){
+		this->_ret = code;
+}
