@@ -59,10 +59,6 @@ void		Sockets::accept(int fd) {
 
 	std::cout <<"New incoming connection " << new_client << std::endl;
 
-	struct pollfd	client;
-	client.fd = new_client;
-	client.events = POLLIN;
-
 	this->sockets_poll.append(new_client, POLLIN);
 }
 

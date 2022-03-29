@@ -116,7 +116,7 @@ bool		Webserv::run(void) {
 				//parsing the request
 				request req(this->_config);
 				req.parseRequest(buffer);
-        
+
 				std::cout<< GREEN <<req<<std::endl;
 
 				client->addRequest(req);
