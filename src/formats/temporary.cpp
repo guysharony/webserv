@@ -24,6 +24,11 @@ Temporary::~Temporary()
 	this->_files.clear();
 }
 
+/**
+ * @brief Defining client socket (fle descriptor) of current class.
+ * 
+ * @param socket client socket
+ */
 void	Temporary::socket(size_t socket)
 {
 	if (this->_sock_id >= 0) {
@@ -34,7 +39,12 @@ void	Temporary::socket(size_t socket)
 	this->_sock_id = static_cast<ssize_t>(socket);
 }
 
-
+/**
+ * @brief Get the size of a temporary file ID.
+ * 
+ * @param id The id of temporary file.
+ * @return size_t Size of temporary file.
+ */
 size_t	Temporary::size(int id)
 {
 	if (id < 0)
@@ -83,6 +93,12 @@ int			Temporary::_filename(std::string & filename)
 	return (1);
 }
 
+/**
+ * @brief Check if a temporary file with a specific id is open.
+ * 
+ * @param id ID of temporary file.
+ * @return int 1 if file if open, 0 otherwise.
+ */
 int		Temporary::isOpen(int id)
 {
 	for (std::vector<int>::iterator it = this->_opened.begin(); it != this->_opened.end(); it++)
@@ -94,6 +110,13 @@ int		Temporary::isOpen(int id)
 	return (0);
 }
 
+/**
+ * @brief Creating a temporary file with a specific ID.
+ * 
+ * @param id The id of the temporary file.
+ * @param data Result of created file.
+ * @return int 1 if temporary file was created successfully, 0 otherwise.
+ */
 int		Temporary::create(int id, TmpFile & data)
 {
 	if (!this->isOpen(id)) {
@@ -111,6 +134,12 @@ int		Temporary::create(int id, TmpFile & data)
 	return (1);
 }
 
+/**
+ * @brief Creating a temporary file with a specific ID.
+ * 
+ * @param id The id of the temporary file.
+ * @return int 1 if temporary file was created successfully, 0 otherwise.
+ */
 int		Temporary::create(int id)
 {
 	if (!this->isOpen(id)) {
@@ -129,6 +158,12 @@ int		Temporary::create(int id)
 	return (1);
 }
 
+/**
+ * @brief Clear the content of temporary file without closing it.
+ * 
+ * @param id The ID of the temporary file to clear.
+ * @return int 1 if temporary file was cleared successfully, 0 otherwise.
+ */
 int			Temporary::clear(int id)
 {
 	if (this->isOpen(id)) {
@@ -139,11 +174,16 @@ int			Temporary::clear(int id)
 	return (0);
 }
 
+/**
+ * @brief Close and delete a specific temporary file. (note: All temporary files are automatically deleted are deconstructor)
+ * 
+ * @param id ID of temporary file to delete.
+ * @return int 1 if temporary file was closed successfully, 0 otherwise.
+ */
 int			Temporary::close(int id)
 {
-	std::vector<int>::iterator file;
-	if (this->getData(id, file)) {
-		this->_opened.erase(file);
+	if (this->isOpen(id)) {
+		this->_files[id].clear();
 		this->_files[id].close();
 		return (1);
 	}
@@ -151,19 +191,13 @@ int			Temporary::close(int id)
 	return (0);
 }
 
-int			Temporary::getData(int id, std::vector<int>::iterator & data)
-{
-	for (std::vector<int>::iterator it = this->_opened.begin(); it != this->_opened.end(); it++)
-	{
-		if (*it == id) {
-			data = it;
-			return (1);
-		}
-	}
-
-	return (1);
-}
-
+/**
+ * @brief Change the cursor position (working only for reading file).
+ * 
+ * @param id ID of temporary file.
+ * @param pos New cursor position.
+ * @return int 1 if success, 0 otherwise.
+ */
 int			Temporary::cursor(int id, size_t pos)
 {
 	if (this->isOpen(id)) {
@@ -174,6 +208,13 @@ int			Temporary::cursor(int id, size_t pos)
 	return (0);
 }
 
+/**
+ * @brief Append string to temporary file.
+ * 
+ * @param id ID of temporary file.
+ * @param value String to append.
+ * @return int 1 if success, 0 otherwise.
+ */
 int			Temporary::append(int id, std::string value)
 {
 	if (this->isOpen(id)) {
@@ -184,10 +225,17 @@ int			Temporary::append(int id, std::string value)
 	return (0);
 }
 
-int			Temporary::read(int fd, std::string & packet)
+/**
+ * @brief Read content of temporary file (max 1000 characters so use it with a while()).
+ * 
+ * @param id ID of temporary file.
+ * @param packet Result of read.
+ * @return int 0 of the end of file wa reached, 1 otherwise.
+ */
+int			Temporary::read(int id, std::string & packet)
 {
-	if (this->isOpen(fd)) {
-		this->_files[fd].read(packet);
+	if (this->isOpen(id)) {
+		this->_files[id].read(packet);
 
 		return (packet.length() > 0);
 	}
@@ -195,12 +243,20 @@ int			Temporary::read(int fd, std::string & packet)
 	return (0);
 }
 
+/**
+ * @brief Copy content of temporary file into another file.
+ * 
+ * @param dest Path of destination file.
+ * @param id ID of temporary file to copy.
+ * @param recreate true to remove the content of destination file before copying, false otherwise.
+ * @return int -1 if ID doesn't exist, 0 on error and 1 on success.
+ */
 int			Temporary::copy(std::string dest, int id, bool recreate)
 {
 	if (!this->isOpen(id))
 		return (-1);
 
-	std::string line;
+	std::string	line;
 	int			fd_dest;
 
 	if ((fd_dest = open(dest.c_str(), O_WRONLY | O_CREAT | ((recreate) ? O_TRUNC : O_APPEND), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) < 1)
@@ -218,7 +274,14 @@ int			Temporary::copy(std::string dest, int id, bool recreate)
 	return (1);
 }
 
-int			Temporary::copy(int fd, std::string source)
+/**
+ * @brief Copy content of source file into temporary file.
+ * 
+ * @param id ID of temporary file.
+ * @param source Path to source file.
+ * @return int 1 on success, 0 otherwise.
+ */
+int			Temporary::copy(int id, std::string source)
 {
 	int			res;
 	std::string 	line;
@@ -233,14 +296,33 @@ int			Temporary::copy(int fd, std::string source)
 	while ((res = ::read(fd_source, buffer, 2047)) > 0) {
 		buffer[res] = 0;
 
-		this->append(fd, toString(buffer));
+		this->append(id, toString(buffer));
 	}
 
 	::close(fd_source);
 
-	this->cursor(fd, 0);
+	this->cursor(id, 0);
 
 	if (res < 0) return (0);
 
 	return (1);
+}
+
+/**
+ * @brief Display content of temporary file for debugging.
+ * 
+ * @param id ID of temporary file.
+ * @return int 1 on success, 0 otherwise.
+ */
+int			Temporary::display(int id)
+{
+	std::string line;
+
+	if (this->isOpen(id)) {
+		this->_files[id].display();
+
+		return (1);
+	}
+
+	return (0);
 }

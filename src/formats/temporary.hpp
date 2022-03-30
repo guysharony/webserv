@@ -17,23 +17,22 @@ class Temporary
 		typedef std::vector<TmpFile>	files_type;
 		typedef files_type::iterator	file_type;
 
-		size_t				size(int fd = -1);
-		int					create(int fd);
-		int					clear(int fd);
-		int					create(int fd, TmpFile & data);
-		int					getData(int fd, std::vector<int>::iterator & data);
-		int					isFD(int id);
-		int					read(int fd, std::string & packet);
-		int					cursor(int fd, size_t pos);
-		int					append(int fd, std::string value);
+		size_t				size(int id = -1);
+		int					create(int id);
+		int					clear(int id);
+		int					create(int id, TmpFile & data);
+		int					read(int id, std::string & packet);
+		int					cursor(int id, size_t pos);
+		int					append(int id, std::string value);
 
 		int					close(int id);
 		int					isOpen(int id);
 
-		int					copy(std::string dest, int fd, bool recreate = false);
-		int					copy(int fd, std::string dest);
+		int					copy(std::string dest, int id, bool recreate = false);
+		int					copy(int id, std::string dest);
 
 		void					socket(size_t socket);
+		int					display(int id);
 
 	private:
 		int					_createFilename(std::string & filename);

@@ -16,6 +16,27 @@ TmpFile		&TmpFile::operator=(const TmpFile &src)
 	return (*this);
 }
 
+int			TmpFile::display(void)
+{
+	char			letter;
+	std::ifstream 	file(this->_filename.c_str(), std::ifstream::binary);
+
+	if (!file) {
+		std::cout << "Can't open file." << std::endl;
+		return (0);
+	}
+
+	while (!file.eof()) {
+		if (!file.get(letter)) letter = 0;
+
+		std::cout << letter;
+	}
+
+	file.close();
+
+	return (1);
+}
+
 void			TmpFile::position(ssize_t value)
 {
 	this->_position = value < 0 ? this->size() : value;
@@ -47,8 +68,7 @@ size_t		TmpFile::size(void)
 int			TmpFile::read(std::string & value)
 {
 	value.clear();
-
-	char			buffer[1000] = { 0 };
+	char			buffer[1001] = { 0 };
 
 	std::ifstream 	file(this->_filename.c_str(), std::ifstream::binary);
 
@@ -58,7 +78,6 @@ int			TmpFile::read(std::string & value)
 	}
 
 	file.seekg(this->_position);
-
 	file.read(buffer, 999);
 
 	ssize_t pos = file.tellg();
@@ -127,7 +146,6 @@ int			TmpFile::write(std::string value)
 	}
 
 	file.seekp(this->_position);
-
 	file << value;
 
 	this->_position += value.length();

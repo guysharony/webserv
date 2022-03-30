@@ -27,6 +27,7 @@ class TmpFile
 		TmpFile			&operator=(const TmpFile &src);
 
 		int				create(std::string filename);
+		int				display(void);
 		size_t			size(void);
 		int				clear(void);
 		int				close(void);
