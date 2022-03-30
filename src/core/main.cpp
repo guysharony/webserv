@@ -13,9 +13,9 @@ int		main(int argc, char **argv)
 	Webserv		webserv;
 
 	try {
-		webserv.load(argc > 1 ? argv[1] : "./config/webserv.conf");
-
-		webserv.run();
+		if (webserv.load(argc > 1 ? argv[1] : "./config/webserv.conf")) {
+			webserv.run();
+		}
 	} catch (const std::exception& e) {
 		std::cout << e.what() << std::endl;
 	}
