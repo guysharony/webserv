@@ -1,6 +1,7 @@
 #ifndef TEMPORARY_HPP
 # define TEMPORARY_HPP
 
+# include "../core/message.hpp"
 # include "files.hpp"
 # include "tmpfile.hpp"
 
@@ -9,6 +10,7 @@ class Temporary
 {
 	public:
 		Temporary(void);
+		Temporary(ssize_t socket);
 		Temporary(Temporary const & src);
 		~Temporary();
 
@@ -19,7 +21,7 @@ class Temporary
 		int					create(int fd);
 		int					clear(int fd);
 		int					create(int fd, TmpFile & data);
-		int					getData(int fd, std::vector<int>::const_iterator data);
+		int					getData(int fd, std::vector<int>::iterator & data);
 		int					isFD(int id);
 		int					read(int fd, std::string & packet);
 		int					cursor(int fd, size_t pos);
@@ -31,12 +33,13 @@ class Temporary
 		int					copy(std::string dest, int fd, bool recreate = false);
 		int					copy(int fd, std::string dest);
 
-		void					socket(int socket);
+		void					socket(size_t socket);
 
 	private:
-		std::string			_createFilename(void);
+		int					_createFilename(std::string & filename);
+		bool					_isSocketDefined(void);
 		int					_filename(std::string & filename);
-		int					_sock_id;
+		ssize_t				_sock_id;
 		int					_file_id;
 		std::vector<int>		_opened;
 		files_type			_files;

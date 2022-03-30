@@ -2,7 +2,15 @@
 
 
 Temporary::Temporary(void)
-: _sock_id(0), _file_id(0)
+:
+	_sock_id(-1),
+	_file_id(0)
+{ }
+
+Temporary::Temporary(ssize_t socket)
+:
+	_sock_id(socket),
+	_file_id(0)
 { }
 
 Temporary::Temporary(Temporary const & src)
@@ -16,8 +24,15 @@ Temporary::~Temporary()
 	this->_files.clear();
 }
 
-void	Temporary::socket(int socket)
-{ this->_sock_id = static_cast<size_t>(socket); }
+void	Temporary::socket(size_t socket)
+{
+	if (this->_sock_id >= 0) {
+		Message::error("Socket already defined.");
+		return;
+	}
+
+	this->_sock_id = static_cast<ssize_t>(socket);
+}
 
 
 size_t	Temporary::size(int id)
@@ -31,19 +46,36 @@ size_t	Temporary::size(int id)
 	return (this->_files[id].size());
 }
 
-std::string	Temporary::_createFilename(void)
+bool			Temporary::_isSocketDefined(void) {
+	if (this->_sock_id < 0) {
+		Message::error("Socket is not defined.");
+		return false;
+	}
+
+	return true;
+}
+
+int			Temporary::_createFilename(std::string & filename)
 {
-	std::string  filename("/tmp/serv_" + intToHex(this->_sock_id) + "_" + intToHex(this->_file_id));
-	this->_file_id++;
-	return (filename);
+	if (this->_isSocketDefined()) {
+		filename = "/tmp/serv_" + intToHex(this->_sock_id) + "_" + intToHex(this->_file_id);
+		this->_file_id++;
+
+		return 1;
+	}
+
+	return 0;
 }
 
 int			Temporary::_filename(std::string & filename)
 {
-	std::string tmp_name = this->_createFilename();
+	std::string tmp_name;
+
+	if (!this->_createFilename(tmp_name))
+		return 0;
 
 	while (exists(tmp_name)) {
-		tmp_name = this->_createFilename();
+		this->_createFilename(tmp_name);
 	}
 
 	filename = tmp_name;
@@ -119,9 +151,9 @@ int			Temporary::close(int id)
 	return (0);
 }
 
-int			Temporary::getData(int id, std::vector<int>::const_iterator data)
+int			Temporary::getData(int id, std::vector<int>::iterator & data)
 {
-	for (std::vector<int>::const_iterator it = this->_opened.begin(); it != this->_opened.end(); it++)
+	for (std::vector<int>::iterator it = this->_opened.begin(); it != this->_opened.end(); it++)
 	{
 		if (*it == id) {
 			data = it;

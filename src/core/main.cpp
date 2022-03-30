@@ -10,34 +10,6 @@ int		main(int argc, char **argv)
 		return (1);
 	}
 
-	Temporary		temporary;
-
-	temporary.socket(0);
-	if (temporary.create(0) && temporary.create(1)) {
-		temporary.append(0, "This is a file n°0...");
-		temporary.append(1, "This is a file n°1...");
-
-		temporary.cursor(0, 0);
-		temporary.cursor(1, 0);
-
-		std::string line;
-
-		std::cout << "___ file n°0 ___" << std::endl;
-		while (temporary.read(0, line)) {
-			std::cout << "[" << line << "]" << std::endl;
-		}
-
-		std::cout << "___ file n°1 ___" << std::endl;
-		while (temporary.read(1, line)) {
-			std::cout << "[" << line << "]" << std::endl;
-		}
-
-		temporary.close(0);
-		temporary.close(1);
-	}
-
-
-	/*
 	Webserv		webserv;
 
 	try {
@@ -47,7 +19,6 @@ int		main(int argc, char **argv)
 	} catch (const std::exception& e) {
 		std::cout << e.what() << std::endl;
 	}
-	*/
 
 	return (0);
 }
