@@ -56,7 +56,11 @@ void			ConfigServer::parseServer(void) {
 			}
 		}
 
+		std::cout << config.error_page.size() << std::endl;
+
 		this->_adjustConfiguration(config);
+
+		std::cout << config.error_page.size() << std::endl;
 
 		this->configuration.push_back(config);
 	}
@@ -265,16 +269,15 @@ void		ConfigServer::_adjustLocations(configuration_struct &config) {
 		if (location->cgi_path.empty())
 			location->cgi_path = config.cgi_path;
 
-		error_pages_type	error_page;
 		std::string		error_path;
 
 		for (error_pages_type::iterator it = config.error_page.begin(); it != config.error_page.end(); it++) {
-			if (getAbsolutePath(secureAddress(config.root, it->second), error_path)) {
-				error_page[it->first] = error_path;
+			if (!location->error_page.count(it->first)) {
+				if (getAbsolutePath(secureAddress(config.root, it->second), error_path)) {
+					location->error_page[it->first] = error_path;
+				}
 			}
 		}
-
-		config.error_page = error_page;
 
 		if (!location->methods.size())
 			location->methods.push_back(METHOD_GET);
