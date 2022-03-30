@@ -25,8 +25,7 @@ int	CGI::launch_cgi(std::string const & filename)
 {
 	int fd[2];
 	pid_t pid;
-	//pipe
-	//dup2
+
 	if (pipe2(fd, O_NONBLOCK))
 		Message::error("pipe2() failed");
 	Message::debug("Fd: ");
@@ -45,24 +44,17 @@ int	CGI::launch_cgi(std::string const & filename)
 			Message::error("dup2() failed");
 		close(fd[1]);
 
-		// std::cout << "Would execve " << this->_cgi_path << std::endl;
-		// exit(0);
+		setenv("PATH_INFO", "test value", true); // Can assign PATH_INFO here once we know what path to use
 		char *executable = strdup(CGI_DEFAULT_PATH);
 		char *argument = strdup(filename.c_str());
 		char * const argv[3] = {executable, argument, NULL};
 
-		execve(executable, argv, NULL); //pathname, argv, envp
+		execve(executable, argv, environ); //pathname, argv, envp
 		Message::error("execve() failed");
 	}
-	else
-	{
-		// Parent
-		(void)filename;
-	}
-	//fork
-		// child execs cgi
-		// parent
-			// return read end of pipe
+	// Parent
+
+
 	
 	close(fd[1]);
 	return (fd[0]);

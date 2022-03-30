@@ -6,6 +6,7 @@
 #include <fcntl.h> // O_NONBLOCK
 #include <sys/types.h> // fork
 #include <cstring> // strdup
+#include <cstdlib> // setenv
 
 #include "../core/message.hpp"
 
