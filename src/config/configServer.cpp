@@ -56,11 +56,7 @@ void			ConfigServer::parseServer(void) {
 			}
 		}
 
-		std::cout << config.error_page.size() << std::endl;
-
 		this->_adjustConfiguration(config);
-
-		std::cout << config.error_page.size() << std::endl;
 
 		this->configuration.push_back(config);
 	}
@@ -233,8 +229,15 @@ void		ConfigServer::_adjustConfiguration(configuration_struct &config) {
 }
 
 void		ConfigServer::_adjustRoot(configuration_struct &config) {
+	std::string	path;
+
 	if (config.root.empty())
 		Message::error("Default root not defined.");
+
+	if (!getAbsolutePath(config.root, path))
+		Message::error("'" + config.root + "' can't be found.");
+
+	config.root = path;
 }
 
 void		ConfigServer::_adjustIndex(configuration_struct &config) {
@@ -256,18 +259,22 @@ void		ConfigServer::_adjustErrorPages(configuration_struct &config) {
 }
 
 void		ConfigServer::_adjustLocations(configuration_struct &config) {
+	std::string	path;
+
 	for (location_type location = config.locations.begin(); location != config.locations.end(); location++) {
-		if (!location->redirect.empty())
+		if (location->redirect.empty())
 			location->redirect = config.redirect;
 
-		if (!location->root.empty())
-			location->root = config.root;
+		path = location->root.empty() ? config.root : location->root;
+		if (!getAbsolutePath(path, location->root))
+			Message::error("'" + path + "' can't be found.");
 
 		if (location->client_max_body_size == -1)
 			location->client_max_body_size = config.client_max_body_size;
 
-		if (location->cgi_path.empty())
-			location->cgi_path = config.cgi_path;
+		path = location->cgi_path.empty() ? config.cgi_path : location->cgi_path;
+		if (!getAbsolutePath(path, location->cgi_path))
+			Message::error("'" + path + "' can't be found.");
 
 		std::string		error_path;
 
