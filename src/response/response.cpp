@@ -92,7 +92,8 @@ std::string   response::createBody(){
         if (_server.root.size() > 0){
             if (_req.getPath().compare(loc->location) == 0){
                 if (this->_autoIndex == 1){
-                    std::string path = loc->root.append((*(loc->index.begin()))); // root is not complete it returns only www/ without static
+                    std::string path = loc->root.append("/"); // root is not complete it returns only www/ without static
+                    path = loc->root.append((*(loc->index.begin())));
                     return(readHtmlFile(path));
                 }
                 else{
