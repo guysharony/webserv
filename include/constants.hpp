@@ -8,6 +8,7 @@
 
 # define CRLF 							"\r\n"
 # define D_CRLF						"\r\n\r\n"
+# define SPACE						" "
 
 
 /* EVENTS */
@@ -56,5 +57,7 @@
 # define GREEN "\033[32m"
 # define YELLOW "\033[33m"
 # define RESET "\033[0m"
+
+
 
 #endif

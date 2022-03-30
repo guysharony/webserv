@@ -116,9 +116,24 @@ bool		Webserv::run(void) {
 				//parsing the request
 				request req(this->_config);
 				req.parseRequest(buffer);
-        
-				std::cout<< GREEN <<req<<std::endl;
-
+				//std::cout<< RED <<req<<RESET<<std::endl;
+				//response
+				response res(req);
+				try
+				{
+					req.selectServer();
+					res = response(req);				
+				}
+				catch(const Config::ServerNotFoundException& e){
+					Message::debug("Server wasn't found: handling error\n");
+					req.setRet(STATUS_INTERNAL_SERVER_ERROR);
+				}
+					res.createResponse();
+				//	std::cout<<YELLOW<<res.getResponse()<<RESET<<std::endl;
+					send(this->current_iterator->fd, res.getResponse().c_str(), res.getResponse().size(), 0);
+					std::cout <<RED<< "Response :" <<RESET<< std::endl;
+					std::cout << "[" << GREEN << res.getResponse() << RESET << "]" << std::endl << std::endl;
+				
 				client->addRequest(req);
 				if (rc == 0) {
 					close(this->current_iterator->fd);

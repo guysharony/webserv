@@ -2,8 +2,13 @@
 # define REQUEST_HPP
 # include <iostream>
 # include <map>
+# include <algorithm>
+# include <sstream>
 # include <string>
 # include <stddef.h>
+# include <sys/types.h>
+# include <sys/stat.h>
+# include <unistd.h>
 # include "../../include/constants.hpp"
 # include "../config/config.hpp"
 
@@ -27,8 +32,10 @@ class request{
         void                                 checkBody(Config::configuration_struct &server);
         void                                 checkPort();
         void                                 request_clear();
-        Config::configuration_struct        &selectServer();
-        Config::location_struct             &selectLocation(Config::configuration_struct &server);
+        bool                                 checkMethodBylocation(std::vector<int> methosds_type);
+        int                                  convertMethodToValue(std::string method);
+
+      
 
 
     public:
@@ -47,6 +54,9 @@ class request{
         std::string getBody(void);
         void parseRequest(std::string request_buffer);
         void displayAllLocations(void);
+        Config::configuration_struct        &selectServer();
+        Config::location_type             selectLocation(Config::configuration_struct &server);
+        void                        setRet(int code);
         
 
 
@@ -56,5 +66,7 @@ std::string trim2(const std::string& str);
 int	ft_atoi(const char *nptr);
 int	ft_isalpha(const char * str);
 void print_buffer(std::string buffer, size_t max_size, std::string color);
+std::string	intToStr(int a);
+std::string		readHtmlFile(std::string path);
 
 #endif
