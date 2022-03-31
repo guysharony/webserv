@@ -9,7 +9,7 @@ int		main(int argc, char **argv)
 		std::cout << "	config_file: Path to a configuration file." << std::endl;
 		return (1);
 	}
-	
+
 	Webserv		webserv;
 
 	try {

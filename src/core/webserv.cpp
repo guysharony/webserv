@@ -116,6 +116,7 @@ bool		Webserv::run(void) {
 				//parsing the request
 				request req(this->_config);
 				req.parseRequest(buffer);
+
 				//std::cout<< RED <<req<<RESET<<std::endl;
 				//response
 				response res(req);
