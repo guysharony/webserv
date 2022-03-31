@@ -8,6 +8,7 @@
 # include <list>
 # include <vector>
 # include <map>
+# include <exception>
 # include "../core/message.hpp"
 # include "../formats/strings.hpp"
 # include "../formats/units.hpp"
@@ -17,6 +18,15 @@
 class ConfigLocation
 {
 	public:
+		class ServerNotFoundException : public std::exception
+		{
+			public:
+			const char * what () const throw ()
+			{
+				return "Server Not Found";
+			}
+		};
+
 		ConfigLocation(void);
 		ConfigLocation(ConfigLocation const & src);
 		virtual ~ConfigLocation();

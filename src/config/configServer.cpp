@@ -229,8 +229,15 @@ void		ConfigServer::_adjustConfiguration(configuration_struct &config) {
 }
 
 void		ConfigServer::_adjustRoot(configuration_struct &config) {
+	std::string	path;
+
 	if (config.root.empty())
 		Message::error("Default root not defined.");
+
+	if (!getAbsolutePath(config.root, path))
+		Message::error("'" + config.root + "' can't be found.");
+
+	config.root = path;
 }
 
 void		ConfigServer::_adjustIndex(configuration_struct &config) {
@@ -252,29 +259,32 @@ void		ConfigServer::_adjustErrorPages(configuration_struct &config) {
 }
 
 void		ConfigServer::_adjustLocations(configuration_struct &config) {
+	std::string	path;
+
 	for (location_type location = config.locations.begin(); location != config.locations.end(); location++) {
-		if (!location->redirect.empty())
+		if (location->redirect.empty())
 			location->redirect = config.redirect;
 
-		if (!location->root.empty())
-			location->root = config.root;
+		path = location->root.empty() ? config.root : location->root;
+		if (!getAbsolutePath(path, location->root))
+			Message::error("'" + path + "' can't be found.");
 
 		if (location->client_max_body_size == -1)
 			location->client_max_body_size = config.client_max_body_size;
 
-		if (location->cgi_path.empty())
-			location->cgi_path = config.cgi_path;
+		path = location->cgi_path.empty() ? config.cgi_path : location->cgi_path;
+		if (!getAbsolutePath(path, location->cgi_path))
+			Message::error("'" + path + "' can't be found.");
 
-		error_pages_type	error_page;
 		std::string		error_path;
 
 		for (error_pages_type::iterator it = config.error_page.begin(); it != config.error_page.end(); it++) {
-			if (getAbsolutePath(secureAddress(config.root, it->second), error_path)) {
-				error_page[it->first] = error_path;
+			if (!location->error_page.count(it->first)) {
+				if (getAbsolutePath(secureAddress(config.root, it->second), error_path)) {
+					location->error_page[it->first] = error_path;
+				}
 			}
 		}
-
-		config.error_page = error_page;
 
 		if (!location->methods.size())
 			location->methods.push_back(METHOD_GET);

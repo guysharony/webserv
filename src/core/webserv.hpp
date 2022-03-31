@@ -6,6 +6,7 @@
 # include "../formats/temporary.hpp"
 # include "../sockets/sockets.hpp"
 # include "../request/request.hpp"
+# include "../response/response.hpp"
 # include "../client/Client.hpp"
 
 class Webserv
