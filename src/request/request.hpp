@@ -72,5 +72,8 @@ int	ft_isalpha(const char * str);
 void print_buffer(std::string buffer, size_t max_size, std::string color);
 std::string	intToStr(int a);
 std::string		readHtmlFile(std::string path);
+int existingDir(std::string path);
+int		isFiley(std::string path);
+
 
 #endif

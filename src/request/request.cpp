@@ -347,8 +347,9 @@ Config::location_type request::selectLocation(Config::configuration_struct &serv
 	Config::location_type ret = server.locations.end();
 	bool  				firstTime = true;
 
+	std::string tmp = _path + "/";
 	for(it_location = server.locations.begin(); it_location != server.locations.end(); it_location++){
-		if (this->_path.find(it_location->location) == 0 && (firstTime || it_location->location.size() > ret->location.size())
+		if ((it_location->location == "/" || tmp.find(it_location->location + "/") == 0) && (firstTime || it_location->location.size() > ret->location.size())
 			&& checkMethodBylocation(it_location->methods)){
 			ret = it_location;			
 			firstTime = false;

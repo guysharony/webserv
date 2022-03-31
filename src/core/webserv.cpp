@@ -105,6 +105,15 @@ bool		Webserv::run(void) {
 				rc = recv(this->current_iterator->fd, buffer, BUFFER_SIZE, 0);
 				if (rc < 0)
 					break;
+				if (rc == 0) {
+					Message::debug("Closing connection: ");
+					Message::debug(this->current_iterator->fd);
+					Message::debug("\n");
+					close(this->current_iterator->fd);
+					this->current_iterator->fd = -1;
+					close_connection = true;
+					break;
+				}
 				Client client_id(this->current_iterator->fd);
 				client_id.print();
 				Client *client;
