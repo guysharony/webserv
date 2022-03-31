@@ -17,8 +17,18 @@ int			Config::load(std::string filename)
 		for (configuration_type it = this->configuration.begin(); it != this->configuration.end(); it++)
 		{
 			std::cout << "[ server name => (" << it->server_name << ") ]" << std::endl;
-			std::cout << "[ host => (" << it->host << ") ]" << std::endl;
-			std::cout << "[ port => (" << it->port << ") ]" << std::endl;
+
+			if (it->listen.size()) {
+				std::cout << "[ listen: ]" << std::endl;
+				for (listen_type::iterator it2 = it->listen.begin(); it2 != it->listen.end(); it2++) {
+					std::cout << "[    (" << it2->first << ") => ";
+					for (ports_type::iterator it3 = it2->second.begin(); it3 != it2->second.end(); it3++) {
+						std::cout << *it3 << ", ";
+					}
+					std::cout << "]" << std::endl;
+				}
+			}
+
 			std::cout << "[ root => (" << it->root << ") ]" << std::endl;
 
 			if (it->redirect.compare(""))

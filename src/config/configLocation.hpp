@@ -8,6 +8,7 @@
 # include <list>
 # include <vector>
 # include <map>
+# include <set>
 # include <exception>
 # include "../core/message.hpp"
 # include "../formats/strings.hpp"
@@ -31,69 +32,70 @@ class ConfigLocation
 		ConfigLocation(ConfigLocation const & src);
 		virtual ~ConfigLocation();
 
-		typedef std::map<int, std::string>			error_pages_type;
-		typedef std::vector<int>					methods_type;
+		typedef std::map<int, std::string>					error_pages_type;
+		typedef std::set<std::string>						ports_type;
+		typedef std::map<std::string, std::set<std::string> >	listen_type;
+		typedef std::vector<int>							methods_type;
 
-		struct 								location_struct
+		struct 										location_struct
 		{
-			std::string 						root;
-			std::string 						location;
-			std::string						redirect;
-			std::string						cgi_path;
-			std::vector<std::string>				cgi_extentions;
+			std::string 								root;
+			std::string 								location;
+			std::string								redirect;
+			std::string								cgi_path;
+			std::vector<std::string>						cgi_extentions;
 
-			std::vector<std::string> 			index;
-			int								auto_index;
-			error_pages_type 					error_page;
-			methods_type 						methods;
+			std::vector<std::string> 					index;
+			int										auto_index;
+			error_pages_type 							error_page;
+			methods_type 								methods;
 
-			ssize_t 							client_max_body_size;
+			ssize_t 									client_max_body_size;
 		};
 
-		typedef std::list<location_struct>			locations_type;
-		typedef locations_type::iterator			location_type;
+		typedef std::list<location_struct>					locations_type;
+		typedef locations_type::iterator					location_type;
 
-		struct 								configuration_struct
+		struct 										configuration_struct
 		{
-			std::string 						server_name;
-			std::string 						port;
-			std::string 						host;
-			std::string 						root;
-			ssize_t 							client_max_body_size;
-			std::string						redirect;
-			std::string						cgi_path;
-			std::vector<std::string>				cgi_extentions;
+			std::string 								server_name;
+			listen_type								listen;
+			std::string 								root;
+			ssize_t 									client_max_body_size;
+			std::string								redirect;
+			std::string								cgi_path;
+			std::vector<std::string>						cgi_extentions;
 
-			std::vector<std::string> 			index;
-			int								auto_index;
-			error_pages_type 					error_page;
+			std::vector<std::string> 					index;
+			int										auto_index;
+			error_pages_type 							error_page;
 
-			locations_type 					locations;
+			locations_type 							locations;
 		};
 
-		typedef std::list<configuration_struct>		configurations_type;
-		typedef configurations_type::iterator		configuration_type;
+		typedef std::list<configuration_struct>				configurations_type;
+		typedef configurations_type::iterator				configuration_type;
 
-		configurations_type						configuration;
-		std::string							compressed_configuration_file;
-		std::string::iterator					compressed_configuration_file_iterator;
+		configurations_type								configuration;
+		std::string									compressed_configuration_file;
+		std::string::iterator							compressed_configuration_file_iterator;
 
 	protected:
-		void									parseLocation(configuration_struct &config);
+		void											parseLocation(configuration_struct &config);
 
 	private:
 		// Directives
-		void									_parseMethods(location_struct &location);
-		void									_parseRoot(location_struct &location);
-		void									_parseIndex(location_struct &location);
-		void									_parseAutoIndex(location_struct &location);
-		void									_parseClientMaxBodySize(location_struct &location);
-		void									_parseRedirect(location_struct &location);
-		void									_parseErrorPage(location_struct &location);
-		void									_parseCGIPath(location_struct &location);
-		void									_parseCGIExtentions(location_struct &location);
+		void											_parseMethods(location_struct &location);
+		void											_parseRoot(location_struct &location);
+		void											_parseIndex(location_struct &location);
+		void											_parseAutoIndex(location_struct &location);
+		void											_parseClientMaxBodySize(location_struct &location);
+		void											_parseRedirect(location_struct &location);
+		void											_parseErrorPage(location_struct &location);
+		void											_parseCGIPath(location_struct &location);
+		void											_parseCGIExtentions(location_struct &location);
 
-		std::string 							_extractWord(void);
+		std::string 									_extractWord(void);
 };
 
 #endif

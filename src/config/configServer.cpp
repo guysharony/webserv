@@ -77,17 +77,27 @@ std::string 	ConfigServer::_extractWord(void) {
 }
 
 void			ConfigServer::_parseListen(configuration_struct &config) {
-	if (!config.port.empty())
-		Message::error("'port' already assigned.");
+	std::string			host;
+	std::string			port;
 
 	std::string			authority = this->_extractWord();
 	std::vector<std::string>	params = split(authority, ":");
 
-	if (params.size() == 2) {
-		config.host = params[0];
-		config.port = params[1];
-	} else if (params.size() == 1)
-		config.port = params[0];
+	if (params.size() != 2 && params.size() != 1)
+		Message::error("'listen' is not valid.");
+
+	host = params.size() == 2 ? params[0] : "127.0.0.1";
+	port = params.size() == 2 ? params[1] : params[0];
+
+	listen_type::iterator it = config.listen.find(host);
+	if (it != config.listen.end()) {
+		(it->second).insert(port);
+	} else {
+		ports_type ports;
+		ports.insert(port);
+
+		config.listen[host] = ports;
+	}
 
 	if (this->_extractWord() != ";")
 		Message::error("'port' already assigned.");
