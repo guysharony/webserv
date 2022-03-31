@@ -85,9 +85,8 @@ std::string			response::findContentType()
 
 std::string   response::createBody(){
     Config::location_type loc = _req.selectLocation(_server);
-    if (_codeDeRetour == STATUS_NOT_FOUND){
+    if (_codeDeRetour == STATUS_NOT_FOUND)
         return (readHtmlFile("www/errors/404.html"));// normalement c _server.error_page[404] mais error_page c toujours vide
-    }
     if (_codeDeRetour == STATUS_OK){
         if (_server.root.size() > 0){
             if (_req.getPath().compare(loc->location) == 0){
@@ -96,11 +95,10 @@ std::string   response::createBody(){
                     path = loc->root.append((*(loc->index.begin())));
                     return(readHtmlFile(path));
                 }
-                else{
-                    return("all files..");
-                }
+                else
+                    return("all files ..");
+                              
             }
-            
         }
     }
     return "this response is not handled yet!!";
@@ -149,7 +147,6 @@ void response::createResponse(){
     _response.append(body);
     _response.append(CRLF);
 }
-
 
 
 
