@@ -87,7 +87,6 @@ std::string   response::createBody(){
     Config::location_type loc = _req.selectLocation(_server);
     if (_codeDeRetour == STATUS_NOT_FOUND)
         return (readHtmlFile(_server.error_page[404]));
-        return (readHtmlFile("www/errors/404.html"));// normalement c _server.error_page[404] mais error_page c toujours vide
     if (_codeDeRetour == STATUS_OK){
         if (_server.root.size() > 0){
             if (_req.getPath().compare(loc->location) == 0){
