@@ -39,6 +39,10 @@ private:
 	std::string	findContentType();
 	std::string createBody();
 	std::string		getStat();
+	std::string     getUrl(std::string dirEntry, std::string dirName);
+	std::string   	getListOfDirectories(const char *path);
+
+
 
 
 

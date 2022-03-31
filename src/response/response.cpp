@@ -86,20 +86,23 @@ std::string			response::findContentType()
 std::string   response::createBody(){
     Config::location_type loc = _req.selectLocation(_server);
     if (_codeDeRetour == STATUS_NOT_FOUND)
-        return (readHtmlFile("www/errors/404.html"));// normalement c _server.error_page[404] mais error_page c toujours vide
+        return (readHtmlFile(_server.error_page[404]));
     if (_codeDeRetour == STATUS_OK){
         if (_server.root.size() > 0){
             if (_req.getPath().compare(loc->location) == 0){
+                std::string path = loc->root.append("/"); // root is not complete it returns only www/ without static
                 if (this->_autoIndex == 1){
-                    std::string path = loc->root.append("/"); // root is not complete it returns only www/ without static
                     path = loc->root.append((*(loc->index.begin())));
                     return(readHtmlFile(path));
                 }
                 else
-                    return("all files ..");
-                              
+                    return(getListOfDirectories(loc->root.c_str()));
             }
+            else
+                return (readHtmlFile(_server.error_page[404]));
+
         }
+        // else what to do if root is empty
     }
     return "this response is not handled yet!!";
     
@@ -148,8 +151,31 @@ void response::createResponse(){
     _response.append(CRLF);
 }
 
+std::string    response::getListOfDirectories(const char *path) {
+    std::string dirName(path);
+    DIR *dir = opendir(path);
+    std::string html ="<!DOCTYPE html>\n<html>\n<head>\n\
+            <title>" + dirName + "</title>\n\
+    </head>\n<body>\n<h1>Index of "+ _req.getPath()+"</h1>\n<p>\n";
+    if (dir == NULL) {
+        std::cerr << RED << "Error: could not open " << _req.getPath() << RESET << std::endl;
+        return "";
+    }
+    if (dirName[0] != '/')
+        dirName = "/" + dirName;
+    for (struct dirent *dirent = readdir(dir); dirent; dirent = readdir(dir)) {
+        html += getUrl(std::string(dirent->d_name), dirName);
+    }
+    html +="</p>\n</body>\n</html>\n";
+    closedir(dir);
+    return html;
+}
 
-
+std::string       response::getUrl(std::string dirent, std::string dirName) {
+    std::stringstream   ss;
+    ss << "\t\t<p><a href=\"http://" + _req.getHost() + ":" <<_req.getPort() << dirName + "/" + dirent + "\">" + dirent + "</a></p>\n";
+    return ss.str();
+}
 
 
 
