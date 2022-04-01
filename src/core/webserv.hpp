@@ -12,10 +12,12 @@
 class Webserv
 {
 	public:
-		typedef std::vector<Client>	clients_container;
 		Webserv(void);
 		Webserv(Webserv const & src);
 		~Webserv();
+
+		typedef std::vector<Client>		clients_type;
+		typedef clients_type::iterator	client_type;
 
 		int							load(char *filename);
 		int							load(std::string const filename);
@@ -29,13 +31,20 @@ class Webserv
 	private:
 		Config						_config;
 		Sockets						_sockets;
-		clients_container				_clients;
+		clients_type					_clients;
+		client_type					_client;
+		bool							_close_connection;
 
 		bool							_run;
 
+		bool							_listen(void);
+		bool							_contextInitialize(void);
+		bool							_isServer(void);
+		bool							_serverAccept(void);
+		bool							_clientRevents(short revents);
+		int							_clientReceive(std::string &packet);
+		void 						_clientUpdate(void);
 		void							_compress(void);
-
-		Client						*updateClient(Client const & client_id);
 };
 
 #endif

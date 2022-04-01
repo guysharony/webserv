@@ -43,88 +43,61 @@ int			Webserv::load(std::string const filename)
 	return 0;
 }
 
-Client *Webserv::updateClient(Client const &client_id)
+void 	Webserv::_clientUpdate(void)
 {
-	Webserv::clients_container::iterator it = this->_clients.begin();
-	Webserv::clients_container::iterator ite = this->_clients.end();
+	client_type it = this->_clients.begin();
+	client_type ite = this->_clients.end();
 	while (it != ite)
 	{
-		if (*it == client_id)
+		if ((*it).getSocketFd() == this->current_iterator->fd)
 		{
 			std::cout << "Client already exists" << std::endl;
-			return (&(*it));
+			this->_client = it;
+			return;
 		}
 		++it;
 	}
+
 	std::cout << "Adding Client" << std::endl;
-	this->_clients.push_back(client_id);
-	it = this->_clients.end() - 1;
-	return (&(*it));
+	this->_clients.push_back(Client(this->current_iterator->fd));
+	this->_client = (this->_clients.end() - 1);
+	return;
 }
 
 bool		Webserv::run(void) {
 	int	rc;
 	int	len;
-	bool	close_connection;
 	bool compress_array;
-	bool	is_server;
-	char	buffer[BUFFER_SIZE];
 
 	rc = 0;
 	len = 0;
-	close_connection = false;
 	compress_array = false;
 
+	this->_close_connection = false;
 	signal(SIGINT, &signalHandler);
 	while (this->_run) {
 		if (g_sigint == 1)
 			break; // Perhaps we need to shutdown/send messages to active clients first
-		std::cout<< YELLOW << "waiting for a connection..."<< RESET<<std::endl;
-		if (this->_sockets.listen() <= 0) {
-			continue ; // Allow server to continue after a failure or timeout in poll
-		}
 
-		this->current_size = this->_sockets.sockets_poll.nfds;
+		if (!this->_listen())
+			continue; // Allow server to continue after a failure or timeout in poll
 
 		for (this->current_index = 0; this->current_index != this->current_size; ++this->current_index) {
-			this->current_iterator = this->_sockets.sockets_poll.fds.begin() + this->current_index;
-
-			if (this->current_iterator->revents == 0)
+			if (!this->_contextInitialize())
 				continue;
 
-			is_server = this->_sockets.isListener(this->current_iterator->fd);
+			if (this->_serverAccept())
+				break;
 
-			if (is_server && (this->current_iterator->revents & POLLIN)) {
-				this->_sockets.accept(this->current_iterator->fd);
-				break ;
-			} else if (!is_server && (this->current_iterator->revents & POLLIN)) {
-				close_connection = false;
+			if (this->_clientRevents(POLLIN)) {
+				std::string packet;
 
-				memset(buffer, 0, BUFFER_SIZE);
-
-				rc = recv(this->current_iterator->fd, buffer, BUFFER_SIZE, 0);
-				if (rc < 0)
+				if (this->_clientReceive(packet) <= 0)
 					break;
-				if (rc == 0) {
-					Message::debug("Closing connection: ");
-					Message::debug(this->current_iterator->fd);
-					Message::debug("\n");
-					close(this->current_iterator->fd);
-					this->current_iterator->fd = -1;
-					close_connection = true;
-					break;
-				}
 
-				Client client_id(this->current_iterator->fd);
-				client_id.print();
-				Client *client;
-				client = this->updateClient(client_id);
-
-				std::cout <<RESET<< "=== [" << this->current_iterator->fd << "] ===" << std::endl;
-				print_buffer(buffer, 1000, GREEN);
 				//parsing the request
 				request req(this->_config);
-				req.parseRequest(buffer);
+				req.parseRequest(packet);
 
 				//std::cout<< RED <<req<<RESET<<std::endl;
 				//response
@@ -139,27 +112,26 @@ bool		Webserv::run(void) {
 					req.setRet(STATUS_INTERNAL_SERVER_ERROR);
 				}
 					res.createResponse();
-				//	std::cout<<YELLOW<<res.getResponse()<<RESET<<std::endl;
+					//	std::cout<<YELLOW<<res.getResponse()<<RESET<<std::endl;
 					send(this->current_iterator->fd, res.getResponse().c_str(), res.getResponse().size(), 0);
 					std::cout <<RED<< "Response :" <<RESET<< std::endl;
 					std::cout << "[" << GREEN << res.getResponse() << RESET << "]" << std::endl << std::endl;
+					this->_close_connection = true;
 				
-				client->addRequest(req);
-			}
-			else if (!is_server && (this->current_iterator->revents & POLLOUT))
-			{
+				// this->_client->addRequest(req);
+			} else if (this->_clientRevents(POLLOUT)) {
 				len = rc;
 
-				rc = send(this->current_iterator->fd, buffer, len, 0);
+				rc = send(this->current_iterator->fd, "", len, 0);
 				if (rc < 0)
 				{
 					Message::error("send() failed.");
-					close_connection = true;
+					this->_close_connection = true;
 					break;
 				}
 			}
 
-			if (close_connection)
+			if (this->_close_connection)
 			{
 				close(this->current_iterator->fd);
 				this->current_iterator->fd = -1;
@@ -175,6 +147,71 @@ bool		Webserv::run(void) {
 	return true;
 }
 
+bool		Webserv::_listen(void) {
+	std::cout << YELLOW << "waiting for a connection..." << RESET << std::endl;
+
+	if (this->_sockets.listen() <= 0)
+		return false;
+
+	this->current_size = this->_sockets.sockets_poll.nfds;
+
+	return true;
+}
+
+bool		Webserv::_contextInitialize(void) {
+	this->current_iterator = this->_sockets.sockets_poll.fds.begin() + this->current_index;
+
+	return this->current_iterator->revents != 0;
+}
+
+bool		Webserv::_isServer(void) {
+	return this->_sockets.isListener(this->current_iterator->fd);
+}
+
+bool		Webserv::_serverAccept(void) {
+	if (this->_isServer() && (this->current_iterator->revents & POLLIN)) {
+		this->_sockets.accept(this->current_iterator->fd);
+		return true;
+	}
+
+	return false;
+}
+
+bool		Webserv::_clientRevents(short revents) {
+	return !this->_isServer() && (this->current_iterator->revents & revents);
+}
+
+int		Webserv::_clientReceive(std::string &packet) {
+	char	buffer[BUFFER_SIZE];
+	int	res;
+
+	this->_close_connection = false;
+
+	memset(buffer, 0, BUFFER_SIZE);
+
+	res = recv(this->current_iterator->fd, buffer, BUFFER_SIZE, 0);
+
+	if (res == 0) {
+		Message::debug("Closing connection: ");
+		Message::debug(this->current_iterator->fd);
+		Message::debug("\n");
+
+		close(this->current_iterator->fd);
+		this->current_iterator->fd = -1;
+		this->_close_connection = true;
+	} else if (res > 0) {
+		packet = std::string(buffer);
+
+		std::cout << RESET << "=== [" << this->current_iterator->fd << "] ===" << std::endl;
+		print_buffer(packet, 1000, GREEN);
+
+		this->_clientUpdate();
+		this->_client->
+	}
+
+	return res;
+}
+
 void		Webserv::_compress(void) {
 	int	i;
 	int	j;
@@ -182,7 +219,7 @@ void		Webserv::_compress(void) {
 	for (i = 0; i < this->_sockets.sockets_poll.nfds; i++) {
 		if (this->_sockets.sockets_poll.fds[i].fd == -1) {
 			for (j = i; j < this->_sockets.sockets_poll.nfds - 1; j++) {
-				this->_sockets.sockets_poll.fds[j].fd = this->_sockets.sockets_poll.fds[j+1].fd;
+				this->_sockets.sockets_poll.fds[j].fd = this->_sockets.sockets_poll.fds[j + 1].fd;
 			}
 
 			i--;
