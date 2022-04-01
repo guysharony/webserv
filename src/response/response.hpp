@@ -39,7 +39,7 @@ private:
 	std::string	findContentType();
 	std::string createBody();
 	std::string		getStat();
-	std::string     getUrl(std::string dirent);
+	std::string     getUrl(std::string dirent, bool isFolder);
 	std::string   	getListOfDirectories(const char *path);
 	std::string getPathAfterreplacinglocationByRoot();
 
