@@ -10,6 +10,8 @@
 # include "../../include/constants.hpp"
 # include "../config/config.hpp"
 # include "../request/request.hpp"
+# include "../formats/temporary.hpp"
+# include<cstdlib>
 
 
 
@@ -37,15 +39,11 @@ private:
 	void 	create_headers(int body_length);
 	std::string	findDate();
 	std::string	findContentType();
-	std::string createBody();
+	Temporary createBody();
 	std::string		getStat();
 	std::string     getUrl(std::string dirent, bool isFolder);
 	std::string   	getListOfDirectories(const char *path);
 	std::string getPathAfterreplacinglocationByRoot();
-
-
-
-
 
 
 };

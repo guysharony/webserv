@@ -1,5 +1,7 @@
 #include "response.hpp"
 
+int 					_unique_id = rand();
+
 std::string		response::getResponse(void){
 	return (this->_response);
 }
@@ -83,40 +85,52 @@ std::string			response::findContentType()
 		return("text/html"); //normalment text/plain mais je veux tester la page d'erreur 404 --> to check
 }
 
-std::string   response::createBody(){
+Temporary   response::createBody(){
+    Temporary tmp(_unique_id);
+    tmp.create(_unique_id);
     Config::location_type loc = _req.selectLocation(_server);
     if (_codeDeRetour == STATUS_NOT_FOUND)
-        return (readHtmlFile(_server.error_page[404]));
-    if (_codeDeRetour == STATUS_OK){
+        tmp.append(_unique_id, readHtmlFile(_server.error_page[404]));
+    else if (_codeDeRetour == STATUS_OK){
         if (loc->root.size() > 0){
             std::string new_p = getPathAfterreplacinglocationByRoot();
             if (isFiley(new_p) == 1)
-                return(readHtmlFile(new_p));
+                tmp.append(_unique_id,readHtmlFile(new_p));
             else if (isFiley(new_p) == 2){
                  if (this->_autoIndex == 1){
                     std::string path = loc->root + "/" + (*(loc->index.begin()));
-                    return(readHtmlFile(path));
+                    tmp.append(_unique_id,readHtmlFile(path));
                 }
                 else
-                    return(getListOfDirectories(new_p.c_str()));
+                    tmp.append(_unique_id,getListOfDirectories(new_p.c_str()));
             }
+            else
+            {
+                _codeDeRetour = STATUS_NOT_FOUND;
+                tmp.append(_unique_id, readHtmlFile(_server.error_page[404]));
+            }
+            
         }
-        _codeDeRetour = STATUS_NOT_FOUND;
-        return (readHtmlFile(_server.error_page[404]));
+        else{
+            _codeDeRetour = STATUS_NOT_FOUND;
+            tmp.append(_unique_id, readHtmlFile(_server.error_page[404]));
+        }
         // else what to do if root is empty
     }
-    if (_codeDeRetour == STATUS_NOT_ALLOWED)
-        return (readHtmlFile(_server.error_page[405]));
-    if (_codeDeRetour == STATUS_INTERNAL_SERVER_ERROR)
-        return (readHtmlFile(_server.error_page[500]));
-    if (_codeDeRetour == STATUS_BAD_REQUEST)
-        return (readHtmlFile(_server.error_page[400]));
-    if (_codeDeRetour == STATUS_REQUEST_ENTITY_TOO_LARGE)
-        return (readHtmlFile(_server.error_page[413]));
+    else if (_codeDeRetour == STATUS_NOT_ALLOWED)
+        tmp.append(_unique_id, readHtmlFile(_server.error_page[405]));
+    else if (_codeDeRetour == STATUS_INTERNAL_SERVER_ERROR)
+        tmp.append(_unique_id, readHtmlFile(_server.error_page[500]));
+    else if (_codeDeRetour == STATUS_BAD_REQUEST)
+        tmp.append(_unique_id, readHtmlFile(_server.error_page[400]));
+    else if (_codeDeRetour == STATUS_REQUEST_ENTITY_TOO_LARGE)
+        tmp.append(_unique_id,readHtmlFile(_server.error_page[413]));
+    else
+    {
+        tmp.append(_unique_id, "this response is not handled yet!!");
 
-
-    return "this response is not handled yet!!";
-    
+    }
+    return(tmp);      
 }
 
 std::string response::getStat(){
@@ -143,9 +157,8 @@ std::string response::getStat(){
 
 void response::createResponse(){
 
-    std::string body = createBody();
-
-    create_headers(body.size());
+    Temporary body = createBody();
+    create_headers(body.size(_unique_id));
     _response.append("HTTP/1.1 ");
     _response.append(intToStr(_codeDeRetour));
     _response.append(" ");
@@ -158,7 +171,11 @@ void response::createResponse(){
         _response.append(CRLF);
     }
     _response.append(D_CRLF);
-    _response.append(body);
+    std::string line;
+    body.cursor(_unique_id, 0);
+    while (body.read(_unique_id, line) != 0){
+        _response.append(line);
+    }
     _response.append(CRLF);
 }
 
@@ -225,4 +242,3 @@ std::string response::getPathAfterreplacinglocationByRoot(){
     }
     return "";
 }
-
