@@ -152,11 +152,10 @@ void response::createResponse(){
 }
 
 std::string    response::getListOfDirectories(const char *path) {
-    std::string dirName(path);
     DIR *dir = opendir(path);
 
     std::string html ="<!DOCTYPE html>\n<html>\n<head>\n\
-            <title>" + dirName + "</title>\n\
+            <title>" + _req.getPath() + "</title>\n\
     </head>\n<body>\n<h1>Index of "+ _req.getPath() +"</h1>\n<p>\n";
     if (dir == NULL) {
         std::cerr << RED << "Error: could not open " << _req.getPath() << RESET << std::endl;
