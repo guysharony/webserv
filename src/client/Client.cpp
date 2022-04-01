@@ -39,6 +39,8 @@ Client::Client(int socket_fd)
 	this->_server_port = ntohs(sock_addr.sin_port);
 }
 
+
+/* Constructor not used
 Client::Client(int socket_fd, std::string server_addr, int server_port, std::string client_addr, int client_port)
 :
 	_client_addr(client_addr),
@@ -49,6 +51,9 @@ Client::Client(int socket_fd, std::string server_addr, int server_port, std::str
 	_request(),
 	_response()
 { }
+*/
+
+
 
 Client::Client(Client const &src)
 { *this = src; }
@@ -121,6 +126,15 @@ void				Client::setServerAddr(std::string const &addr)
 void				Client::setServerPort(int port)
 { this->_server_port = port; }
 
+void				Client::setRequest(Config &config)
+{ this->_request = request(config); }
+
+void				Client::setResponse(void)
+{ this->_response = response(this->_request); }
+
+
+void				Client::parseRequest(std::string packet)
+{ this->_request.parseRequest(packet); }
 
 void				Client::print()
 {

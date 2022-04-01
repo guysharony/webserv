@@ -61,16 +61,15 @@ void 	Webserv::_clientUpdate(void)
 	std::cout << "Adding Client" << std::endl;
 	this->_clients.push_back(Client(this->current_iterator->fd));
 	this->_client = (this->_clients.end() - 1);
+	this->_client->setRequest(this->_config);
 	return;
 }
 
 bool		Webserv::run(void) {
 	int	rc;
-	int	len;
 	bool compress_array;
 
 	rc = 0;
-	len = 0;
 	compress_array = false;
 
 	this->_close_connection = false;
@@ -90,22 +89,24 @@ bool		Webserv::run(void) {
 				break;
 
 			if (this->_clientRevents(POLLIN)) {
-				std::string packet;
-
-				if (this->_clientReceive(packet) <= 0)
+				if (this->_clientReceive() <= 0)
 					break;
 
-				//parsing the request
+				this->current_iterator->events |= POLLOUT;
+
+				/*
+				parsing the request
 				request req(this->_config);
 				req.parseRequest(packet);
+				*/
 
-				//std::cout<< RED <<req<<RESET<<std::endl;
-				//response
+				/*
+				std::cout<< RED <<req<<RESET<<std::endl;
 				response res(req);
 				try
 				{
 					req.selectServer();
-					res = response(req);				
+					res = response(req);
 				}
 				catch(const Config::ServerNotFoundException& e){
 					Message::debug("Server wasn't found: handling error\n");
@@ -118,17 +119,28 @@ bool		Webserv::run(void) {
 					std::cout << "[" << GREEN << res.getResponse() << RESET << "]" << std::endl << std::endl;
 					this->_close_connection = true;
 				
-				// this->_client->addRequest(req);
+				this->_client->addRequest(req);
+				*/
 			} else if (this->_clientRevents(POLLOUT)) {
-				len = rc;
+				std::string response;
+				response.append("HTTP/1.1 200 OK\r\n");
+				response.append("content-length : 11\r\n");
+				response.append("content-location : /\r\n");
+				response.append("content-type : text/html\r\n");
+				response.append("date : Fri, 01 Apr 2022 15:39:15 GMT\r\n");
+				response.append("server_name : Michello\r\n");
+				response.append("\r\n");
+				response.append("all files..\r\n");
 
-				rc = send(this->current_iterator->fd, "", len, 0);
+				rc = send(this->current_iterator->fd, response.c_str(), response.length(), 0);
 				if (rc < 0)
 				{
 					Message::error("send() failed.");
 					this->_close_connection = true;
 					break;
 				}
+
+				this->current_iterator->events &= ~POLLOUT;
 			}
 
 			if (this->_close_connection)
@@ -181,9 +193,9 @@ bool		Webserv::_clientRevents(short revents) {
 	return !this->_isServer() && (this->current_iterator->revents & revents);
 }
 
-int		Webserv::_clientReceive(std::string &packet) {
-	char	buffer[BUFFER_SIZE];
-	int	res;
+int		Webserv::_clientReceive(void) {
+	char			buffer[BUFFER_SIZE];
+	int			res;
 
 	this->_close_connection = false;
 
@@ -200,13 +212,14 @@ int		Webserv::_clientReceive(std::string &packet) {
 		this->current_iterator->fd = -1;
 		this->_close_connection = true;
 	} else if (res > 0) {
-		packet = std::string(buffer);
+		std::string packet = std::string(buffer);
 
 		std::cout << RESET << "=== [" << this->current_iterator->fd << "] ===" << std::endl;
 		print_buffer(packet, 1000, GREEN);
 
 		this->_clientUpdate();
-		this->_client->
+
+		this->_client->parseRequest(packet);
 	}
 
 	return res;

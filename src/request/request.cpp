@@ -185,7 +185,7 @@ size_t request::headerParsing(std::string request_buffer)
 void request::parseRequest(std::string request_buffer)
 {
 	size_t i;
-	if (_ret < STATUS_BAD_REQUEST)
+	if (this->_ret < STATUS_BAD_REQUEST)
 		firstLineParsing(request_buffer);
 	if (_ret < STATUS_BAD_REQUEST)
 		i = headerParsing(request_buffer);
