@@ -101,6 +101,7 @@ std::string   response::createBody(){
                     return(getListOfDirectories(new_p.c_str()));
             }
         }
+        _codeDeRetour = STATUS_NOT_FOUND;
         return (readHtmlFile(_server.error_page[404]));
         // else what to do if root is empty
     }
