@@ -179,6 +179,7 @@ std::string    response::getListOfDirectories(const char *path) {
     }
     std::sort(v.begin(), v.end());
     v.erase(std::find(v.begin(), v.end(), "."));
+    html += "<hr>";
     html += "<table>";
     for (std::vector<std::string>::iterator it = v.begin(); it != v.end(); it++){
         if (isFiley(p+ "/" + *it) == 2)
