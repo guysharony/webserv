@@ -114,7 +114,6 @@ bool		Webserv::run(void) {
 					close_connection = true;
 					break;
 				}
-
 				Client client_id(this->current_iterator->fd);
 				client_id.print();
 				Client *client;
@@ -125,7 +124,6 @@ bool		Webserv::run(void) {
 				//parsing the request
 				request req(this->_config);
 				req.parseRequest(buffer);
-
 				//std::cout<< RED <<req<<RESET<<std::endl;
 				//response
 				response res(req);
@@ -143,7 +141,6 @@ bool		Webserv::run(void) {
 					send(this->current_iterator->fd, res.getResponse().c_str(), res.getResponse().size(), 0);
 					std::cout <<RED<< "Response :" <<RESET<< std::endl;
 					std::cout << "[" << GREEN << res.getResponse() << RESET << "]" << std::endl << std::endl;
-				
 				client->addRequest(req);
 			}
 			else if (!is_server && (this->current_iterator->revents & POLLOUT))

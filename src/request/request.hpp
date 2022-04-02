@@ -23,6 +23,7 @@ class request{
         std::string                         _port;
         std::string                         _host;
 		Config						        _config;
+        int                                 _timeout;
         void                                 firstLineParsing(std::string request_buffer);
         std::string		                     getNextLine(std::string str, size_t *i);
         size_t                               headerParsing(std::string request_buffer);
@@ -31,9 +32,11 @@ class request{
         void                                 checkVersion();
         void                                 checkBody(Config::configuration_struct &server);
         void                                 checkPort();
+        void                                 checkTimeout();
         void                                 request_clear();
         bool                                 checkMethodBylocation(std::vector<int> methosds_type);
         int                                  convertMethodToValue(std::string method);
+
 
       
 
@@ -49,6 +52,7 @@ class request{
         std::string getPath(void);
         std::string getHost(void);
         std::string getPort(void);
+        int getTimeout(void);
         int getRet(void);
         const std::map<std::string, std::string>& getHeader() const;
         std::string getBody(void);
@@ -68,5 +72,8 @@ int	ft_isalpha(const char * str);
 void print_buffer(std::string buffer, size_t max_size, std::string color);
 std::string	intToStr(int a);
 std::string		readHtmlFile(std::string path);
+int existingDir(std::string path);
+int		isFiley(std::string path);
+
 
 #endif
