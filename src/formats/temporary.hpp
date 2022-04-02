@@ -1,6 +1,8 @@
 #ifndef TEMPORARY_HPP
 # define TEMPORARY_HPP
 
+# include <iostream>
+# include <map>
 # include "../core/message.hpp"
 # include "files.hpp"
 # include "tmpfile.hpp"
@@ -14,8 +16,8 @@ class Temporary
 		Temporary(Temporary const & src);
 		~Temporary();
 
-		typedef std::vector<TmpFile>	files_type;
-		typedef files_type::iterator	file_type;
+		typedef std::map<int, TmpFile>	files_type;
+		typedef files_type::iterator		file_type;
 
 		size_t				size(int id = -1);
 		int					create(int id);
@@ -40,7 +42,6 @@ class Temporary
 		int					_filename(std::string & filename);
 		ssize_t				_sock_id;
 		int					_file_id;
-		std::vector<int>		_opened;
 		files_type			_files;
 };
 
