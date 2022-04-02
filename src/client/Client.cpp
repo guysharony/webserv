@@ -8,7 +8,12 @@ Client::Client(void)
 	_server_addr(),
 	_server_port(-1),
 	_request(),
-	_response()
+	_response(),
+	_event(EVT_REQUEST_LINE),
+	_encoding(NONE),
+	_remaining(-1),
+	_temporary(),
+	_end(0)
 { }
 
 Client::Client(int socket_fd)
@@ -19,7 +24,12 @@ Client::Client(int socket_fd)
 	_server_addr(),
 	_server_port(-1),
 	_request(),
-	_response()
+	_response(),
+	_event(EVT_REQUEST_LINE),
+	_encoding(NONE),
+	_remaining(-1),
+	_temporary(),
+	_end(0)
 {
 	struct sockaddr_in sock_addr;
 	struct sockaddr_in peer_addr;
@@ -37,6 +47,7 @@ Client::Client(int socket_fd)
 	this->_socket_fd = socket_fd;
 	this->_server_addr = inet_ntoa(sock_addr.sin_addr);
 	this->_server_port = ntohs(sock_addr.sin_port);
+	this->_temporary.socket(this->_socket_fd);
 }
 
 
@@ -69,6 +80,8 @@ Client	&Client::operator=(Client const &rhs)
 		this->_server_port = rhs._server_port;
 		this->_response = rhs._response;
 		this->_request = rhs._request;
+		this->_temporary = rhs._temporary;
+		this->_event = rhs._event;
 	}
 	return (*this);
 }
@@ -132,9 +145,93 @@ void				Client::setRequest(Config &config)
 void				Client::setResponse(void)
 { this->_response = response(this->_request); }
 
+int				Client::appendRequest(std::string packet)
+{
+	std::size_t	found;
+	std::string	current;
 
-void				Client::parseRequest(std::string packet)
-{ this->_request.parseRequest(packet); }
+	if (this->_temporary.create(0)) {
+		this->_temporary.append(0, packet);
+
+		if (this->_event < EVT_REQUEST_BODY) {
+			this->_temp.append(packet);
+
+			while ((found = this->_temp.find("\r\n")) != std::string::npos)
+			{
+				current = this->_temp.substr(0, found);
+
+				if (this->_event == EVT_REQUEST_LINE) {
+					this->_event = EVT_REQUEST_HEADERS;
+				} else if (this->_event == EVT_REQUEST_HEADERS) {
+					std::string key;
+					std::string value;
+
+					if (current.length() == 0) {
+						this->_event = EVT_REQUEST_BODY;
+
+						if (this->_encoding == NONE)
+							this->_end = 1;
+
+						return this->_end;
+					}
+
+					if (this->_preparseHeader(current, key, value))
+					{
+						if (!key.compare("content-length")) {
+							this->_encoding = LENGTH;
+							this->_remaining = toInteger(value);
+						}
+						else if (!key.compare("transfer-encoding")) {
+							if (!value.compare("chunked")) {
+								this->_encoding = CHUNKED;
+								this->_remaining = 0;
+							}
+						}
+					}
+				}
+
+				this->_temp = this->_temp.substr(found + 2);
+			}
+		}
+
+		return 0;
+	}
+
+	return -1;
+}
+
+int			Client::_preparseHeader(std::string source, std::string & key, std::string & value)
+{
+	size_t	pos = source.find(":");
+
+	std::string tmp_key;
+	std::string tmp_value;
+
+	if (pos != std::string::npos)
+	{
+		tmp_key = source.substr(0, pos);
+		tmp_value = source.substr(pos + 1);
+
+		if (!isTchar(tmp_key))
+			return (0);
+
+		trim(tmp_value);
+
+		key = toLowercase(tmp_key);
+		value = tmp_value;
+
+		return (1);
+	}
+
+	return (0);
+}
+
+void				Client::displayRequest(void)
+{
+	if (this->_temporary.create(0)) {
+		this->_temporary.display(0);
+	}
+}
 
 void				Client::print()
 {

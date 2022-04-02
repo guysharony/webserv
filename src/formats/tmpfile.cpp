@@ -37,6 +37,25 @@ int			TmpFile::display(void)
 	return (1);
 }
 
+ssize_t	TmpFile::findline(std::string value) {
+	std::string	line;
+	std::ifstream 	file(this->_filename.c_str(), std::ifstream::binary);
+
+	if (!file) {
+		Message::error("Can't open file.");
+		return -1;
+	}
+
+	for (unsigned int i = 0; getline(file, line); i++) {
+		if (line.compare(value + "\r") == 0) {
+			file.close();
+			return i;
+		}
+	}
+
+	return -1;
+}
+
 void			TmpFile::position(ssize_t value)
 {
 	this->_position = value < 0 ? this->size() : value;

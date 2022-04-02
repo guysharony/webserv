@@ -92,8 +92,6 @@ bool		Webserv::run(void) {
 				if (this->_clientReceive() <= 0)
 					break;
 
-				this->current_iterator->events |= POLLOUT;
-
 				/*
 				parsing the request
 				request req(this->_config);
@@ -173,6 +171,9 @@ bool		Webserv::_listen(void) {
 bool		Webserv::_contextInitialize(void) {
 	this->current_iterator = this->_sockets.sockets_poll.fds.begin() + this->current_index;
 
+	if (!this->_isServer())
+		std::cout << "revents: " << this->current_iterator->revents << std::endl;
+
 	return this->current_iterator->revents != 0;
 }
 
@@ -204,6 +205,9 @@ int		Webserv::_clientReceive(void) {
 	res = recv(this->current_iterator->fd, buffer, BUFFER_SIZE, 0);
 
 	if (res == 0) {
+		std::cout << "END" << std::endl;
+		this->_client->displayRequest();
+
 		Message::debug("Closing connection: ");
 		Message::debug(this->current_iterator->fd);
 		Message::debug("\n");
@@ -214,12 +218,14 @@ int		Webserv::_clientReceive(void) {
 	} else if (res > 0) {
 		std::string packet = std::string(buffer);
 
-		std::cout << RESET << "=== [" << this->current_iterator->fd << "] ===" << std::endl;
+		std::cout << RESET << "=== [" << this->current_iterator->fd << "] - (" << res << ")" << std::endl;
 		print_buffer(packet, 1000, GREEN);
 
 		this->_clientUpdate();
 
-		this->_client->parseRequest(packet);
+		if (this->_client->appendRequest(packet) > 0) {
+			this->current_iterator->events |= POLLOUT;
+		}
 	}
 
 	return res;

@@ -8,7 +8,7 @@
 
 # define CRLF 							"\r\n"
 # define D_CRLF						"\r\n\r\n"
-# define SPACE						" "
+# define SPACE							" "
 
 
 /* EVENTS */
@@ -30,7 +30,7 @@
 # define STATUS_PARTIAL_CONTENT 			206
 # define STATUS_MOVED_PERMANENTLY			301
 # define STATUS_BAD_REQUEST 				400
-# define STATUS_NOT_FOUND 				    404
+# define STATUS_NOT_FOUND 				404
 # define STATUS_NOT_ALLOWED 				405
 # define STATUS_REQUEST_ENTITY_TOO_LARGE	413
 # define STATUS_INTERNAL_SERVER_ERROR		500

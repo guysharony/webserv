@@ -28,6 +28,8 @@ class Temporary
 		int					close(int id);
 		int					isOpen(int id);
 
+		ssize_t				find(int id, std::string value);
+
 		int					copy(std::string dest, int id, bool recreate = false);
 		int					copy(int id, std::string dest);
 

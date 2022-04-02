@@ -314,6 +314,21 @@ int			Temporary::copy(int id, std::string source)
  * @param id ID of temporary file.
  * @return int 1 on success, 0 otherwise.
  */
+ssize_t			Temporary::find(int id, std::string value)
+{
+	if (this->isOpen(id)) {
+		return this->_files[id].findline(value);
+	}
+
+	return -1;
+}
+
+/**
+ * @brief Display content of temporary file for debugging.
+ * 
+ * @param id ID of temporary file.
+ * @return int 1 on success, 0 otherwise.
+ */
 int			Temporary::display(int id)
 {
 	std::string line;

@@ -11,6 +11,7 @@
 # include <netinet/in.h> // sockaddr_in, inet_addr
 # include <arpa/inet.h>	// htons, inet_addr
 
+# include "../formats/temporary.hpp"
 # include "../request/request.hpp"
 # include "../response/response.hpp"
 # include "../core/message.hpp"
@@ -44,9 +45,10 @@ class Client
 
 		// Debug functions
 		void					print();
-		void					parseRequest(std::string packet);
 
-		std::string			content;
+		int					appendRequest(std::string packet);
+		void					displayRequest(void);
+
 	private:
 		Client(void);
 
@@ -57,6 +59,14 @@ class Client
 		int					_server_port;	// The port of the server FROM which the client connected (the one on which the server is listening)
 		request				_request; // All of the request/response pairs associated with this client
 		response				_response;
+		int					_event;
+		int					_encoding;
+		int					_remaining;
+		std::string			_temp;
+		Temporary				_temporary;
+		int					_end;
+
+		int					_preparseHeader(std::string source, std::string & key, std::string & value);
 };
 
 #endif

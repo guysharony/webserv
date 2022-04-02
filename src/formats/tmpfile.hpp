@@ -12,6 +12,7 @@
 # include <sys/time.h>
 # include <sys/socket.h>
 # include <fstream>
+# include "../core/message.hpp"
 # include "files.hpp"
 # include "units.hpp"
 # include "strings.hpp"
@@ -36,6 +37,7 @@ class TmpFile
 		void				position(ssize_t value);
 		size_t			getPosition(void);
 		std::string		getFilename(void);
+		ssize_t			findline(std::string value);
 
 	private:
 		size_t			_position;
