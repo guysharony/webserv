@@ -82,13 +82,24 @@ bool		Webserv::run(void) {
 			continue; // Allow server to continue after a failure or timeout in poll
 
 		for (this->current_index = 0; this->current_index != this->current_size; ++this->current_index) {
-			if (!this->_contextInitialize())
+			if (!this->_contextInitialize()) {
+				if (!this->_isServer()) {
+					std::cout << RED << "CLOSE CLIENT: " << this->current_iterator->fd << RESET << std::endl;
+					close(this->current_iterator->fd);
+					this->current_iterator->fd = -1;
+					this->_client = this->_clients.erase(this->_client);
+					compress_array = true;
+				}
 				continue;
+			}
 
 			if (this->_serverAccept())
 				break;
 
 			if (this->_clientRevents(POLLIN)) {
+				if (this->_client->getEvent() == EVT_SEND_RESPONSE)
+					this->_client->setEvent(EVT_REQUEST_LINE);
+
 				if (this->_clientReceive() <= 0)
 					break;
 
@@ -160,7 +171,7 @@ bool		Webserv::run(void) {
 bool		Webserv::_listen(void) {
 	std::cout << YELLOW << "waiting for a connection..." << RESET << std::endl;
 
-	if (this->_sockets.listen() <= 0)
+	if (this->_sockets.listen() < 0)
 		return false;
 
 	this->current_size = this->_sockets.sockets_poll.nfds;
@@ -171,8 +182,10 @@ bool		Webserv::_listen(void) {
 bool		Webserv::_contextInitialize(void) {
 	this->current_iterator = this->_sockets.sockets_poll.fds.begin() + this->current_index;
 
-	if (!this->_isServer())
+	if (!this->_isServer()) {
+		this->_clientUpdate();
 		std::cout << "revents: " << this->current_iterator->revents << std::endl;
+	}
 
 	return this->current_iterator->revents != 0;
 }
@@ -224,6 +237,7 @@ int		Webserv::_clientReceive(void) {
 		this->_clientUpdate();
 
 		if (this->_client->appendRequest(packet) > 0) {
+			this->_client->setEvent(EVT_SEND_RESPONSE);
 			this->current_iterator->events |= POLLOUT;
 		}
 	}

@@ -36,7 +36,7 @@ bool		Sockets::isListener(int fd) {
 }
 
 int		Sockets::listen(void) {
-	int rc = poll(this->sockets_poll.fds.data(), this->sockets_poll.nfds, 3 * 60 * 1000);
+	int rc = poll(this->sockets_poll.fds.data(), this->sockets_poll.nfds, 2000);
 
 	if (rc < 0) {
 		std::cout << "poll() failed with error code: " << rc << std::endl;

@@ -122,6 +122,9 @@ std::string const	&Client::getServerAddr(void)
 int				Client::getServerPort(void)
 { return (this->_server_port); }
 
+int				Client::getEvent(void)
+{ return (this->_event); }
+
 
 // Setters
 void				Client::setClientAddr(std::string const &addr)
@@ -144,6 +147,10 @@ void				Client::setRequest(Config &config)
 
 void				Client::setResponse(void)
 { this->_response = response(this->_request); }
+
+void				Client::setEvent(int value)
+{ this->_event = value; }
+
 
 int				Client::appendRequest(std::string packet)
 {
@@ -169,8 +176,9 @@ int				Client::appendRequest(std::string packet)
 					if (current.length() == 0) {
 						this->_event = EVT_REQUEST_BODY;
 
-						if (this->_encoding == NONE)
+						if (this->_encoding == NONE) {
 							this->_end = 1;
+						}
 
 						return this->_end;
 					}

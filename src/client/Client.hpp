@@ -33,6 +33,7 @@ class Client
 		int					getSocketFd(void);
 		std::string const		&getServerAddr(void);
 		int					getServerPort(void);
+		int					getEvent(void);
 
 		// Setters
 		void					setClientAddr(std::string const &addr);
@@ -42,6 +43,7 @@ class Client
 		void					setServerPort(int port);
 		void					setRequest(Config &config);
 		void					setResponse(void);
+		void					setEvent(int event);
 
 		// Debug functions
 		void					print();
