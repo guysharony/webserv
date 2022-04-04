@@ -9,13 +9,13 @@ int		main(int argc, char **argv)
 		std::cout << "	config_file: Path to a configuration file." << std::endl;
 		return (1);
 	}
-	
+
 	Webserv		webserv;
 
 	try {
-		webserv.load(argc > 1 ? argv[1] : "./config/webserv.conf");
-
-		webserv.run();
+		if (webserv.load(argc > 1 ? argv[1] : "./config/webserv.conf")) {
+			webserv.run();
+		}
 	} catch (const std::exception& e) {
 		std::cout << e.what() << std::endl;
 	}

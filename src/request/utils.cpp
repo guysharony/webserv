@@ -69,3 +69,52 @@ void print_buffer(std::string buffer, size_t max_size, std::string color){
 	}
 	
 }
+
+int		isFiley(std::string path)
+{
+	struct stat status;
+	if (stat(path.c_str(), &status) == 0 )
+	{
+		if (status.st_mode & S_IFDIR)
+			return 2;
+		else if (status.st_mode & S_IFREG)
+			return 1;
+	}
+	return 0;
+}
+
+std::string		readHtmlFile(std::string path)
+{
+	std::ofstream		file;
+	std::stringstream	buffer;
+
+	if (isFiley(path))
+	{
+		file.open(path.c_str(), std::ifstream::in);
+		if (file.is_open() == false)
+			return ("<!DOCTYPE html>\n<html><title>404</title><body>error page not found !!</body></html>\n");
+		buffer << file.rdbuf();
+		file.close();
+		return (buffer.str());
+	}
+	else
+			return ("<!DOCTYPE html>\n<html><title>404</title><body>error page not found !!</body></html>\n");
+		
+}
+
+std::string	intToStr(int a){
+	std::stringstream ss;
+    ss << a;
+    std::string str = ss.str();
+	return (str);
+}
+
+int existingDir(std::string path){
+    DIR *dir = opendir(path.c_str());
+    if (dir){
+		closedir(dir);
+        return 1;
+	}
+	closedir(dir);
+    return 0;
+}

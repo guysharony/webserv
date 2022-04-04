@@ -4,8 +4,10 @@
 # include <csignal> // signal, SIGINT, SIG_DFL
 # include <cstring> // memset
 # include "../../include/constants.hpp"
+# include "../formats/temporary.hpp"
 # include "../sockets/sockets.hpp"
 # include "../request/request.hpp"
+# include "../response/response.hpp"
 # include "../client/Client.hpp"
 # include "../cgi/CGI.hpp"
 
@@ -29,13 +31,13 @@ class Webserv
 	private:
 		Config						_config;
 		Sockets						_sockets;
-		clients_container			_clients;
+		clients_container				_clients;
 
 		bool							_run;
 
 		void							_compress(void);
 
-		Client							*updateClient(Client const & client_id);
+		Client						*updateClient(Client const & client_id);
 };
 
 #endif

@@ -8,6 +8,7 @@ request::request(void)
 	this->_version = "";
 	this->_body = "";
 	this->_port = "80";
+	this->_timeout = 120;
 	this->_header.clear();
 	this->_ret = STATUS_OK;
 }
@@ -23,6 +24,7 @@ request::request(Config& conf){
 	this->_version = "";
 	this->_body = "";
 	this->_port = "80";
+	this->_timeout = 120;
 	this->_header.clear();
 	this->_ret = STATUS_OK;
 	this->_config = conf;
@@ -40,6 +42,7 @@ request &request::operator=(request const &rhs){
 		this->_path = rhs._path;
 		this->_ret = rhs._ret;
 		this->_version = rhs._version;
+		this->_timeout = rhs._timeout;
 		this->_config = rhs._config;
 	}
 	return (*this);
@@ -53,6 +56,7 @@ void request::request_clear()
 	this->_version = "";
 	this->_body = "";
 	this->_port = "80";
+	this->_timeout = 120;
 	this->_ret = STATUS_OK;
 	this->_header.clear();
 }
@@ -86,6 +90,11 @@ std::string request::getHost(void)
 	return (this->_host);
 }
 
+int request::getTimeout(void)
+{
+	return (this->_timeout);
+}
+
 const std::map<std::string, std::string> &request::getHeader() const
 {
 	return (this->_header);
@@ -107,7 +116,7 @@ void request::parsePathAndVersion(std::string line)
 
 	i = line.find_first_of(' ');
 	_path = line.substr(0, i);
-	_version = trim2(line.substr(i + 1, line.size() - i - 2));
+	_version = trim2(line.substr(i + 1, line.size() - i - 1));
 	checkVersion();
 }
 
@@ -116,7 +125,7 @@ void request::firstLineParsing(std::string request_buffer)
 	std::string line;
 	size_t i;
 
-	i = request_buffer.find_first_of('\n');
+	i = request_buffer.find(CRLF);
 	if (i == std::string::npos)
 	{
 		std::cerr << RED << "no newline found!!" << std::endl;
@@ -144,7 +153,7 @@ std::string request::getNextLine(std::string str, size_t *i)
 
 	if (*i == std::string::npos)
 		return "";
-	j = str.find_first_of('\n', *i);
+	j = str.find(CRLF, *i);
 	ret = str.substr(*i, j - *i);
 	if (j == std::string::npos)
 		*i = j;
@@ -162,23 +171,24 @@ size_t request::headerParsing(std::string request_buffer)
 	std::string value;
 	size_t header_length;
 
-	header_length = request_buffer.find("\r\n\r\n");
+	header_length = request_buffer.find(D_CRLF);
 	if (header_length == std::string::npos)
 	{
 		_ret = STATUS_BAD_REQUEST;
 		std::cerr << RED << "no header is found!!" << std::endl;
 		return -1;
 	}
-	i = request_buffer.find_first_of('\n') + 1;
+	i = request_buffer.find(CRLF) + 1;
 	while (_ret != STATUS_BAD_REQUEST && (line = getNextLine(request_buffer, &i)) != "" && i < header_length)
 	{
 		key = line.substr(0, line.find_first_of(':'));
-		value = line.substr(line.find_first_of(':') + 1, line.size() - (line.find_first_of(':') + 1) - 1);
+		value = line.substr(line.find_first_of(':') + 1, line.size() - (line.find_first_of(':') + 1));
 		key = trim2(key);
 		value = trim2(value);
 		this->_header[key] = value;
 	}
 	checkPort();
+	checkTimeout();
 	return header_length;
 }
 
@@ -191,10 +201,33 @@ void request::parseRequest(std::string request_buffer)
 		i = headerParsing(request_buffer);
 	if (_ret < STATUS_BAD_REQUEST){
 		this->_body = trim2(request_buffer.substr(i, request_buffer.size() - i));
-		Config::configuration_struct server = selectServer();
-		checkBody(server);
-		if (_ret < STATUS_BAD_REQUEST)
-			std::cout<<YELLOW<< "location = "<<selectLocation(server).location<<RESET<<std::endl;
+		
+		Config::configuration_struct server;
+		try
+		{
+			server = selectServer();
+			checkBody(server);
+
+		}
+		catch(const Config::ServerNotFoundException & e)
+		{
+			Message::debug("Server wasn't found: handling error\n");
+			// Handle error here
+			//throw e; // delete this once error is handled properly
+		}
+
+		if (_ret < STATUS_BAD_REQUEST){
+			Config::location_type loc = selectLocation(server);
+			if (loc != server.locations.end()){
+				std::cout<<YELLOW<< "location = "<< selectLocation(server)->location<<RESET<<std::endl;	
+			}
+			else
+			{
+				_ret = STATUS_NOT_FOUND;
+				std::cerr<<RED <<"location not found"<<RESET<<std::endl;
+			}
+			
+		}
 	}
 }
 
@@ -240,6 +273,14 @@ void request::checkPort()
 	}
 }
 
+void request::checkTimeout()
+{
+	std::string tmp;
+	tmp = _header["Connection-Timeout"];
+	if (tmp.size() > 0 && ft_atoi(tmp.c_str()) >= 0 && ft_isalpha(tmp.c_str()) != 1)		
+		_timeout = ft_atoi(tmp.c_str());
+}
+
 void request::checkVersion()
 {
 	size_t i;
@@ -253,7 +294,7 @@ void request::checkVersion()
 		std::cerr << RED << "this is not a HTTP version" << std::endl;
 		return;
 	}
-	str = _version.substr(i + 1, _version.size() - i - 1);
+	str = _version.substr(i + 1, _version.size() - i);
 	_version = str;
 	if (str.compare("1.1") != 0)
 	{
@@ -276,7 +317,6 @@ void request::displayAllLocations(void){
 Config::configuration_struct &request::selectServer(){
 	Config::configuration_type it;
 	Config::configuration_type default_server = this->_config.configuration.end();
-	std::cout << "THIS: "<<this->_host << ":" << this->_port << std::endl;
 	for (it = this->_config.configuration.begin(); it != this->_config.configuration.end(); it++) {
 		if (it->port.compare(this->_port) == 0)
 		{
@@ -289,33 +329,58 @@ Config::configuration_struct &request::selectServer(){
 				return (*it);
 			}
 		}
-		std::cout << it->host << ":" << it->port << std::endl;	
 	}
+	if (default_server == this->_config.configuration.end())
+		throw Config::ServerNotFoundException();
 	return (*default_server);
 }
 
-Config::location_struct &request::selectLocation(Config::configuration_struct &server){
+bool request::checkMethodBylocation(std::vector<int> methods_type){
+	if (std::find(methods_type.begin(), methods_type.end(), convertMethodToValue(this->_method)) != methods_type.end()){
+		return true;
+	}
+	return false;
+}
+
+Config::location_type request::selectLocation(Config::configuration_struct &server){
 	Config::location_type it_location;
-	Config::location_type ret;
+	Config::location_type ret = server.locations.end();
 	bool  				firstTime = true;
 
+	std::string tmp = _path + "/";
 	for(it_location = server.locations.begin(); it_location != server.locations.end(); it_location++){
-		if (this->_path.find(it_location->location) == 0 && (firstTime || it_location->location.size() > ret->location.size())){
+		if ((it_location->location == "/" || tmp.find(it_location->location + "/") == 0) && (firstTime || it_location->location.size() > ret->location.size())
+			&& checkMethodBylocation(it_location->methods)){
 			ret = it_location;			
 			firstTime = false;
 		}
 	}
-	return (*ret);
+	return (ret);
 }
 
 void  request::checkBody(Config::configuration_struct &server){
 	if (_body.size() > (size_t)server.client_max_body_size){
 		_ret = STATUS_REQUEST_ENTITY_TOO_LARGE;
 		std::cerr << RED << "body too large !!" << std::endl;
-		return;
 	}
 
 }
 
+int 	request::convertMethodToValue(std::string method){
+	if (method.compare("GET") == 0)
+		return METHOD_GET;
+	if (method.compare("HEAD") == 0)
+		return METHOD_HEAD;
+	if (method.compare("POST") == 0)
+		return METHOD_POST;
+	if (method.compare("PUT") == 0)
+		return METHOD_PUT;
+	if (method.compare("DELETE") == 0)
+		return METHOD_DELETE;
+	return 0;
+}
 
 
+void    request::setRet(int code){
+		this->_ret = code;
+}
