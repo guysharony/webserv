@@ -8,6 +8,7 @@ request::request(void)
 	this->_version = "";
 	this->_body = "";
 	this->_port = "80";
+	this->_timeout = 120;
 	this->_header.clear();
 	this->_ret = STATUS_OK;
 }
@@ -23,6 +24,7 @@ request::request(Config& conf){
 	this->_version = "";
 	this->_body = "";
 	this->_port = "80";
+	this->_timeout = 120;
 	this->_header.clear();
 	this->_ret = STATUS_OK;
 	this->_config = conf;
@@ -40,6 +42,7 @@ request &request::operator=(request const &rhs){
 		this->_path = rhs._path;
 		this->_ret = rhs._ret;
 		this->_version = rhs._version;
+		this->_timeout = rhs._timeout;
 		this->_config = rhs._config;
 	}
 	return (*this);
@@ -53,6 +56,7 @@ void request::request_clear()
 	this->_version = "";
 	this->_body = "";
 	this->_port = "80";
+	this->_timeout = 120;
 	this->_ret = STATUS_OK;
 	this->_header.clear();
 }
@@ -84,6 +88,11 @@ std::string request::getPort(void)
 std::string request::getHost(void)
 {
 	return (this->_host);
+}
+
+int request::getTimeout(void)
+{
+	return (this->_timeout);
 }
 
 const std::map<std::string, std::string> &request::getHeader() const
@@ -179,6 +188,7 @@ size_t request::headerParsing(std::string request_buffer)
 		this->_header[key] = value;
 	}
 	checkPort();
+	checkTimeout();
 	return header_length;
 }
 
@@ -263,6 +273,14 @@ void request::checkPort()
 	}
 }
 
+void request::checkTimeout()
+{
+	std::string tmp;
+	tmp = _header["Connection-Timeout"];
+	if (tmp.size() > 0 && ft_atoi(tmp.c_str()) >= 0 && ft_isalpha(tmp.c_str()) != 1)		
+		_timeout = ft_atoi(tmp.c_str());
+}
+
 void request::checkVersion()
 {
 	size_t i;
@@ -334,8 +352,9 @@ Config::location_type request::selectLocation(Config::configuration_struct &serv
 	Config::location_type ret = server.locations.end();
 	bool  				firstTime = true;
 
+	std::string tmp = _path + "/";
 	for(it_location = server.locations.begin(); it_location != server.locations.end(); it_location++){
-		if (this->_path.find(it_location->location) == 0 && (firstTime || it_location->location.size() > ret->location.size())
+		if ((it_location->location == "/" || tmp.find(it_location->location + "/") == 0) && (firstTime || it_location->location.size() > ret->location.size())
 			&& checkMethodBylocation(it_location->methods)){
 			ret = it_location;			
 			firstTime = false;

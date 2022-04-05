@@ -109,6 +109,15 @@ bool		Webserv::run(void) {
 				rc = recv(this->current_iterator->fd, buffer, BUFFER_SIZE, 0);
 				if (rc < 0)
 					break;
+				if (rc == 0) {
+					Message::debug("Closing connection: ");
+					Message::debug(this->current_iterator->fd);
+					Message::debug("\n");
+					close(this->current_iterator->fd);
+					this->current_iterator->fd = -1;
+					close_connection = true;
+					break;
+				}
 				Client client_id(this->current_iterator->fd);
 				client_id.print();
 				Client *client;
@@ -137,12 +146,6 @@ bool		Webserv::run(void) {
 					std::cout <<RED<< "Response :" <<RESET<< std::endl;
 					std::cout << "[" << GREEN << res.getResponse() << RESET << "]" << std::endl << std::endl;
 				client->addRequest(req);
-				if (rc == 0) {
-					close(this->current_iterator->fd);
-					this->current_iterator->fd = -1;
-					close_connection = true;
-					break;
-				}
 			}
 			else if (!is_server && (this->current_iterator->revents & POLLOUT))
 			{
