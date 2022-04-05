@@ -19,7 +19,7 @@ Temporary::Temporary(Temporary const & src)
 Temporary::~Temporary()
 {
 	for (file_type it = this->_files.begin(); it != this->_files.end(); it++)
-		it->close();
+		it->second.close();
 
 	this->_files.clear();
 }
@@ -101,13 +101,7 @@ int			Temporary::_filename(std::string & filename)
  */
 int		Temporary::isOpen(int id)
 {
-	for (std::vector<int>::iterator it = this->_opened.begin(); it != this->_opened.end(); it++)
-	{
-		if (*it == id)
-			return (1);
-	}
-
-	return (0);
+	return (this->_files.count(id) ? 1 : 0);
 }
 
 /**
@@ -126,9 +120,7 @@ int		Temporary::create(int id, TmpFile & data)
 
 		data.create(name);
 
-		this->_opened.push_back(id);
-		this->_files.resize(id);
-		this->_files.insert(this->_files.begin() + id, data);
+		this->_files[id] = data;
 	}
 
 	return (1);
@@ -150,9 +142,7 @@ int		Temporary::create(int id)
 		TmpFile data;
 		data.create(name);
 
-		this->_opened.push_back(id);
-		this->_files.resize(id);
-		this->_files.insert(this->_files.begin() + id, data);
+		this->_files[id] = data;
 	}
 	
 	return (1);
@@ -306,21 +296,6 @@ int			Temporary::copy(int id, std::string source)
 	if (res < 0) return (0);
 
 	return (1);
-}
-
-/**
- * @brief Display content of temporary file for debugging.
- * 
- * @param id ID of temporary file.
- * @return int 1 on success, 0 otherwise.
- */
-ssize_t			Temporary::find(int id, std::string value)
-{
-	if (this->isOpen(id)) {
-		return this->_files[id].findline(value);
-	}
-
-	return -1;
 }
 
 /**

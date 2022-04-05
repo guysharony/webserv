@@ -34,6 +34,7 @@ class Webserv
 		clients_type					_clients;
 		client_type					_client;
 		bool							_close_connection;
+		bool							_compress_array;
 
 		bool							_run;
 

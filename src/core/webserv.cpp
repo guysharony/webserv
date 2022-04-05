@@ -51,14 +51,14 @@ void 	Webserv::_clientUpdate(void)
 	{
 		if ((*it).getSocketFd() == this->current_iterator->fd)
 		{
-			std::cout << "Client already exists" << std::endl;
+			Message::debug("Client already exists");
 			this->_client = it;
 			return;
 		}
 		++it;
 	}
 
-	std::cout << "Adding Client" << std::endl;
+	Message::debug("Adding client");
 	this->_clients.push_back(Client(this->current_iterator->fd));
 	this->_client = (this->_clients.end() - 1);
 	this->_client->setRequest(this->_config);
@@ -67,11 +67,10 @@ void 	Webserv::_clientUpdate(void)
 
 bool		Webserv::run(void) {
 	int	rc;
-	bool compress_array;
 
 	rc = 0;
-	compress_array = false;
 
+	this->_compress_array = false;
 	this->_close_connection = false;
 	signal(SIGINT, &signalHandler);
 	while (this->_run) {
@@ -82,16 +81,8 @@ bool		Webserv::run(void) {
 			continue; // Allow server to continue after a failure or timeout in poll
 
 		for (this->current_index = 0; this->current_index != this->current_size; ++this->current_index) {
-			if (!this->_contextInitialize()) {
-				if (!this->_isServer()) {
-					std::cout << RED << "CLOSE CLIENT: " << this->current_iterator->fd << RESET << std::endl;
-					close(this->current_iterator->fd);
-					this->current_iterator->fd = -1;
-					this->_client = this->_clients.erase(this->_client);
-					compress_array = true;
-				}
+			if (!this->_contextInitialize())
 				continue;
-			}
 
 			if (this->_serverAccept())
 				break;
@@ -102,34 +93,6 @@ bool		Webserv::run(void) {
 
 				if (this->_clientReceive() <= 0)
 					break;
-
-				/*
-				parsing the request
-				request req(this->_config);
-				req.parseRequest(packet);
-				*/
-
-				/*
-				std::cout<< RED <<req<<RESET<<std::endl;
-				response res(req);
-				try
-				{
-					req.selectServer();
-					res = response(req);
-				}
-				catch(const Config::ServerNotFoundException& e){
-					Message::debug("Server wasn't found: handling error\n");
-					req.setRet(STATUS_INTERNAL_SERVER_ERROR);
-				}
-					res.createResponse();
-					//	std::cout<<YELLOW<<res.getResponse()<<RESET<<std::endl;
-					send(this->current_iterator->fd, res.getResponse().c_str(), res.getResponse().size(), 0);
-					std::cout <<RED<< "Response :" <<RESET<< std::endl;
-					std::cout << "[" << GREEN << res.getResponse() << RESET << "]" << std::endl << std::endl;
-					this->_close_connection = true;
-				
-				this->_client->addRequest(req);
-				*/
 			} else if (this->_clientRevents(POLLOUT)) {
 				std::string response;
 				response.append("HTTP/1.1 200 OK\r\n");
@@ -149,18 +112,18 @@ bool		Webserv::run(void) {
 					break;
 				}
 
-				this->current_iterator->events &= ~POLLOUT;
+				this->current_iterator->events = POLLIN;
 			}
 
 			if (this->_close_connection)
 			{
 				close(this->current_iterator->fd);
 				this->current_iterator->fd = -1;
-				compress_array = true;
+				this->_compress_array = true;
 			}
 		}
 
-		if (compress_array) {
+		if (this->_compress_array) {
 			this->_compress();
 		}
 	}
@@ -169,8 +132,6 @@ bool		Webserv::run(void) {
 }
 
 bool		Webserv::_listen(void) {
-	std::cout << YELLOW << "waiting for a connection..." << RESET << std::endl;
-
 	if (this->_sockets.listen() < 0)
 		return false;
 
@@ -184,7 +145,7 @@ bool		Webserv::_contextInitialize(void) {
 
 	if (!this->_isServer()) {
 		this->_clientUpdate();
-		std::cout << "revents: " << this->current_iterator->revents << std::endl;
+		Message::debug("revents: " + toString(this->current_iterator->fd));
 	}
 
 	return this->current_iterator->revents != 0;
@@ -218,7 +179,6 @@ int		Webserv::_clientReceive(void) {
 	res = recv(this->current_iterator->fd, buffer, BUFFER_SIZE, 0);
 
 	if (res == 0) {
-		std::cout << "END" << std::endl;
 		this->_client->displayRequest();
 
 		Message::debug("Closing connection: ");
@@ -228,13 +188,12 @@ int		Webserv::_clientReceive(void) {
 		close(this->current_iterator->fd);
 		this->current_iterator->fd = -1;
 		this->_close_connection = true;
+		this->_compress_array = true;
 	} else if (res > 0) {
 		std::string packet = std::string(buffer);
 
 		std::cout << RESET << "=== [" << this->current_iterator->fd << "] - (" << res << ")" << std::endl;
 		print_buffer(packet, 1000, GREEN);
-
-		this->_clientUpdate();
 
 		if (this->_client->appendRequest(packet) > 0) {
 			this->_client->setEvent(EVT_SEND_RESPONSE);

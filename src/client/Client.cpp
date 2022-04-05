@@ -35,6 +35,9 @@ Client::Client(int socket_fd)
 	struct sockaddr_in peer_addr;
 
 	socklen_t sock_addr_size = sizeof(sock_addr);
+
+	std::cout << "SOCKET NAME: " << socket_fd << std::endl;
+
 	if (getsockname(socket_fd, (struct sockaddr *)&sock_addr, &sock_addr_size) < 0)
 		Message::error("getsockname() failed");
 
@@ -157,55 +160,49 @@ int				Client::appendRequest(std::string packet)
 	std::size_t	found;
 	std::string	current;
 
-	if (this->_temporary.create(0)) {
-		this->_temporary.append(0, packet);
+	if (this->_event < EVT_REQUEST_BODY) {
+		this->_temp.append(packet);
 
-		if (this->_event < EVT_REQUEST_BODY) {
-			this->_temp.append(packet);
+		while ((found = this->_temp.find("\r\n")) != std::string::npos)
+		{
+			current = this->_temp.substr(0, found);
 
-			while ((found = this->_temp.find("\r\n")) != std::string::npos)
-			{
-				current = this->_temp.substr(0, found);
+			if (this->_event == EVT_REQUEST_LINE) {
+				this->_event = EVT_REQUEST_HEADERS;
+			} else if (this->_event == EVT_REQUEST_HEADERS) {
+				std::string key;
+				std::string value;
 
-				if (this->_event == EVT_REQUEST_LINE) {
-					this->_event = EVT_REQUEST_HEADERS;
-				} else if (this->_event == EVT_REQUEST_HEADERS) {
-					std::string key;
-					std::string value;
+				if (current.length() == 0) {
+					this->_event = EVT_REQUEST_BODY;
 
-					if (current.length() == 0) {
-						this->_event = EVT_REQUEST_BODY;
-
-						if (this->_encoding == NONE) {
-							this->_end = 1;
-						}
-
-						return this->_end;
+					if (this->_encoding == NONE) {
+						this->_end = 1;
 					}
 
-					if (this->_preparseHeader(current, key, value))
-					{
-						if (!key.compare("content-length")) {
-							this->_encoding = LENGTH;
-							this->_remaining = toInteger(value);
-						}
-						else if (!key.compare("transfer-encoding")) {
-							if (!value.compare("chunked")) {
-								this->_encoding = CHUNKED;
-								this->_remaining = 0;
-							}
+					return this->_end;
+				}
+
+				if (this->_preparseHeader(current, key, value))
+				{
+					if (!key.compare("content-length")) {
+						this->_encoding = LENGTH;
+						this->_remaining = toInteger(value);
+					}
+					else if (!key.compare("transfer-encoding")) {
+						if (!value.compare("chunked")) {
+							this->_encoding = CHUNKED;
+							this->_remaining = 0;
 						}
 					}
 				}
-
-				this->_temp = this->_temp.substr(found + 2);
 			}
-		}
 
-		return 0;
+			this->_temp = this->_temp.substr(found + 2);
+		}
 	}
 
-	return -1;
+	return 0;
 }
 
 int			Client::_preparseHeader(std::string source, std::string & key, std::string & value)
