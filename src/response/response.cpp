@@ -97,25 +97,24 @@ Temporary   response::createBody(){
             if (isFiley(new_p) == 1)
                 tmp.append(_unique_id,readHtmlFile(new_p));
             else if (isFiley(new_p) == 2){
-                 if (this->_autoIndex == 1){
-                    std::string path = loc->root + "/" + (*(loc->index.begin()));
-                    tmp.append(_unique_id,readHtmlFile(path));
+                std::vector<std::string>::iterator it ;
+                for (it = loc->index.begin() ; it != loc->index.end() ; it++){
+                     std::string path = loc->root + "/" + (*it);
+                    if (isFiley(path) == 1){
+                        tmp.append(_unique_id,readHtmlFile(path));
+                        break;
+                    }
                 }
-                else
-                    tmp.append(_unique_id,getListOfDirectories(new_p.c_str()));
+                if(it == loc->index.end() && this->_autoIndex)
+                        tmp.append(_unique_id,getListOfDirectories(new_p.c_str()));
+            else{
+                _codeDeRetour = STATUS_FORBIDDEN;
+                tmp.append(_unique_id, readHtmlFile(_server.error_page[403]));}
             }
-            else
-            {
-                _codeDeRetour = STATUS_NOT_FOUND;
-                tmp.append(_unique_id, readHtmlFile(_server.error_page[404]));
-            }
-            
-        }
         else{
             _codeDeRetour = STATUS_NOT_FOUND;
-            tmp.append(_unique_id, readHtmlFile(_server.error_page[404]));
+            tmp.append(_unique_id, readHtmlFile(_server.error_page[404]));}
         }
-        // else what to do if root is empty
     }
     else if (_codeDeRetour == STATUS_NOT_ALLOWED)
         tmp.append(_unique_id, readHtmlFile(_server.error_page[405]));
@@ -125,6 +124,8 @@ Temporary   response::createBody(){
         tmp.append(_unique_id, readHtmlFile(_server.error_page[400]));
     else if (_codeDeRetour == STATUS_REQUEST_ENTITY_TOO_LARGE)
         tmp.append(_unique_id,readHtmlFile(_server.error_page[413]));
+    else if (_codeDeRetour == STATUS_FORBIDDEN)
+        tmp.append(_unique_id,readHtmlFile(_server.error_page[403]));
     else
     {
         tmp.append(_unique_id, "this response is not handled yet!!");
@@ -152,6 +153,8 @@ std::string response::getStat(){
         return("PARTIAL CONTENT");
     if (_codeDeRetour == STATUS_NOT_ALLOWED)
         return("NOT ALLOWED");
+    if (_codeDeRetour == STATUS_FORBIDDEN)
+        return("FORBIDDEN");
     return "";
 }
 
