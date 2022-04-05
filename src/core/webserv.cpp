@@ -189,6 +189,7 @@ int		Webserv::_clientReceive(void) {
 		this->current_iterator->fd = -1;
 		this->_close_connection = true;
 		this->_compress_array = true;
+		this->_client = this->_clients.erase(this->_client);
 	} else if (res > 0) {
 		std::string packet = std::string(buffer);
 

@@ -39,6 +39,8 @@ int			TmpFile::display(void)
 
 ssize_t	TmpFile::findline(std::string value) {
 	std::string	line;
+
+	std::cout << this->_filename << std::endl;
 	std::ifstream 	file(this->_filename.c_str(), std::ifstream::binary);
 
 	if (!file) {
