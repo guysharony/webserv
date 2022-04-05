@@ -36,8 +36,6 @@ Client::Client(int socket_fd)
 
 	socklen_t sock_addr_size = sizeof(sock_addr);
 
-	std::cout << "SOCKET NAME: " << socket_fd << std::endl;
-
 	if (getsockname(socket_fd, (struct sockaddr *)&sock_addr, &sock_addr_size) < 0)
 		Message::error("getsockname() failed");
 
