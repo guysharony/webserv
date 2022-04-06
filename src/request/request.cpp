@@ -1,6 +1,6 @@
 #include "request.hpp"
 
-request::request(void)
+Request::Request(void)
 {
 	this->_method = "";
 	this->_host = "";
@@ -13,11 +13,11 @@ request::request(void)
 	this->_ret = STATUS_OK;
 }
 
-request::request(request const &src){
+Request::Request(Request const &src){
 	*this = src;
 }
 
-request::request(Config& conf){
+Request::Request(Config& conf){
 	this->_method = "";
 	this->_host = "";
 	this->_path = "";
@@ -31,7 +31,7 @@ request::request(Config& conf){
 }
 
 
-request &request::operator=(request const &rhs){
+Request &Request::operator=(Request const &rhs){
 	if (this != &rhs)
 	{
 		this->_body = rhs._body;
@@ -48,7 +48,7 @@ request &request::operator=(request const &rhs){
 	return (*this);
 }
 
-void request::request_clear()
+void Request::request_clear()
 {
 	this->_method = "";
 	this->_path = "";
@@ -61,56 +61,56 @@ void request::request_clear()
 	this->_header.clear();
 }
 
-request::~request(void) {
+Request::~Request(void) {
 	request_clear();
 }
 
-std::string request::getMethod(void)
+std::string Request::getMethod(void)
 {
 	return (this->_method);
 }
 
-std::string request::getVersion(void)
+std::string Request::getVersion(void)
 {
 	return (this->_version);
 }
 
-std::string request::getPath(void)
+std::string Request::getPath(void)
 {
 	return (this->_path);
 }
 
-std::string request::getPort(void)
+std::string Request::getPort(void)
 {
 	return (this->_port);
 }
 
-std::string request::getHost(void)
+std::string Request::getHost(void)
 {
 	return (this->_host);
 }
 
-int request::getTimeout(void)
+int Request::getTimeout(void)
 {
 	return (this->_timeout);
 }
 
-const std::map<std::string, std::string> &request::getHeader() const
+const std::map<std::string, std::string> &Request::getHeader() const
 {
 	return (this->_header);
 }
 
-std::string request::getBody(void)
+std::string Request::getBody(void)
 {
 	return (this->_body);
 }
 
-int request::getRet(void)
+int Request::getRet(void)
 {
 	return (this->_ret);
 }
 
-void request::parsePathAndVersion(std::string line)
+void Request::parsePathAndVersion(std::string line)
 {
 	size_t i;
 
@@ -120,7 +120,7 @@ void request::parsePathAndVersion(std::string line)
 	checkVersion();
 }
 
-void request::firstLineParsing(std::string request_buffer)
+void Request::firstLineParsing(std::string request_buffer)
 {
 	std::string line;
 	size_t i;
@@ -146,7 +146,7 @@ void request::firstLineParsing(std::string request_buffer)
 	parsePathAndVersion(line);
 }
 
-std::string request::getNextLine(std::string str, size_t *i)
+std::string Request::getNextLine(std::string str, size_t *i)
 {
 	std::string ret;
 	size_t j;
@@ -162,7 +162,7 @@ std::string request::getNextLine(std::string str, size_t *i)
 	return ret;
 }
 
-size_t request::headerParsing(std::string request_buffer)
+size_t Request::headerParsing(std::string request_buffer)
 {
 
 	size_t i;
@@ -192,7 +192,7 @@ size_t request::headerParsing(std::string request_buffer)
 	return header_length;
 }
 
-void request::parseRequest(std::string request_buffer)
+void Request::parseRequest(std::string request_buffer)
 {
 	size_t i;
 	if (_ret < STATUS_BAD_REQUEST)
@@ -231,7 +231,7 @@ void request::parseRequest(std::string request_buffer)
 	}
 }
 
-std::ostream &operator<<(std::ostream &os, request &req)
+std::ostream &operator<<(std::ostream &os, Request &req)
 {
 	std::map<std::string, std::string>::const_iterator it;
 
@@ -246,7 +246,7 @@ std::ostream &operator<<(std::ostream &os, request &req)
 	return os;
 }
 
-void request::checkMethod()
+void Request::checkMethod()
 {
 	if (_method.compare("GET") != 0 && _method.compare("POST") != 0 && _method.compare("DELETE") != 0)
 	{
@@ -256,7 +256,7 @@ void request::checkMethod()
 	return;
 }
 
-void request::checkPort()
+void Request::checkPort()
 {
 	size_t i;
 	std::string tmp;
@@ -273,7 +273,7 @@ void request::checkPort()
 	}
 }
 
-void request::checkTimeout()
+void Request::checkTimeout()
 {
 	std::string tmp;
 	tmp = _header["Connection-Timeout"];
@@ -281,7 +281,7 @@ void request::checkTimeout()
 		_timeout = ft_atoi(tmp.c_str());
 }
 
-void request::checkVersion()
+void Request::checkVersion()
 {
 	size_t i;
 	std::string str;
@@ -304,7 +304,7 @@ void request::checkVersion()
 	}
 }
 
-void request::displayAllLocations(void){
+void Request::displayAllLocations(void){
 	for (Config::configuration_type it = this->_config.configuration.begin(); it != this->_config.configuration.end(); it++) {
 			std::cout<<it->server_name<<std::endl;
 		for(Config::location_type it_locations = it->locations.begin(); it_locations != it->locations.end(); it_locations++){
@@ -314,7 +314,7 @@ void request::displayAllLocations(void){
 
 }
 
-Config::configuration_struct &request::selectServer(){
+Config::configuration_struct &Request::selectServer(){
 	Config::configuration_type it;
 	Config::configuration_type default_server = this->_config.configuration.end();
 	for (it = this->_config.configuration.begin(); it != this->_config.configuration.end(); it++) {
@@ -335,14 +335,14 @@ Config::configuration_struct &request::selectServer(){
 	return (*default_server);
 }
 
-bool request::checkMethodBylocation(std::vector<int> methods_type){
+bool Request::checkMethodBylocation(std::vector<int> methods_type){
 	if (std::find(methods_type.begin(), methods_type.end(), convertMethodToValue(this->_method)) != methods_type.end()){
 		return true;
 	}
 	return false;
 }
 
-Config::location_type request::selectLocation(Config::configuration_struct &server){
+Config::location_type Request::selectLocation(Config::configuration_struct &server){
 	Config::location_type it_location;
 	Config::location_type ret = server.locations.end();
 	bool  				firstTime = true;
@@ -358,7 +358,7 @@ Config::location_type request::selectLocation(Config::configuration_struct &serv
 	return (ret);
 }
 
-void  request::checkBody(Config::configuration_struct &server){
+void  Request::checkBody(Config::configuration_struct &server){
 	if (_body.size() > (size_t)server.client_max_body_size){
 		_ret = STATUS_REQUEST_ENTITY_TOO_LARGE;
 		std::cerr << RED << "body too large !!" << std::endl;
@@ -366,7 +366,7 @@ void  request::checkBody(Config::configuration_struct &server){
 
 }
 
-int 	request::convertMethodToValue(std::string method){
+int 	Request::convertMethodToValue(std::string method){
 	if (method.compare("GET") == 0)
 		return METHOD_GET;
 	if (method.compare("HEAD") == 0)
@@ -381,6 +381,6 @@ int 	request::convertMethodToValue(std::string method){
 }
 
 
-void    request::setRet(int code){
+void    Request::setRet(int code){
 		this->_ret = code;
 }

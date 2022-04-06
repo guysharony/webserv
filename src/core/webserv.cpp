@@ -122,15 +122,15 @@ bool		Webserv::run(void) {
 				std::cout <<RESET<< "=== [" << this->current_iterator->fd << "] ===" << std::endl;
 				print_buffer(buffer, 1000, GREEN);
 				//parsing the request
-				request req(this->_config);
+				Request req(this->_config);
 				req.parseRequest(buffer);
 				//std::cout<< RED <<req<<RESET<<std::endl;
 				//response
-				response res(req);
+				Response res(req);
 				try
 				{
 					req.selectServer();
-					res = response(req);				
+					res = Response(req);				
 				}
 				catch(const Config::ServerNotFoundException& e){
 					Message::debug("Server wasn't found: handling error\n");

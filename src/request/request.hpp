@@ -12,7 +12,7 @@
 # include "../../include/constants.hpp"
 # include "../config/config.hpp"
 
-class request{
+class Request{
     private:
         std::string                         _method;
         std::string                         _version;
@@ -42,11 +42,11 @@ class request{
 
 
     public:
-        request(void);
-        request(Config& conf);
-        ~request(void);
-        request &operator=(request const &rhs);
-        request(request const &src);
+        Request(void);
+        Request(Config& conf);
+        ~Request(void);
+        Request &operator=(Request const &rhs);
+        Request(Request const &src);
         std::string getMethod(void);
         std::string getVersion(void);
         std::string getPath(void);
@@ -56,7 +56,7 @@ class request{
         int getRet(void);
         const std::map<std::string, std::string>& getHeader() const;
         std::string getBody(void);
-        void parseRequest(std::string request_buffer);
+        void parseRequest(std::string Request_buffer);
         void displayAllLocations(void);
         Config::configuration_struct        &selectServer();
         Config::location_type             selectLocation(Config::configuration_struct &server);
@@ -65,7 +65,7 @@ class request{
 
 
 };
-std::ostream&		operator<<(std::ostream& os, request& re);
+std::ostream&		operator<<(std::ostream& os, Request& re);
 std::string trim2(const std::string& str);
 int	ft_atoi(const char *nptr);
 int	ft_isalpha(const char * str);

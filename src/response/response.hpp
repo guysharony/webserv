@@ -15,13 +15,13 @@
 
 
 
-class response {
+class Response {
 public:
-	response(void);
-	response(const response & src);
-	response(request & request);
-	~response(void);
-	response & operator=(const response & src);
+	Response(void);
+	Response(const Response & src);
+	Response(Request & request);
+	~Response(void);
+	Response & operator=(const Response & src);
 
 	std::string		getResponse(void);
 	void		createResponse();
@@ -29,7 +29,7 @@ public:
 
 
 private:
-	request						_req;
+	Request						_req;
 	Config::configuration_struct    _server;
 	std::string					_response;
 	std::string					_path;

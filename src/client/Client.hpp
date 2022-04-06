@@ -18,7 +18,7 @@
 class Client
 {
 public:
-	typedef request request_type;
+	typedef Request request_type;
 	typedef std::string response_type; // should be Response class
 	typedef std::pair<request_type, response_type> pair_type;
 
