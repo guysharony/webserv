@@ -101,7 +101,7 @@ bool		Webserv::run(void) {
 			if (is_server && (this->current_iterator->revents & POLLIN)) {
 				this->_sockets.accept(this->current_iterator->fd);
 				break ;
-			} else if (this->_sockets.sockets_poll.pipe_fds.count(this->current_iterator->fd)) {
+			} else if (this->_sockets.sockets_poll.pipe_fds.count(this->current_iterator->fd) && (this->current_iterator->revents & POLLIN)) {
 				Message::debug("Reading from CGI pipe\n");
 				memset(buffer, 0, BUFFER_SIZE);
 				rc = read(this->current_iterator->fd, buffer, BUFFER_SIZE);
