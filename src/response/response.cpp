@@ -2,12 +2,12 @@
 
 int 					_unique_id = rand();
 
-std::string		response::getResponse(void){
+std::string		Response::getResponse(void){
 	return (this->_response);
 }
 
 
-response & response::operator=(const response & src)
+Response & Response::operator=(const Response & src)
 {
     _req = src._req;
 	_response = src._response;
@@ -19,16 +19,16 @@ response & response::operator=(const response & src)
 }
 
 
-response::response(void){}
+Response::Response(void){}
 
-response::response(const response & src)
+Response::Response(const Response & src)
 {
 	*this = src;
 }
 
-response::~response(void){}
+Response::~Response(void){}
 
-response::response(request & request){
+Response::Response(Request & request){
     this->_req = request;
     this->_codeDeRetour = request.getRet();
     this->_response = "";
@@ -44,7 +44,7 @@ response::response(request & request){
 
 }
 
-std::string			response::findDate()
+std::string			Response::findDate()
 {
 	char			buffer[80];
 	struct timeval	tv;
@@ -54,7 +54,7 @@ std::string			response::findDate()
 	return (std::string(buffer));
 }
 
-void    response::create_headers(int body_length){
+void    Response::create_headers(int body_length){
    if (this->_codeDeRetour < STATUS_INTERNAL_SERVER_ERROR)
         _headers["server_name"] = _server.server_name;
     _headers["date"] = findDate();
@@ -65,7 +65,7 @@ void    response::create_headers(int body_length){
     
 }
 
-std::string			response::findContentType()
+std::string			Response::findContentType()
 {
 	std::string type;
 	type = _path.substr(_path.rfind(".") + 1, _path.size() - _path.rfind("."));
@@ -85,7 +85,7 @@ std::string			response::findContentType()
 		return("text/html"); //normalment text/plain mais je veux tester la page d'erreur 404 --> to check
 }
 
-Temporary   response::createBody(){
+Temporary   Response::createBody(){
     Temporary tmp(_unique_id);
     tmp.create(_unique_id);
     Config::location_type loc = _req.selectLocation(_server);
@@ -97,25 +97,24 @@ Temporary   response::createBody(){
             if (isFiley(new_p) == 1)
                 tmp.append(_unique_id,readHtmlFile(new_p));
             else if (isFiley(new_p) == 2){
-                 if (this->_autoIndex == 1){
-                    std::string path = loc->root + "/" + (*(loc->index.begin()));
-                    tmp.append(_unique_id,readHtmlFile(path));
+                std::vector<std::string>::iterator it ;
+                for (it = loc->index.begin() ; it != loc->index.end() ; it++){
+                     std::string path = loc->root + "/" + (*it);
+                    if (isFiley(path) == 1){
+                        tmp.append(_unique_id,readHtmlFile(path));
+                        break;
+                    }
                 }
-                else
-                    tmp.append(_unique_id,getListOfDirectories(new_p.c_str()));
+                if(it == loc->index.end() && this->_autoIndex)
+                        tmp.append(_unique_id,getListOfDirectories(new_p.c_str()));
+            else{
+                _codeDeRetour = STATUS_FORBIDDEN;
+                tmp.append(_unique_id, readHtmlFile(_server.error_page[403]));}
             }
-            else
-            {
-                _codeDeRetour = STATUS_NOT_FOUND;
-                tmp.append(_unique_id, readHtmlFile(_server.error_page[404]));
-            }
-            
-        }
         else{
             _codeDeRetour = STATUS_NOT_FOUND;
-            tmp.append(_unique_id, readHtmlFile(_server.error_page[404]));
+            tmp.append(_unique_id, readHtmlFile(_server.error_page[404]));}
         }
-        // else what to do if root is empty
     }
     else if (_codeDeRetour == STATUS_NOT_ALLOWED)
         tmp.append(_unique_id, readHtmlFile(_server.error_page[405]));
@@ -125,6 +124,8 @@ Temporary   response::createBody(){
         tmp.append(_unique_id, readHtmlFile(_server.error_page[400]));
     else if (_codeDeRetour == STATUS_REQUEST_ENTITY_TOO_LARGE)
         tmp.append(_unique_id,readHtmlFile(_server.error_page[413]));
+    else if (_codeDeRetour == STATUS_FORBIDDEN)
+        tmp.append(_unique_id,readHtmlFile(_server.error_page[403]));
     else
     {
         tmp.append(_unique_id, "this response is not handled yet!!");
@@ -133,7 +134,7 @@ Temporary   response::createBody(){
     return(tmp);      
 }
 
-std::string response::getStat(){
+std::string Response::getStat(){
     if (_codeDeRetour == STATUS_OK)
         return("OK");
     if (_codeDeRetour == STATUS_NOT_FOUND)
@@ -152,10 +153,12 @@ std::string response::getStat(){
         return("PARTIAL CONTENT");
     if (_codeDeRetour == STATUS_NOT_ALLOWED)
         return("NOT ALLOWED");
+    if (_codeDeRetour == STATUS_FORBIDDEN)
+        return("FORBIDDEN");
     return "";
 }
 
-void response::createResponse(){
+void Response::createResponse(){
 
     Temporary body = createBody();
     create_headers(body.size(_unique_id));
@@ -179,7 +182,7 @@ void response::createResponse(){
     _response.append(CRLF);
 }
 
-std::string    response::getListOfDirectories(const char *path) {
+std::string    Response::getListOfDirectories(const char *path) {
     DIR *dir = opendir(path);
 
     std::string html ="<!DOCTYPE html>\n<html>\n<head>\n\
@@ -211,7 +214,7 @@ std::string    response::getListOfDirectories(const char *path) {
     return html;
 }
 
-std::string       response::getUrl(std::string dirent, bool isFolder) {
+std::string       Response::getUrl(std::string dirent, bool isFolder) {
     std::string folder = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABI0lEQVR42mNkIBIwwgkk8B9JiBGXRqAEPy8To50pDwcnOyM3XOl/hn/X7/18xyglxMKoKsnGiMsAMVEW5t56qR4xQeYUoFZ2ZLnfv/9vYrw/TaVHmJclF8hnxuZuFnFGRhYxRpBLGKG2gMn//0EeYPjP+G6e4guQRVBZFIcwczExcKizgEUZMT35H6zhxQzp14zMjMIoKoAsVj4WBk55VgYmVoTVWMPo426FN+xCLELYrEAEJB4Dvp9V+gtRg0cVvuj9flbxH4GYxG/AtzMK/8nRCDfg62k5ygz4fFLmH9T9JHnhPywaPx6T+ssIiQFSw+A/KDExnl8tuU5UkMGPZN1A/PYDwyZGeUkWRkUZYDpgYGAi0Yx/D5/9eUcwN+JzAQgAABw0Qn/X2Z3nAAAAAElFTkSuQmCC";
     std::string file = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACkElEQVR42n2T2U8TURTGv5lpbSmlqbYEJNSiPvFkTFjUqDGCmBAVRGmpFX0xiInLszGGxJj4aIzGjb64YGmhUBbf/AMYbGJEEoMPQFg0LiQmlq7TGc+9sk1DPJlk7j0353e/c849Atat0mazdRSQrTpUVYOSyyGdTiOxHH9MrgnkmbDyt/r9/ukHDx8VM5fGgnMqEqk0vv1YwtzX73g3FPwVCATq6ejjZoDqvv7IeFXtfh1dVVUkUxn8/rOM3a5S3L51k0HqNipZBdT0RwbkfQcOIjoYgWuHG8lEAoqSQyabwd6qWjjsNg68e6drKdDdfYxiPuQBIvKhw0cQi8UgiiIFK5AkCYWFhSgnIGUESaT0NA03rl9bejs8uIfiFtcAlIJ8tK4eiwsLyCpZDmFFNJlMoChel+VkCpq4BeG+fty/11VLrnEdoKHhOCYnP/GqC4IAo9GITCYDg8HAFRUUWOCq2IlodAhXOy/pAUSVGxsbMTMzwzNTSAWDsLxXAXa7HQ6nE8PDI2j3+/SAEAFOnTyBqakvFAhkswo/YKkwgCSJKCkphcVi4YA2b2seINwnNzc3YWKCOqSxT4PRYOQ3C1Q85rNvtaNsexlGRkfh9eQBekNh+UxLC+bn5/jtrANcAd3MKs+U5AjmdlcgMjBACjx6QLA3JHtaz2JsbOzfAxFEOJ0OSCTfQDAGKS938fRYF3xtXj2gJ9gr+7weLFAbVda2leIxJSwN9qgcjm0oKipCMBSG39emA1S/eNUzfuH8OczOzvLAHA0Ru9XtdvNubLSXr9/gYru/hpbv14apqfn09JOnz4rNZhP+ZykasCudl38ORQd30Ta+EV1ptVo7zOb1cd4ckEzG4/HntPzM9n8B7MUhIOXcgRgAAAAASUVORK5CYII=";
     std::string image = file;
@@ -227,7 +230,7 @@ std::string       response::getUrl(std::string dirent, bool isFolder) {
 }
 
 
-std::string response::getPathAfterreplacinglocationByRoot(){
+std::string Response::getPathAfterreplacinglocationByRoot(){
     Config::location_type loc = _req.selectLocation(_server);
     std::string loc_p = loc->location;
     std::string p = _req.getPath();
