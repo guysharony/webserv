@@ -45,16 +45,18 @@ int			Webserv::load(std::string const filename)
 
 void 	Webserv::_clientUpdate(void)
 {
+	client_type it = this->_clients.begin();
 	client_type ite = this->_clients.end();
-	for (client_type it = this->_clients.begin(); it != ite; ++it) {
+	while (it != ite) {
 		if ((*it).getSocketFd() == this->current_iterator->fd) {
-			Message::debug("Client already exists");
+			Message::debug("Client already exists\n");
 			this->_client = it;
 			return;
 		}
+		++it;
 	}
 
-	Message::debug("Adding client");
+	Message::debug("Adding client\n");
 	this->_clients.push_back(Client(this->current_iterator->fd));
 	this->_client = (this->_clients.end() - 1);
 	this->_client->setRequest(this->_config);
@@ -92,11 +94,11 @@ bool		Webserv::run(void) {
 			} else if (this->_clientRevents(POLLOUT)) {
 				std::string response;
 				response.append("HTTP/1.1 200 OK\r\n");
-				response.append("content-length : 11\r\n");
-				response.append("content-location : /\r\n");
-				response.append("content-type : text/html\r\n");
-				response.append("date : Fri, 01 Apr 2022 15:39:15 GMT\r\n");
-				response.append("server_name : Michello\r\n");
+				response.append("content-length: 11\r\n");
+				response.append("content-location: /\r\n");
+				response.append("content-type: text/html\r\n");
+				response.append("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
+				response.append("server_name: Michello\r\n");
 				response.append("\r\n");
 				response.append("all files..\r\n");
 
@@ -135,7 +137,7 @@ bool		Webserv::_contextInitialize(void) {
 
 	if (!this->_isServer()) {
 		this->_clientUpdate();
-		Message::debug("revents: " + toString(this->current_iterator->fd));
+		Message::debug("revents: " + toString(this->current_iterator->revents) + "\n");
 	}
 
 	return this->current_iterator->revents != 0;
@@ -194,7 +196,6 @@ void		Webserv::_clientReject(void) {
 
 	close(this->current_iterator->fd);
 	this->current_iterator->fd = -1;
-	this->_close_connection = true;
 	this->_compress_array = true;
 	this->_client = this->_clients.erase(this->_client);
 }

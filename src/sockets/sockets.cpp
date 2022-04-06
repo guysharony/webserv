@@ -36,7 +36,7 @@ bool		Sockets::isListener(int fd) {
 }
 
 int		Sockets::listen(void) {
-	return poll(this->sockets_poll.fds.data(), this->sockets_poll.nfds, 100);
+	return poll(this->sockets_poll.fds.data(), this->sockets_poll.nfds, 500);
 }
 
 void		Sockets::accept(int fd) {
@@ -47,7 +47,6 @@ void		Sockets::accept(int fd) {
 	if (fcntl(new_client, F_SETFL, O_NONBLOCK) < 0)
 		close(new_client);
 
-	std::cout <<"New incoming connection " << new_client << std::endl;
 	this->sockets_poll.append(new_client, POLLIN);
 }
 
@@ -94,7 +93,7 @@ void		Sockets::_initializeSocket(socketsListenerType::iterator socket_iterator) 
 		return;
 	}
 
-	if (::listen(socketfd, 1000) < 0)
+	if (::listen(socketfd, 32) < 0)
 	{
 		Message::error("listen() failed");
 		close(socketfd);

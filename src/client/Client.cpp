@@ -9,7 +9,7 @@ Client::Client(void)
 	_server_port(-1),
 	_request(),
 	_response(),
-	_event(EVT_REQUEST_LINE),
+	_event(NONE),
 	_encoding(NONE),
 	_remaining(-1),
 	_temporary(),
@@ -25,7 +25,7 @@ Client::Client(int socket_fd)
 	_server_port(-1),
 	_request(),
 	_response(),
-	_event(EVT_REQUEST_LINE),
+	_event(NONE),
 	_encoding(NONE),
 	_remaining(-1),
 	_temporary(),
@@ -50,22 +50,6 @@ Client::Client(int socket_fd)
 	this->_server_port = ntohs(sock_addr.sin_port);
 	this->_temporary.socket(this->_socket_fd);
 }
-
-
-/* Constructor not used
-Client::Client(int socket_fd, std::string server_addr, int server_port, std::string client_addr, int client_port)
-:
-	_client_addr(client_addr),
-	_client_port(client_port),
-	_socket_fd(socket_fd),
-	_server_addr(server_addr),
-	_server_port(server_port),
-	_request(),
-	_response()
-{ }
-*/
-
-
 
 Client::Client(Client const &src)
 { *this = src; }
