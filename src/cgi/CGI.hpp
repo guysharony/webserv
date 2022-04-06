@@ -16,6 +16,7 @@ class CGI
 {
 	public:
 	CGI(void);
+	CGI(std::string const &cgi_path);
 	CGI(CGI const & src);
 	~CGI(void);
 	CGI &operator=(CGI const & rhs);
