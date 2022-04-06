@@ -45,17 +45,13 @@ int			Webserv::load(std::string const filename)
 
 void 	Webserv::_clientUpdate(void)
 {
-	client_type it = this->_clients.begin();
 	client_type ite = this->_clients.end();
-	while (it != ite)
-	{
-		if ((*it).getSocketFd() == this->current_iterator->fd)
-		{
+	for (client_type it = this->_clients.begin(); it != ite; ++it) {
+		if ((*it).getSocketFd() == this->current_iterator->fd) {
 			Message::debug("Client already exists");
 			this->_client = it;
 			return;
 		}
-		++it;
 	}
 
 	Message::debug("Adding client");
@@ -88,7 +84,7 @@ bool		Webserv::run(void) {
 				break;
 
 			if (this->_clientRevents(POLLIN)) {
-				if (this->_client->getEvent() == EVT_SEND_RESPONSE)
+				if (this->_client->getEvent() == NONE)
 					this->_client->setEvent(EVT_REQUEST_LINE);
 
 				if (this->_clientReceive() <= 0)
@@ -113,13 +109,7 @@ bool		Webserv::run(void) {
 				}
 
 				this->current_iterator->events = POLLIN;
-			}
-
-			if (this->_close_connection)
-			{
-				close(this->current_iterator->fd);
-				this->current_iterator->fd = -1;
-				this->_compress_array = true;
+				this->_client->setEvent(NONE);
 			}
 		}
 
@@ -178,19 +168,9 @@ int		Webserv::_clientReceive(void) {
 
 	res = recv(this->current_iterator->fd, buffer, BUFFER_SIZE, 0);
 
-	if (res == 0) {
-		this->_client->displayRequest();
-
-		Message::debug("Closing connection: ");
-		Message::debug(this->current_iterator->fd);
-		Message::debug("\n");
-
-		close(this->current_iterator->fd);
-		this->current_iterator->fd = -1;
-		this->_close_connection = true;
-		this->_compress_array = true;
-		this->_client = this->_clients.erase(this->_client);
-	} else if (res > 0) {
+	if (res == 0)
+		this->_clientReject();
+	else if (res > 0) {
 		std::string packet = std::string(buffer);
 
 		std::cout << RESET << "=== [" << this->current_iterator->fd << "] - (" << res << ")" << std::endl;
@@ -203,6 +183,20 @@ int		Webserv::_clientReceive(void) {
 	}
 
 	return res;
+}
+
+void		Webserv::_clientReject(void) {
+	this->_client->displayRequest();
+
+	Message::debug("Closing connection: ");
+	Message::debug(this->current_iterator->fd);
+	Message::debug("\n");
+
+	close(this->current_iterator->fd);
+	this->current_iterator->fd = -1;
+	this->_close_connection = true;
+	this->_compress_array = true;
+	this->_client = this->_clients.erase(this->_client);
 }
 
 void		Webserv::_compress(void) {

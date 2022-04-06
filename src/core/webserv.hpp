@@ -45,6 +45,7 @@ class Webserv
 		bool							_clientRevents(short revents);
 		int							_clientReceive(void);
 		void 						_clientUpdate(void);
+		void							_clientReject(void);
 		void							_compress(void);
 };
 

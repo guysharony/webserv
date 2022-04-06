@@ -94,7 +94,7 @@ void		Sockets::_initializeSocket(socketsListenerType::iterator socket_iterator) 
 		return;
 	}
 
-	if (::listen(socketfd, 32) < 0)
+	if (::listen(socketfd, 1000) < 0)
 	{
 		Message::error("listen() failed");
 		close(socketfd);
