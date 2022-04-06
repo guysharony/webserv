@@ -75,9 +75,11 @@ bool		Webserv::run(void) {
 	close_connection = false;
 	compress_array = false;
 
-	CGI new_cgi;
-	int pipefd = new_cgi.launch_cgi("www/php/index.php");
-	this->_sockets.sockets_poll.append_pipe(pipefd, POLLIN);
+	/* CGI Demo
+	CGI new_cgi("/usr/bin/php-cgi");							// Create a new CGI connection with the path to CGI
+	int pipefd = new_cgi.launch_cgi("www/php/index.php");		// Launch the CGI command with the path to requested file (returns file descriptor to read)
+	this->_sockets.sockets_poll.append_pipe(pipefd, POLLIN);	// Add the new file descriptor to poll
+	*/
 
 	signal(SIGINT, &signalHandler);
 	while (this->_run) {
@@ -101,7 +103,7 @@ bool		Webserv::run(void) {
 			if (is_server && (this->current_iterator->revents & POLLIN)) {
 				this->_sockets.accept(this->current_iterator->fd);
 				break ;
-			} else if (this->_sockets.sockets_poll.pipe_fds.count(this->current_iterator->fd) && (this->current_iterator->revents & POLLIN)) {
+			} else if (this->_sockets.sockets_poll.pipe_fds.count(this->current_iterator->fd) && (this->current_iterator->revents & POLLIN)) { // Handle cgi response here
 				Message::debug("Reading from CGI pipe\n");
 				memset(buffer, 0, BUFFER_SIZE);
 				rc = read(this->current_iterator->fd, buffer, BUFFER_SIZE);
