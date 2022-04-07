@@ -236,9 +236,7 @@ int			Client::_requestHeaders(void)
 		return this->_end;
 	}
 
-	if (this->_requestHeader(this->_current, key, value))
-	{
-		std::cout << "[" << key << "]: " << value <<std::endl;
+	if (this->_requestHeader(this->_current, key, value)) {
 		if (!key.compare("host")) this->_request_headers.host = value;
 		else if (!key.compare("connection")) {
 			this->_request_headers.connection = value;
