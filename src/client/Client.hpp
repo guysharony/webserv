@@ -12,6 +12,7 @@
 # include <arpa/inet.h>	// htons, inet_addr
 
 # include "../formats/temporary.hpp"
+# include "../formats/strings.hpp"
 # include "../request/request.hpp"
 # include "../response/response.hpp"
 # include "../core/message.hpp"
@@ -20,7 +21,6 @@ class Client
 {
 	public:
 		Client(int socket_fd);
-		// Client(int socket_fd, std::string server_addr, int server_port, std::string client_addr, int client_port);
 		Client(Client const &src);
 		Client				&operator=(Client const &rhs);
 		~Client();
@@ -51,6 +51,30 @@ class Client
 		int					appendRequest(std::string packet);
 		void					displayRequest(void);
 
+		/* request line */
+		struct 								request_line_struct
+		{
+			int								method;
+			std::string						target;
+			std::string						version;
+		};
+		
+		typedef	request_line_struct				request_line_type;
+
+
+		/* request headers */
+		struct 								request_headers_struct
+		{
+			std::string						host;
+			std::string						connection;
+			std::string						accept;
+			std::string						accept_encoding;
+			std::string						accept_language;
+			std::map<std::string, std::string>		custom;
+		};
+		
+		typedef	request_headers_struct			request_headers_type;
+
 	private:
 		Client(void);
 
@@ -64,11 +88,24 @@ class Client
 		int					_event;
 		int					_encoding;
 		int					_remaining;
+		// int					_status;
+		int					_connection;
+		// int					_current_remaining;
+		bool					_chunked;
+		request_line_type		_request_line;
+		request_headers_type	_request_headers;
 		std::string			_temp;
+		std::string			_current;
 		Temporary				_temporary;
 		int					_end;
 
-		int					_preparseHeader(std::string source, std::string & key, std::string & value);
+		int					_requestLine(void);
+		int					_requestMethod(std::string & source, int & dst);
+		int					_requestTarget(std::string & source, std::string & dst);
+		int					_requestVersion(std::string & source, std::string & dst);
+
+		int					_requestHeaders(void);
+		int					_requestHeader(std::string source, std::string & key, std::string & value);
 };
 
 #endif

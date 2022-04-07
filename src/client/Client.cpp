@@ -140,54 +140,135 @@ void				Client::setEvent(int value)
 int				Client::appendRequest(std::string packet)
 {
 	std::size_t	found;
-	std::string	current;
 
 	if (this->_event < EVT_REQUEST_BODY) {
 		this->_temp.append(packet);
 
 		while ((found = this->_temp.find("\r\n")) != std::string::npos)
 		{
-			current = this->_temp.substr(0, found);
+			this->_current = this->_temp.substr(0, found);
 
 			if (this->_event == EVT_REQUEST_LINE) {
-				this->_event = EVT_REQUEST_HEADERS;
+				if (!this->_requestLine())
+					Message::error("Bad request");
 			} else if (this->_event == EVT_REQUEST_HEADERS) {
-				std::string key;
-				std::string value;
-
-				if (current.length() == 0) {
-					this->_event = EVT_REQUEST_BODY;
-
-					if (this->_encoding == NONE) {
-						this->_end = 1;
-					}
-
-					return this->_end;
-				}
-
-				if (this->_preparseHeader(current, key, value))
-				{
-					if (!key.compare("content-length")) {
-						this->_encoding = LENGTH;
-						this->_remaining = toInteger(value);
-					}
-					else if (!key.compare("transfer-encoding")) {
-						if (!value.compare("chunked")) {
-							this->_encoding = CHUNKED;
-							this->_remaining = 0;
-						}
-					}
-				}
+				this->_requestHeaders();
 			}
 
 			this->_temp = this->_temp.substr(found + 2);
 		}
 	}
 
+	return this->_end;
+}
+
+int			Client::_requestLine(void)
+{
+	if (occurence(this->_current, " ") != 2)
+		return (0);
+
+	this->_temp = this->_temp.substr(this->_current.length() + 2);
+
+	if (!this->_requestMethod(this->_current, this->_request_line.method))
+		return (0);
+
+	if (!this->_requestTarget(this->_current, this->_request_line.target))
+		return (0);
+
+	if (!this->_requestVersion(this->_current, this->_request_line.version))
+		return (0);
+
+	this->_event = EVT_REQUEST_HEADERS;
+
+	return (1);
+}
+
+int			Client::_requestMethod(std::string & source, int & dst)
+{
+	std::string	sep = " ";
+	size_t 		pos = source.find(sep);
+	std::string	line = source.substr(0, pos);
+
+	source = source.substr(pos + sep.length());
+
+	return (isHttpMethod(line, dst));
+}
+
+int			Client::_requestTarget(std::string & source, std::string & dst)
+{
+	std::string	sep = " ";
+	size_t 		pos = source.find(sep);
+	std::string	line = source.substr(0, pos);
+
+	source = source.substr(pos + sep.length());
+
+	if (line.length() > 0 && line[0] == '/') {
+		dst = line;
+		return (1);
+	}
+
+	return (0);
+}
+
+int			Client::_requestVersion(std::string & source, std::string & dst)
+{
+	if (!source.compare("HTTP/1.1")) {
+		dst = source;
+		
+		return (1);
+	}
+
+	return (0);
+}
+
+int			Client::_requestHeaders(void)
+{
+	std::string key;
+	std::string value;
+
+	if (this->_current.length() == 0) {
+		this->_event = EVT_REQUEST_BODY;
+
+		if (this->_encoding == NONE) {
+			this->_end = 1;
+		}
+
+		return this->_end;
+	}
+
+	if (this->_requestHeader(this->_current, key, value))
+	{
+		std::cout << "[" << key << "]: " << value <<std::endl;
+		if (!key.compare("host")) this->_request_headers.host = value;
+		else if (!key.compare("connection")) {
+			this->_request_headers.connection = value;
+
+			if (!value.compare("close")) this->_connection = CLOSE;
+			if (!value.compare("keep-alive")) this->_connection = KEEP_ALIVE;
+		}
+		else if (!key.compare("accept")) this->_request_headers.accept = value;
+		else if (!key.compare("accept-encoding")) this->_request_headers.accept_encoding = value;
+		else if (!key.compare("accept-language")) this->_request_headers.accept_language = value;
+		else if (!key.compare("content-length")) {
+			this->_encoding = LENGTH;
+			this->_remaining = toInteger(value);
+		}
+		else if (!key.compare("transfer-encoding")) {
+			if (!value.compare("chunked")) {
+				this->_encoding = CHUNKED;
+				this->_remaining = 0;
+				this->_chunked = 0;
+			}
+		}
+		else {
+			this->_request_headers.custom[key] = value;
+		}
+	}
+
 	return 0;
 }
 
-int			Client::_preparseHeader(std::string source, std::string & key, std::string & value)
+int			Client::_requestHeader(std::string source, std::string & key, std::string & value)
 {
 	size_t	pos = source.find(":");
 
