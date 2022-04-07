@@ -105,6 +105,7 @@ bool		Webserv::run(void) {
 					std::string response;
 
 					if (this->_client->getMethod() == METHOD_GET) {
+						std::cout << "GET RESPONSE" << std::endl;
 						response.append("HTTP/1.1 200 OK\r\n");
 						response.append("content-length: 11\r\n");
 						response.append("content-location: /\r\n");
@@ -114,12 +115,15 @@ bool		Webserv::run(void) {
 						response.append("\r\n");
 						response.append("all files..");
 					} else {
-						response.append("HTTP/1.1 201 CREATED\r\n");
-						response.append("content-length: 0\r\n");
-						response.append("content-type: test/file\r\n");
+						std::cout << "POST RESPONSE" << std::endl;
+						response.append("HTTP/1.1 405 Not Allowed\r\n");
+						response.append("content-length: 11\r\n");
+						response.append("content-location: /\r\n");
+						response.append("content-type: text/html\r\n");
 						response.append("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
 						response.append("server_name: Michello\r\n");
 						response.append("\r\n");
+						response.append("all files..");
 					}
 
 					rc = send(this->current_iterator->fd, response.c_str(), response.length(), 0);

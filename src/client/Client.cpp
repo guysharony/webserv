@@ -150,6 +150,7 @@ int				Client::execute(void) {
 
 			if (this->_event == EVT_REQUEST_LINE) {
 				this->_end = 0;
+				this->_encoding = NONE;
 
 				if (!this->_requestLine())
 					Message::error("Bad request");
@@ -161,18 +162,48 @@ int				Client::execute(void) {
 						this->_end = 1;
 					}
 
-					return 0;
+					return this->_end;
 				}
 
 				this->_requestHeaders();
 			}
+
+			if (this->_temp[0] == '\r' && this->_temp[1] == '\n') {
+				this->_event = EVT_REQUEST_BODY;
+
+				if (this->_encoding == NONE) {
+					this->_end = 1;
+				}
+
+				this->_temp = this->_temp.substr(2);
+			}
 		}
 	} else if (this->_event == EVT_REQUEST_BODY) {
 		if (this->_encoding == CHUNKED) {
+			std::cout << "CHUNK" << std::endl;
+
 			while ((found = this->_temp.find("\r\n")) != std::string::npos) {
 				this->_current = this->_temp.substr(0, found);
+				this->_temp = this->_temp.substr(found + 2);
 
-				std::cout << "CHUNKED [" << this->_current << "]" << std::endl;
+				if (!this->_chunked) {
+					std::cout << "CHUNKED [" << this->_current << "]" << std::endl;
+
+					if (!this->_current.length())
+						Message::error("Chunk is not valid.");
+
+					this->_remaining = hexToInt(this->_current);
+					this->_current_remaining = 0;
+					this->_chunked = true;
+				} else {
+					this->_current_remaining += this->_current.length();
+
+					if (this->_current_remaining > this->_remaining)
+						Message::error("Something is wrong");
+
+					if (this->_remaining == 0)
+						this->_end = 1;
+				}
 			}
 		}
 	}

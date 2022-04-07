@@ -92,7 +92,7 @@ class Client
 		int					_remaining;
 		// int					_status;
 		int					_connection;
-		// int					_current_remaining;
+		int					_current_remaining;
 		bool					_chunked;
 		request_line_type		_request_line;
 		request_headers_type	_request_headers;
