@@ -150,22 +150,27 @@ bool		Webserv::run(void) {
 				//parsing the request
 				Request req(this->_config);
 				req.parseRequest(buffer);
-				
+				Config::configuration_struct server;
 				try
 				{
-					req.selectServer();		
+					server =req.selectServer();		
 				}
 				catch(const Config::ServerNotFoundException& e){
 					Message::debug("Server wasn't found: handling error\n");
 					req.setRet(STATUS_INTERNAL_SERVER_ERROR);
 				}
+				 char buffer[2000];
+				 if (req.isCgi(server)){
+					 CGI new_cgi(req.getPath());								// Create a new CGI connection with the path to CGI
+					 int pipefd = new_cgi.launch_cgi(req.getPath());			// Launch the CGI command with the path to requested file (returns file descriptor to read)
+					this->_sockets.sockets_poll.append_pipe(pipefd, POLLIN);	// Add the new file descriptor to poll
 
-				// if (req.isCGI)
-					// CGI new_cgi(req.CGIPath);								// Create a new CGI connection with the path to CGI
-					// int pipefd = new_cgi.launch_cgi(req.path);				// Launch the CGI command with the path to requested file (returns file descriptor to read)
-					// this->_sockets.sockets_poll.append_pipe(pipefd, POLLIN);	// Add the new file descriptor to poll
-				// else {
-
+					read(pipefd, (void*)buffer, 2000);
+					std::cout << buffer <<std::endl;	
+					CgiResponse  cgiRes;
+					cgiRes.parseCgiBuffer(buffer);
+				 }
+			//	 else {
 					Response res(req);
 					res.createResponse();
 
@@ -174,7 +179,7 @@ bool		Webserv::run(void) {
 					send(this->current_iterator->fd, res.getResponse().c_str(), res.getResponse().size(), 0);
 					std::cout <<RED<< "Response :" <<RESET<< std::endl;
 					std::cout << "[" << GREEN << res.getResponse() << RESET << "]" << std::endl << std::endl;
-				// }
+			// }
 				client->addRequest(req);
 			}
 			else if (!is_server && (this->current_iterator->revents & POLLOUT))

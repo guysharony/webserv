@@ -384,3 +384,21 @@ int 	Request::convertMethodToValue(std::string method){
 void    Request::setRet(int code){
 		this->_ret = code;
 }
+
+bool 	Request::isCgi(Config::configuration_struct server){
+	size_t i;
+	i = _path.find_last_of(".");
+	if (i == std::string ::npos)
+		return false;
+	std::string ext = _path.substr(i, _path.size() - 1);
+	std::vector<std::string>::iterator it = server.cgi_extentions.begin();
+	while (it != server.cgi_extentions.end()){
+		if((*it).compare(ext) == 0)
+			break;
+		else
+			it++;
+	}
+	if (it != server.cgi_extentions.end() && isFiley("www/php/index.php") == 1)
+		return true;
+	return false;
+}
