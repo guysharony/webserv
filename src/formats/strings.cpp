@@ -162,7 +162,6 @@ int		occurence(std::string source, std::string occurence)
 	int			count = 0;
 	size_t		pos = 0;
 
-	std::cout << source << std::endl;
 	while ((pos = source.find(occurence, pos)) != std::string::npos) {
 		count++;
 		pos++;

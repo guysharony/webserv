@@ -7,8 +7,6 @@ Client::Client(void)
 	_socket_fd(-1),
 	_server_addr(),
 	_server_port(-1),
-	_request(),
-	_response(),
 	_event(NONE),
 	_encoding(NONE),
 	_remaining(-1),
@@ -23,8 +21,6 @@ Client::Client(int socket_fd)
 	_socket_fd(socket_fd),
 	_server_addr(),
 	_server_port(-1),
-	_request(),
-	_response(),
 	_event(NONE),
 	_encoding(NONE),
 	_remaining(-1),
@@ -110,6 +106,9 @@ int				Client::getServerPort(void)
 int				Client::getEvent(void)
 { return (this->_event); }
 
+int				Client::getMethod(void)
+{ return (this->_request_line.method); }
+
 
 // Setters
 void				Client::setClientAddr(std::string const &addr)
@@ -137,25 +136,44 @@ void				Client::setEvent(int value)
 { this->_event = value; }
 
 
-int				Client::appendRequest(std::string packet)
-{
+void				Client::appendRequest(std::string packet)
+{ this->_temp.append(packet); }
+
+int				Client::execute(void) {
 	std::size_t	found;
 
-	if (this->_event < EVT_REQUEST_BODY) {
-		this->_temp.append(packet);
-
-		while ((found = this->_temp.find("\r\n")) != std::string::npos)
-		{
+	if (this->_event < EVT_REQUEST_BODY)
+	{
+		while ((found = this->_temp.find("\r\n")) != std::string::npos) {
 			this->_current = this->_temp.substr(0, found);
+			this->_temp = this->_temp.substr(found + 2);
 
 			if (this->_event == EVT_REQUEST_LINE) {
+				this->_end = 0;
+
 				if (!this->_requestLine())
 					Message::error("Bad request");
 			} else if (this->_event == EVT_REQUEST_HEADERS) {
+				if (this->_current.length() == 0) {
+					this->_event = EVT_REQUEST_BODY;
+
+					if (this->_encoding == NONE) {
+						this->_end = 1;
+					}
+
+					return 0;
+				}
+
 				this->_requestHeaders();
 			}
+		}
+	} else if (this->_event == EVT_REQUEST_BODY) {
+		if (this->_encoding == CHUNKED) {
+			while ((found = this->_temp.find("\r\n")) != std::string::npos) {
+				this->_current = this->_temp.substr(0, found);
 
-			this->_temp = this->_temp.substr(found + 2);
+				std::cout << "CHUNKED [" << this->_current << "]" << std::endl;
+			}
 		}
 	}
 
@@ -166,8 +184,6 @@ int			Client::_requestLine(void)
 {
 	if (occurence(this->_current, " ") != 2)
 		return (0);
-
-	this->_temp = this->_temp.substr(this->_current.length() + 2);
 
 	if (!this->_requestMethod(this->_current, this->_request_line.method))
 		return (0);
@@ -226,15 +242,8 @@ int			Client::_requestHeaders(void)
 	std::string key;
 	std::string value;
 
-	if (this->_current.length() == 0) {
-		this->_event = EVT_REQUEST_BODY;
-
-		if (this->_encoding == NONE) {
-			this->_end = 1;
-		}
-
-		return this->_end;
-	}
+	std::cout << "CURRENT: [" << this->_current << "]" << std::endl;
+	std::cout << "TEMP:    [" << this->_temp << "]" << std::endl;
 
 	if (this->_requestHeader(this->_current, key, value)) {
 		if (!key.compare("host")) this->_request_headers.host = value;

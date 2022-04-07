@@ -34,6 +34,7 @@ class Client
 		std::string const		&getServerAddr(void);
 		int					getServerPort(void);
 		int					getEvent(void);
+		int					getMethod(void);
 
 		// Setters
 		void					setClientAddr(std::string const &addr);
@@ -48,8 +49,9 @@ class Client
 		// Debug functions
 		void					print();
 
-		int					appendRequest(std::string packet);
+		void					appendRequest(std::string packet);
 		void					displayRequest(void);
+		int					execute(void);
 
 		/* request line */
 		struct 								request_line_struct

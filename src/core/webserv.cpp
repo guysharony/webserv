@@ -85,33 +85,54 @@ bool		Webserv::run(void) {
 			if (this->_serverAccept())
 				break;
 
-			if (this->_clientRevents(POLLIN)) {
-				if (this->_client->getEvent() == NONE)
-					this->_client->setEvent(EVT_REQUEST_LINE);
+			if (this->_client->getEvent() < EVT_REQUEST) {
+				if (this->_clientRevents(POLLIN)) {
+					if (this->_client->getEvent() == NONE)
+						this->_client->setEvent(EVT_REQUEST_LINE);
 
-				if (this->_clientReceive() <= 0)
-					break;
-			} else if (this->_clientRevents(POLLOUT)) {
-				std::string response;
-				response.append("HTTP/1.1 200 OK\r\n");
-				response.append("content-length: 11\r\n");
-				response.append("content-location: /\r\n");
-				response.append("content-type: text/html\r\n");
-				response.append("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
-				response.append("server_name: Michello\r\n");
-				response.append("\r\n");
-				response.append("all files..\r\n");
-
-				rc = send(this->current_iterator->fd, response.c_str(), response.length(), 0);
-				if (rc < 0)
-				{
-					Message::error("send() failed.");
-					this->_close_connection = true;
-					break;
+					if (this->_clientReceive() <= 0)
+						break;
 				}
 
-				this->current_iterator->events = POLLIN;
-				this->_client->setEvent(NONE);
+				if (this->_client->execute()) {
+					std::cout << "EVECUTE" << std::endl;
+					this->current_iterator->events = POLLOUT;
+					this->_client->setEvent(EVT_PREPARE_RESPONSE);
+				}
+
+			} else {
+				if (this->_clientRevents(POLLOUT)) {
+					std::string response;
+
+					if (this->_client->getMethod() == METHOD_GET) {
+						response.append("HTTP/1.1 200 OK\r\n");
+						response.append("content-length: 11\r\n");
+						response.append("content-location: /\r\n");
+						response.append("content-type: text/html\r\n");
+						response.append("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
+						response.append("server_name: Michello\r\n");
+						response.append("\r\n");
+						response.append("all files..");
+					} else {
+						response.append("HTTP/1.1 201 CREATED\r\n");
+						response.append("content-length: 0\r\n");
+						response.append("content-type: test/file\r\n");
+						response.append("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
+						response.append("server_name: Michello\r\n");
+						response.append("\r\n");
+					}
+
+					rc = send(this->current_iterator->fd, response.c_str(), response.length(), 0);
+					if (rc < 0)
+					{
+						Message::error("send() failed.");
+						this->_close_connection = true;
+						break;
+					}
+
+					this->current_iterator->events = POLLIN;
+					this->_client->setEvent(NONE);
+				}
 			}
 		}
 
@@ -178,10 +199,7 @@ int		Webserv::_clientReceive(void) {
 		std::cout << RESET << "=== [" << this->current_iterator->fd << "] - (" << res << ")" << std::endl;
 		print_buffer(packet, 1000, GREEN);
 
-		if (this->_client->appendRequest(packet) > 0) {
-			this->_client->setEvent(EVT_SEND_RESPONSE);
-			this->current_iterator->events |= POLLOUT;
-		}
+		this->_client->appendRequest(packet);
 	}
 
 	return res;
