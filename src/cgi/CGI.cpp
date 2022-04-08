@@ -48,7 +48,7 @@ int	CGI::launch_cgi(std::string const & filename)
 			Message::error("dup2() failed");
 		close(fd[1]);
 
-		setenv("PATH_INFO", "test value", true); // Can assign PATH_INFO here once we know what path to use
+		setenv("PATH_INFO", filename.c_str(), true); // Can assign PATH_INFO here once we know what path to use
 		char *executable = strdup(this->_cgi_path.c_str());
 		if (!executable)
 			Message::error("strdup() failed");
