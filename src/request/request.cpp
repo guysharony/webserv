@@ -154,11 +154,14 @@ std::string Request::getNextLine(std::string str, size_t *i)
 	if (*i == std::string::npos)
 		return "";
 	j = str.find(CRLF, *i);
-	ret = str.substr(*i, j - *i);
-	if (j == std::string::npos)
+	if (j != std::string::npos){
+		ret = str.substr(*i, j - *i);
 		*i = j;
-	else
-		*i = j + 1;
+	}
+	else{
+		ret = str.substr(*i, str.size() - *i - 1);
+		*i = str.size() - 1;
+	}
 	return ret;
 }
 
@@ -186,6 +189,7 @@ size_t Request::headerParsing(std::string request_buffer)
 		key = trim2(key);
 		value = trim2(value);
 		this->_header[key] = value;
+		i++;
 	}
 	checkPort();
 	checkTimeout();

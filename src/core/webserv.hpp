@@ -10,7 +10,7 @@
 # include "../response/response.hpp"
 # include "../client/Client.hpp"
 # include "../cgi/CGI.hpp"
-# include "../cgi/cgiResponse.hpp"
+# include "../cgi/CgiParser.hpp"
 
 class Webserv
 {

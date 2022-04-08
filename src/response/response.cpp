@@ -245,3 +245,26 @@ std::string Response::getPathAfterreplacinglocationByRoot(){
     }
     return "";
 }
+
+void Response::createCgiResponse(CgiParser p){
+    create_headers(p.getBody().size());
+    //append cgi headers if does not exist in _headers or replace the old value by the new one
+    std::map<std::string, std::string> header = p.getHeaders();
+     for (std::map<std::string, std::string>::iterator itCgi = header.begin(); itCgi != header.end(); itCgi++){
+        _headers[itCgi->first] = itCgi->second;
+    } 
+    _response.append("HTTP/1.1 ");
+    _response.append(intToStr(p.getStatus()));
+    _response.append(" ");
+    _response.append(getStat());
+    _response.append(CRLF);
+    for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); it++){
+        _response.append(it->first);
+        _response.append(" : ");
+        _response.append(it->second);
+        _response.append(CRLF);
+    }
+    _response.append(D_CRLF);
+    _response.append(p.getBody());
+    _response.append(CRLF);
+}
