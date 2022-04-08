@@ -180,14 +180,14 @@ int				Client::execute(void) {
 		}
 	} else if (this->_event == EVT_REQUEST_BODY) {
 		if (this->_encoding == CHUNKED) {
-			std::cout << "CHUNK" << std::endl;
+			// std::cout << "CHUNK" << std::endl;
 
 			while ((found = this->_temp.find("\r\n")) != std::string::npos) {
 				this->_current = this->_temp.substr(0, found);
 				this->_temp = this->_temp.substr(found + 2);
 
 				if (!this->_chunked) {
-					std::cout << "CHUNKED [" << this->_current << "]" << std::endl;
+					// std::cout << "CHUNKED [" << this->_current << "]" << std::endl;
 
 					if (!this->_current.length())
 						Message::error("Chunk is not valid.");
@@ -273,8 +273,8 @@ int			Client::_requestHeaders(void)
 	std::string key;
 	std::string value;
 
-	std::cout << "CURRENT: [" << this->_current << "]" << std::endl;
-	std::cout << "TEMP:    [" << this->_temp << "]" << std::endl;
+	// std::cout << "CURRENT: [" << this->_current << "]" << std::endl;
+	// std::cout << "TEMP:    [" << this->_temp << "]" << std::endl;
 
 	if (this->_requestHeader(this->_current, key, value)) {
 		if (!key.compare("host")) this->_request_headers.host = value;
