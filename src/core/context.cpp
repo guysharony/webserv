@@ -95,7 +95,7 @@ int			Context::contextExecute(void) {
 		return 0;
 	} else if (!this->context.is_server) {
 		if (this->context.client->getEvent() < EVT_REQUEST) {
-			if (this->context.poll->revents & POLLIN) {
+			if (this->context.is_read) {
 				if (this->context.client->getEvent() == NONE)
 					this->context.client->setEvent(EVT_REQUEST_LINE);
 
@@ -104,47 +104,19 @@ int			Context::contextExecute(void) {
 			}
 
 			if (this->context.client->execute()) {
-				std::cout << "EXECUTE" << std::endl;
 				this->context.poll->events = POLLOUT;
-				this->context.client->setEvent(EVT_PREPARE_RESPONSE);
+				this->context.client->setEvent(EVT_SEND_RESPONSE);
 			}
+		} else if (this->context.client->getEvent() == EVT_SEND_RESPONSE) {
+			if (this->context.is_write) {
+				std::string packet;
 
-		} else {
-			if (this->context.poll->revents & POLLOUT) {
-				std::string response;
-
-				if (this->context.client->getMethod() == METHOD_GET) {
-					std::cout << "GET RESPONSE" << std::endl;
-					response.append("HTTP/1.1 200 OK\r\n");
-					response.append("content-length: 11\r\n");
-					response.append("content-location: /\r\n");
-					response.append("content-type: text/html\r\n");
-					response.append("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
-					response.append("server_name: Michello\r\n");
-					response.append("\r\n");
-					response.append("all files..");
-				} else {
-					std::cout << "POST RESPONSE" << std::endl;
-					response.append("HTTP/1.1 405 Not Allowed\r\n");
-					response.append("content-length: 11\r\n");
-					response.append("content-location: /\r\n");
-					response.append("content-type: text/html\r\n");
-					response.append("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
-					response.append("server_name: Michello\r\n");
-					response.append("\r\n");
-					response.append("all files..");
-				}
-
-				int rc = send(this->context.poll->fd, response.c_str(), response.length(), 0);
-				if (rc < 0)
-				{
-					Message::error("send() failed.");
-					this->_close_connection = true;
-					return 0;
-				}
+				while (this->context.client->getResponse(packet))
+					this->_clientSend(packet);
 
 				this->context.poll->events = POLLIN;
 				this->context.client->setEvent(NONE);
+				this->context.client->clearResponse();
 			}
 		}
 	}
@@ -177,6 +149,12 @@ void					Context::_clientReject(void) {
 
 	close(this->context.poll->fd);
 	this->context.poll->fd = -1;
+	if (this->context.client->getConnection() == CLOSE) {
+		struct linger sl;
+		sl.l_onoff = 1;
+		sl.l_linger = 0;
+		setsockopt(this->context.poll->fd, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl));
+	}
 	this->_compress_array = true;
 	this->context.client = this->_clients.erase(this->context.client);
 }
@@ -203,4 +181,19 @@ int				Context::_clientReceive(void) {
 	}
 
 	return res;
+}
+
+int				Context::_clientSend(std::string value) {
+	if (this->context.is_server)
+		return -1;
+
+	int rc = send(this->context.poll->fd, value.c_str(), value.length(), 0);
+	if (rc < 0)
+	{
+		Message::error("send() failed.");
+		this->_close_connection = true;
+		return 0;
+	}
+
+	return rc;
 }

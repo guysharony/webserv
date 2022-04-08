@@ -35,6 +35,9 @@ class Client
 		int					getServerPort(void);
 		int					getEvent(void);
 		int					getMethod(void);
+		int					getConnection(void);
+		int					getRequestLine(void);
+		int					getResponse(std::string &packet);
 
 		// Setters
 		void					setClientAddr(std::string const &addr);
@@ -50,6 +53,10 @@ class Client
 		void					print();
 
 		void					appendRequest(std::string packet);
+		int					appendResponse(std::string packet);
+		int					prepareResponse(void);
+		void					displayResponse(void);
+		void					clearResponse(void);
 		void					displayRequest(void);
 		int					execute(void);
 

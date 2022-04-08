@@ -66,6 +66,7 @@ class Context {
 
 		client_type					_clientFind(void);
 		int							_clientReceive(void);
+		int							_clientSend(std::string value);
 		void							_clientReject(void);
 
 };

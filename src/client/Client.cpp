@@ -109,6 +109,24 @@ int				Client::getEvent(void)
 int				Client::getMethod(void)
 { return (this->_request_line.method); }
 
+int				Client::getConnection(void)
+{ return (this->_connection); }
+
+int				Client::getRequestLine(void) {
+	std::size_t	found = this->_temp.find("\r\n");
+
+	if (found != std::string::npos) {
+		this->_current = this->_temp.substr(0, found);
+		this->_temp = this->_temp.substr(found + 2);
+		return (1);
+	}
+
+	return (0);
+}
+
+int				Client::getResponse(std::string &packet)
+{ return this->_temporary.read(0, packet); }
+
 
 // Setters
 void				Client::setClientAddr(std::string const &addr)
@@ -139,15 +157,68 @@ void				Client::setEvent(int value)
 void				Client::appendRequest(std::string packet)
 { this->_temp.append(packet); }
 
+int				Client::appendResponse(std::string packet)
+{
+	if (this->_temporary.create(0)) {
+		this->_temporary.append(0, packet);
+		return 1;
+	}
+
+	return 0;
+}
+
+
+int				Client::prepareResponse(void) {
+	std::cout << "EXECUTE" << std::endl;
+
+	if (this->getMethod() == METHOD_GET) {
+		// std::cout << "GET RESPONSE" << std::endl;
+		this->appendResponse("HTTP/1.1 200 OK\r\n");
+		this->appendResponse("content-length: 11\r\n");
+		this->appendResponse("content-location: /\r\n");
+		this->appendResponse("content-type: text/html\r\n");
+		this->appendResponse("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
+		this->appendResponse("server_name: Michello\r\n");
+		this->appendResponse("\r\n");
+		this->appendResponse("all files..");
+	} else if (this->getMethod() == METHOD_HEAD) {
+		// std::cout << "HEAD RESPONSE" << std::endl;
+		this->appendResponse("HTTP/1.1 405 Not Allowed\r\n");
+		this->appendResponse("content-length: 11\r\n");
+		this->appendResponse("content-location: /\r\n");
+		this->appendResponse("content-type: text/html\r\n");
+		this->appendResponse("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
+		this->appendResponse("server_name: Michello\r\n");
+		this->appendResponse("\r\n");
+	} else {
+		// std::cout << "POST RESPONSE" << std::endl;
+		this->appendResponse("HTTP/1.1 405 Not Allowed\r\n");
+		this->appendResponse("content-length: 11\r\n");
+		this->appendResponse("content-location: /\r\n");
+		this->appendResponse("content-type: text/html\r\n");
+		this->appendResponse("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
+		this->appendResponse("server_name: Michello\r\n");
+		this->appendResponse("\r\n");
+		this->appendResponse("all files..");
+	}
+
+	this->_temporary.cursor(0, 0);
+
+	return 1;
+}
+
+void				Client::displayResponse(void)
+{ this->_temporary.display(0); }
+
+void				Client::clearResponse(void)
+{ this->_temporary.close(0); }
+
 int				Client::execute(void) {
 	std::size_t	found;
 
 	if (this->_event < EVT_REQUEST_BODY)
 	{
-		while ((found = this->_temp.find("\r\n")) != std::string::npos) {
-			this->_current = this->_temp.substr(0, found);
-			this->_temp = this->_temp.substr(found + 2);
-
+		while (this->_event < EVT_REQUEST_BODY && this->getRequestLine()) {
 			if (this->_event == EVT_REQUEST_LINE) {
 				this->_end = 0;
 				this->_encoding = NONE;
@@ -161,34 +232,21 @@ int				Client::execute(void) {
 					if (this->_encoding == NONE) {
 						this->_end = 1;
 					}
-
-					return this->_end;
+					break;
 				}
 
 				this->_requestHeaders();
 			}
-
-			if (this->_temp[0] == '\r' && this->_temp[1] == '\n') {
-				this->_event = EVT_REQUEST_BODY;
-
-				if (this->_encoding == NONE) {
-					this->_end = 1;
-				}
-
-				this->_temp = this->_temp.substr(2);
-			}
 		}
-	} else if (this->_event == EVT_REQUEST_BODY) {
-		if (this->_encoding == CHUNKED) {
-			// std::cout << "CHUNK" << std::endl;
+	}
 
+	if (this->_event == EVT_REQUEST_BODY) {
+		if (this->_encoding == CHUNKED) {
 			while ((found = this->_temp.find("\r\n")) != std::string::npos) {
 				this->_current = this->_temp.substr(0, found);
 				this->_temp = this->_temp.substr(found + 2);
 
 				if (!this->_chunked) {
-					// std::cout << "CHUNKED [" << this->_current << "]" << std::endl;
-
 					if (!this->_current.length())
 						Message::error("Chunk is not valid.");
 
@@ -207,6 +265,9 @@ int				Client::execute(void) {
 			}
 		}
 	}
+
+	if (this->_end)
+		this->prepareResponse();
 
 	return this->_end;
 }
@@ -272,9 +333,6 @@ int			Client::_requestHeaders(void)
 {
 	std::string key;
 	std::string value;
-
-	// std::cout << "CURRENT: [" << this->_current << "]" << std::endl;
-	// std::cout << "TEMP:    [" << this->_temp << "]" << std::endl;
 
 	if (this->_requestHeader(this->_current, key, value)) {
 		if (!key.compare("host")) this->_request_headers.host = value;
