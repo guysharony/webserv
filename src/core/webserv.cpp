@@ -85,7 +85,7 @@ bool		Webserv::run(void) {
 	while (this->_run) {
 		if (g_sigint == 1)
 			break; // Perhaps we need to shutdown/send messages to active clients first
-		std::cout<< YELLOW << "waiting for a connection..."<< RESET<<std::endl;
+		// std::cout<< YELLOW << "waiting for a connection..."<< RESET<<std::endl;
 		if (this->_sockets.listen() <= 0) {
 			continue ; // Allow server to continue after a failure or timeout in poll
 		}
@@ -161,16 +161,16 @@ bool		Webserv::run(void) {
 				}
 				 char buffer[2000];
 				 if (req.isCgi(server)){
-					 CGI new_cgi(req.getPath());								// Create a new CGI connection with the path to CGI
-					 int pipefd = new_cgi.launch_cgi(req.getPath());			// Launch the CGI command with the path to requested file (returns file descriptor to read)
+					 CGI new_cgi("/usr/bin/php-cgi");								// Create a new CGI connection with the path to CGI
+					 int pipefd = new_cgi.launch_cgi("/sgoinfre/goinfre/Perso/tmorris/webserv/www/php/index.php");			// Launch the CGI command with the path to requested file (returns file descriptor to read)
 					this->_sockets.sockets_poll.append_pipe(pipefd, POLLIN);	// Add the new file descriptor to poll
-
+			
 					read(pipefd, (void*)buffer, 2000);
-					std::cout << buffer <<std::endl;	
+					std::cout << YELLOW << "***" << buffer <<std::endl;	
 					CgiResponse  cgiRes;
 					cgiRes.parseCgiBuffer(buffer);
 				 }
-			//	 else {
+				 else {
 					Response res(req);
 					res.createResponse();
 
@@ -179,7 +179,7 @@ bool		Webserv::run(void) {
 					send(this->current_iterator->fd, res.getResponse().c_str(), res.getResponse().size(), 0);
 					std::cout <<RED<< "Response :" <<RESET<< std::endl;
 					std::cout << "[" << GREEN << res.getResponse() << RESET << "]" << std::endl << std::endl;
-			// }
+				}
 				client->addRequest(req);
 			}
 			else if (!is_server && (this->current_iterator->revents & POLLOUT))
