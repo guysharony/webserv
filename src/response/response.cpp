@@ -215,17 +215,16 @@ std::string    Response::getListOfDirectories(const char *path) {
 }
 
 std::string       Response::getUrl(std::string dirent, bool isFolder) {
-    std::string folder = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABI0lEQVR42mNkIBIwwgkk8B9JiBGXRqAEPy8To50pDwcnOyM3XOl/hn/X7/18xyglxMKoKsnGiMsAMVEW5t56qR4xQeYUoFZ2ZLnfv/9vYrw/TaVHmJclF8hnxuZuFnFGRhYxRpBLGKG2gMn//0EeYPjP+G6e4guQRVBZFIcwczExcKizgEUZMT35H6zhxQzp14zMjMIoKoAsVj4WBk55VgYmVoTVWMPo426FN+xCLELYrEAEJB4Dvp9V+gtRg0cVvuj9flbxH4GYxG/AtzMK/8nRCDfg62k5ygz4fFLmH9T9JHnhPywaPx6T+ssIiQFSw+A/KDExnl8tuU5UkMGPZN1A/PYDwyZGeUkWRkUZYDpgYGAi0Yx/D5/9eUcwN+JzAQgAABw0Qn/X2Z3nAAAAAElFTkSuQmCC";
-    std::string file = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACkElEQVR42n2T2U8TURTGv5lpbSmlqbYEJNSiPvFkTFjUqDGCmBAVRGmpFX0xiInLszGGxJj4aIzGjb64YGmhUBbf/AMYbGJEEoMPQFg0LiQmlq7TGc+9sk1DPJlk7j0353e/c849Atat0mazdRSQrTpUVYOSyyGdTiOxHH9MrgnkmbDyt/r9/ukHDx8VM5fGgnMqEqk0vv1YwtzX73g3FPwVCATq6ejjZoDqvv7IeFXtfh1dVVUkUxn8/rOM3a5S3L51k0HqNipZBdT0RwbkfQcOIjoYgWuHG8lEAoqSQyabwd6qWjjsNg68e6drKdDdfYxiPuQBIvKhw0cQi8UgiiIFK5AkCYWFhSgnIGUESaT0NA03rl9bejs8uIfiFtcAlIJ8tK4eiwsLyCpZDmFFNJlMoChel+VkCpq4BeG+fty/11VLrnEdoKHhOCYnP/GqC4IAo9GITCYDg8HAFRUUWOCq2IlodAhXOy/pAUSVGxsbMTMzwzNTSAWDsLxXAXa7HQ6nE8PDI2j3+/SAEAFOnTyBqakvFAhkswo/YKkwgCSJKCkphcVi4YA2b2seINwnNzc3YWKCOqSxT4PRYOQ3C1Q85rNvtaNsexlGRkfh9eQBekNh+UxLC+bn5/jtrANcAd3MKs+U5AjmdlcgMjBACjx6QLA3JHtaz2JsbOzfAxFEOJ0OSCTfQDAGKS938fRYF3xtXj2gJ9gr+7weLFAbVda2leIxJSwN9qgcjm0oKipCMBSG39emA1S/eNUzfuH8OczOzvLAHA0Ru9XtdvNubLSXr9/gYru/hpbv14apqfn09JOnz4rNZhP+ZykasCudl38ORQd30Ta+EV1ptVo7zOb1cd4ckEzG4/HntPzM9n8B7MUhIOXcgRgAAAAASUVORK5CYII=";
+    std::string folder = "&#128193;";
+	std::string file = "&#128462;";
     std::string image = file;
     if (isFolder)
         image = folder;
     std::string tmp = _req.getPath();
     if (tmp[tmp.size() - 1] != '/')
         tmp.append("/");
-    std::string img_coln = "<td><img src=\"data:image/jpg;base64," + image + "\"/></td>";
     std::string link_coln = "<td><a href=\"http://" + _req.getHost() + ":" + _req.getPort() + tmp + dirent + "\">" + dirent + "</a></td>";
-    std::string line = "<tr>"+img_coln + link_coln +"</tr>";
+	std::string line = "<tr><td>"+ image + "</td>" + link_coln +"</tr>";
     return line ;
 }
 
