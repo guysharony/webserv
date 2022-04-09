@@ -123,8 +123,11 @@ int				Client::getLine(void) {
 	if (end != std::string::npos) {
 		this->_current = this->_temp.substr(0, end);
 		this->_temp = this->_temp.substr(end + 2);
-		return (1);
+		return (2);
 	}
+
+	if (this->getEvent() < EVT_REQUEST_BODY)
+		return (0);
 
 	if (!this->_temp.length() || (this->_temp[this->_temp.length() - 1] == '\r')) {
 		if (this->_temp.length()) {
@@ -233,22 +236,26 @@ void				Client::clearResponse(void)
 { this->_temporary.close(0); }
 
 int				Client::execute(void) {
-	while (this->getLine()) {
+	int	res;
+
+	while ((res = this->getLine()) > 0) {
 		if (this->getEvent() == EVT_REQUEST_LINE) {
-			Message::debug("REQUEST LINE [" + this->_current + "]");
+			Message::debug("REQUEST LINE [" + this->_current + "]\n");
 			this->_end = 0;
 			this->_encoding = NONE;
 
 			this->_requestLine();
 		} else if (this->getEvent() == EVT_REQUEST_HEADERS) {
 			if (this->_current.length() == 0) {
-				Message::debug("SEPARATOR");
+				Message::debug("SEPARATOR\n");
 				this->_event = EVT_REQUEST_BODY;
 				if (this->_encoding == NONE) {
 					this->_end = 1;
 				}
 				continue;
 			}
+
+			Message::debug("REQUEST HEADER [" + this->_current + "]\n");
 
 			this->_requestHeaders();
 		} else if (this->getEvent() == EVT_REQUEST_BODY) {
@@ -260,17 +267,23 @@ int				Client::execute(void) {
 						this->_chunked = true;
 					}
 
-					Message::debug("CHUNK SIZE [" + toString(this->_chunk_size) + "]");
+					Message::debug("CHUNK SIZE [" + toString(this->_chunk_size) + "]\n");
 				} else {
 					if (!this->_chunk_size) {
-						Message::debug("FINISHED");
+						Message::debug("FINISHED\n");
 						this->_end = 1;
 						break;
 					}
 
 					this->_remaining -= this->_current.length();
 
-					Message::debug("CHUNK BODY [" + this->_current + "]");
+					if (this->_remaining > 0 && res == 2) {
+						this->_remaining -= 2;
+						this->_current.append("\r\n");
+					}
+
+					Message::debug("CHUNK BODY [" + this->_current + "]\n");
+
 					this->appendResponse(this->_current);
 
 					if (this->_remaining == 0) {
