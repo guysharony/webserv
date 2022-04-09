@@ -17,8 +17,7 @@
 # include "../response/response.hpp"
 # include "../core/message.hpp"
 
-class Client
-{
+class Client {
 	public:
 		Client(int socket_fd);
 		Client(Client const &src);
@@ -36,7 +35,7 @@ class Client
 		int					getEvent(void);
 		int					getMethod(void);
 		int					getConnection(void);
-		int					getRequestLine(void);
+		int					getLine(void);
 		int					getResponse(std::string &packet);
 
 		// Setters
@@ -54,6 +53,7 @@ class Client
 
 		void					appendRequest(std::string packet);
 		int					appendResponse(std::string packet);
+		int					appendRequestBody(std::string packet);
 		int					prepareResponse(void);
 		void					displayResponse(void);
 		void					clearResponse(void);
@@ -92,14 +92,16 @@ class Client
 		int					_socket_fd;	// The socket which is used to communicate between client and server
 		std::string			_server_addr;	// The IP address of the server
 		int					_server_port;	// The port of the server FROM which the client connected (the one on which the server is listening)
+		/*
 		request				_request; // All of the request/response pairs associated with this client
 		response				_response;
+		*/
 		int					_event;
 		int					_encoding;
-		int					_remaining;
+		size_t				_remaining;
+		size_t				_chunk_size;
 		// int					_status;
 		int					_connection;
-		int					_current_remaining;
 		bool					_chunked;
 		request_line_type		_request_line;
 		request_headers_type	_request_headers;
@@ -108,6 +110,14 @@ class Client
 		Temporary				_temporary;
 		int					_end;
 
+		int					_close(void);
+
+		int					_receive(std::string & content);
+		int					_send(std::string content);
+
+		/* request */
+		void					_request(void);
+
 		int					_requestLine(void);
 		int					_requestMethod(std::string & source, int & dst);
 		int					_requestTarget(std::string & source, std::string & dst);
@@ -115,6 +125,16 @@ class Client
 
 		int					_requestHeaders(void);
 		int					_requestHeader(std::string source, std::string & key, std::string & value);
+
+		int					_requestBody(void);
+		int					_requestBodyLength(void);
+		int					_requestBodyChunked(void);
+		int					_requestBodyFinished(void);
+
+		/* response */
+		void					_response(void);
 };
+
+# include "../core/context.hpp"
 
 #endif

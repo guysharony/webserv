@@ -59,8 +59,10 @@ Client	&Client::operator=(Client const &rhs)
 		this->_socket_fd = rhs._socket_fd;
 		this->_server_addr = rhs._server_addr;
 		this->_server_port = rhs._server_port;
+		/*
 		this->_response = rhs._response;
 		this->_request = rhs._request;
+		*/
 		this->_temporary = rhs._temporary;
 		this->_event = rhs._event;
 	}
@@ -112,16 +114,31 @@ int				Client::getMethod(void)
 int				Client::getConnection(void)
 { return (this->_connection); }
 
-int				Client::getRequestLine(void) {
-	std::size_t	found = this->_temp.find("\r\n");
+int				Client::getLine(void) {
+	this->_current.clear();
 
-	if (found != std::string::npos) {
-		this->_current = this->_temp.substr(0, found);
-		this->_temp = this->_temp.substr(found + 2);
+	std::size_t	end;
+
+	end = this->_temp.find(CRLF);
+	if (end != std::string::npos) {
+		this->_current = this->_temp.substr(0, end);
+		this->_temp = this->_temp.substr(end + 2);
 		return (1);
 	}
 
-	return (0);
+	if (!this->_temp.length() || (this->_temp[this->_temp.length() - 1] == '\r')) {
+		if (this->_temp.length()) {
+			this->_current = this->_temp.substr(0, this->_temp.length() - 1);
+			this->_temp = this->_temp.substr(this->_temp.length() - 1);
+		}
+
+		return (0);
+	}
+
+	this->_current = this->_temp;
+	this->_temp.clear();
+
+	return (1);
 }
 
 int				Client::getResponse(std::string &packet)
@@ -144,11 +161,13 @@ void				Client::setServerAddr(std::string const &addr)
 void				Client::setServerPort(int port)
 { this->_server_port = port; }
 
+/*
 void				Client::setRequest(Config &config)
 { this->_request = request(config); }
 
 void				Client::setResponse(void)
 { this->_response = response(this->_request); }
+*/
 
 void				Client::setEvent(int value)
 { this->_event = value; }
@@ -214,11 +233,63 @@ void				Client::clearResponse(void)
 { this->_temporary.close(0); }
 
 int				Client::execute(void) {
-	std::size_t	found;
+	while (this->getLine()) {
+		if (this->getEvent() == EVT_REQUEST_LINE) {
+			Message::debug("REQUEST LINE [" + this->_current + "]");
+			this->_end = 0;
+			this->_encoding = NONE;
 
+			this->_requestLine();
+		} else if (this->getEvent() == EVT_REQUEST_HEADERS) {
+			if (this->_current.length() == 0) {
+				Message::debug("SEPARATOR");
+				this->_event = EVT_REQUEST_BODY;
+				if (this->_encoding == NONE) {
+					this->_end = 1;
+				}
+				continue;
+			}
+
+			this->_requestHeaders();
+		} else if (this->getEvent() == EVT_REQUEST_BODY) {
+			if (this->_encoding == CHUNKED) {
+				if (!this->_chunked) {
+					if (this->_current.length()) {
+						this->_chunk_size = hexToInt(this->_current);
+						this->_remaining = this->_chunk_size;
+						this->_chunked = true;
+					}
+
+					Message::debug("CHUNK SIZE [" + toString(this->_chunk_size) + "]");
+				} else {
+					if (!this->_chunk_size) {
+						Message::debug("FINISHED");
+						this->_end = 1;
+						break;
+					}
+
+					this->_remaining -= this->_current.length();
+
+					Message::debug("CHUNK BODY [" + this->_current + "]");
+					this->appendResponse(this->_current);
+
+					if (this->_remaining == 0) {
+						this->_chunked = false;
+					}
+				}
+			}
+		}
+	}
+
+	if (this->_end)
+		this->prepareResponse();
+
+	return this->_end;
+
+	/*
 	if (this->_event < EVT_REQUEST_BODY)
 	{
-		while (this->_event < EVT_REQUEST_BODY && this->getRequestLine()) {
+		while (this->_event < EVT_REQUEST_BODY && this->getLine()) {
 			if (this->_event == EVT_REQUEST_LINE) {
 				this->_end = 0;
 				this->_encoding = NONE;
@@ -242,27 +313,11 @@ int				Client::execute(void) {
 
 	if (this->_event == EVT_REQUEST_BODY) {
 		if (this->_encoding == CHUNKED) {
-			while ((found = this->_temp.find("\r\n")) != std::string::npos) {
-				this->_current = this->_temp.substr(0, found);
-				this->_temp = this->_temp.substr(found + 2);
-
-				if (!this->_chunked) {
-					if (!this->_current.length())
-						Message::error("Chunk is not valid.");
-
-					this->_remaining = hexToInt(this->_current);
-					this->_current_remaining = 0;
-					this->_chunked = true;
-				} else {
-					this->_current_remaining += this->_current.length();
-
-					if (this->_current_remaining > this->_remaining)
-						Message::error("Something is wrong");
-
-					if (this->_remaining == 0)
-						this->_end = 1;
-				}
+			while (this->getLine()) {
+				std::cout << "CHUNKED [" << this->_current << "]" << std::endl;
 			}
+
+			std::cout << "CHUNKED [" << this->_current << "]" << std::endl;
 		}
 	}
 
@@ -270,21 +325,30 @@ int				Client::execute(void) {
 		this->prepareResponse();
 
 	return this->_end;
+	*/
 }
 
 int			Client::_requestLine(void)
 {
+	int			method;
+	std::string	target;
+	std::string	version;
+
 	if (occurence(this->_current, " ") != 2)
 		return (0);
 
-	if (!this->_requestMethod(this->_current, this->_request_line.method))
+	if (!this->_requestMethod(this->_current, method))
 		return (0);
 
-	if (!this->_requestTarget(this->_current, this->_request_line.target))
+	if (!this->_requestTarget(this->_current, target))
 		return (0);
 
-	if (!this->_requestVersion(this->_current, this->_request_line.version))
+	if (!this->_requestVersion(this->_current, version))
 		return (0);
+
+	this->_request_line.method = method;
+	this->_request_line.target = target;
+	this->_request_line.version = version;
 
 	this->_event = EVT_REQUEST_HEADERS;
 

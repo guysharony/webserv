@@ -167,7 +167,7 @@ int				Context::_clientReceive(void) {
 
 	memset(buffer, 0, BUFFER_SIZE);
 
-	res = recv(this->context.poll->fd, buffer, BUFFER_SIZE, 0);
+	res = recv(this->context.poll->fd, buffer, BUFFER_SIZE - 1, 0);
 
 	if (res == 0)
 		this->_clientReject();
