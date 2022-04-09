@@ -11,6 +11,8 @@ Client::Client(void)
 	_encoding(NONE),
 	_content_length(-1),
 	_body_size(-1),
+	_chunk_size(-1),
+	_status(0),
 	_temporary(),
 	_end(0)
 { }
@@ -26,6 +28,8 @@ Client::Client(int socket_fd)
 	_encoding(NONE),
 	_content_length(-1),
 	_body_size(-1),
+	_chunk_size(-1),
+	_status(0),
 	_temporary(),
 	_end(0)
 {
@@ -115,6 +119,9 @@ int				Client::getMethod(void)
 
 int				Client::getConnection(void)
 { return (this->_connection); }
+
+int				Client::getStatus(void)
+{ return (this->_status); }
 
 int				Client::getLine(void) {
 	this->_current.clear();
@@ -263,6 +270,8 @@ int				Client::execute(void) {
 			this->_end = 0;
 			this->_encoding = NONE;
 			this->_content_length = -1;
+			this->_status = 0;
+			this->_chunk_size = -1;
 
 			if (!this->_requestLine()) {
 				this->_end = 1;
@@ -301,6 +310,12 @@ int				Client::execute(void) {
 						if (chunk_extention != std::string::npos)
 							this->_current = this->_current.substr(0, chunk_extention);
 
+						if (!isPositiveBase16(this->_current)) {
+							this->_status = STATUS_BAD_REQUEST;
+							this->_end = 1;
+							break;
+						}
+
 						this->_chunk_size = hexToInt(this->_current);
 						this->_body_size = this->_chunk_size;
 						this->_chunked = true;
@@ -331,7 +346,9 @@ int				Client::execute(void) {
 				}
 			} else if (this->_encoding == LENGTH) {
 				if (this->_current.length() > static_cast<size_t>(this->_body_size)) {
-					this->_current = this->_current.substr(0, this->_body_size);
+					this->_status = STATUS_BAD_REQUEST;
+					this->_end = 1;
+					break;
 				}
 
 				this->_body_size -= this->_current.length();
@@ -454,7 +471,7 @@ int			Client::_requestHeaders(void)
 		else if (!key.compare("accept-encoding")) this->_request_headers.accept_encoding = value;
 		else if (!key.compare("accept-language")) this->_request_headers.accept_language = value;
 		else if (!key.compare("content-length")) {
-			if (this->_content_length >= 0 || !isPositiveNumber(value))
+			if (this->_content_length >= 0 || !isPositiveBase10(value))
 				return 0;
 
 			this->_encoding = LENGTH;

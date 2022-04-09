@@ -6,7 +6,7 @@
 /*   By: gsharony <gsharony@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 09:02:47 by gsharony          #+#    #+#             */
-/*   Updated: 2022/04/09 12:57:49 by gsharony         ###   ########.fr       */
+/*   Updated: 2022/04/09 13:53:58 by gsharony         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,8 @@
 int				toInteger(std::string str);
 int				toInteger(char c);
 int				toInteger(char * str);
-bool				isPositiveNumber(std::string num);
+bool				isPositiveBase10(std::string num);
+bool				isPositiveBase16(std::string num);
 
 /* floats */
 float 			toFloat(std::string str);

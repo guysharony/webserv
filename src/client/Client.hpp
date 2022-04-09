@@ -35,6 +35,7 @@ class Client {
 		int					getEvent(void);
 		int					getMethod(void);
 		int					getConnection(void);
+		int					getStatus(void);
 		int					getLine(void);
 		int					getResponse(std::string &packet);
 

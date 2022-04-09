@@ -15,7 +15,7 @@ class Context {
 		virtual ~Context();
 
 	protected:
-		typedef std::vector<Client>		clients_type;
+		typedef std::vector<Client*>		clients_type;
 		typedef clients_type::iterator	client_type;
 
 		typedef std::vector<pollfd>		polls_type;

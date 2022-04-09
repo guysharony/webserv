@@ -6,7 +6,7 @@
 /*   By: gsharony <gsharony@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 09:02:50 by gsharony          #+#    #+#             */
-/*   Updated: 2022/04/09 12:59:55 by gsharony         ###   ########.fr       */
+/*   Updated: 2022/04/09 13:54:00 by gsharony         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,9 +79,18 @@ float 			toFloat(std::string str)
 	return (result);
 }
 
-bool				isPositiveNumber(std::string num) {
+bool				isPositiveBase10(std::string num) {
 	for (size_t i = 0; i < num.length(); i++) {
 		if (num[i] < '0' || num[i] > '9')
+			return false;
+	}
+
+	return true;
+}
+
+bool				isPositiveBase16(std::string num) {
+	for (size_t i = 0; i < num.length(); i++) {
+		if (!((num[i] >= '0' && num[i] <= '9') || (num[i] >= 'a' && num[i] <= 'f') || (num[i] >= 'A' && num[i] <= 'F')))
 			return false;
 	}
 
