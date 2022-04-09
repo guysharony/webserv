@@ -139,6 +139,4 @@ class Client {
 		void					_response(void);
 };
 
-# include "../core/context.hpp"
-
 #endif

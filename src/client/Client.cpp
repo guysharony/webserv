@@ -210,7 +210,7 @@ int				Client::appendRequestBody(std::string packet)
 
 
 int				Client::prepareResponse(void) {
-	std::cout << "EXECUTE [" << this->_status << "]" << std::endl;
+	Message::debug("EXECUTE [" + toString(this->_status) + "]");
 
 	if (this->getMethod() == METHOD_GET) {
 		// std::cout << "GET RESPONSE" << std::endl;
@@ -372,9 +372,11 @@ int				Client::execute(void) {
 	}
 
 	if (this->_end) {
-		std::cout << "___ BODY [" << toString(this->_content_length) << "] ___" << std::endl;
-		this->displayRequestBody();
-		std::cout << "_____________" << std::endl;
+		#ifdef DEBUG
+			std::cout << "___ BODY [" << toString(this->_content_length) << "] ___" << std::endl;
+			this->displayRequestBody();
+			std::cout << "_____________" << std::endl;
+		#endif
 		this->prepareResponse();
 	}
 
