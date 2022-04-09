@@ -51,12 +51,15 @@ int	CGI::launch_cgi(std::string const & filename, request_type &request)
 
 	std::map<std::string, std::string>headers = request.getHeader();
 	Message::debug("Headers\n");
-	for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); ++it)
+	for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it)
 	{
-		Message::debug(it->first);
+		std::string key(it->first);
+		key = "HTTP_" + key;
+		Message::debug(key);
 		Message::debug(" = ");
-		Message::debug(it->second);
+		Message::debug(it->second.c_str());
 		Message::debug("\n");
+		setenv(key.c_str(), it->second.c_str(), true);
 	}
 
 
