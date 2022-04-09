@@ -1,12 +1,12 @@
-# ifndef CGIRESPONSE_HPP
-# define CGIRESPONSE_HPP
+# ifndef CGIPARSER_HPP
+# define CGIPARSER_HPP
 
 # include <iostream>
 # include "../../include/constants.hpp"
 # include <map>
 # include "../request/request.hpp"
 
-class CgiResponse
+class CgiParser
 {
 private:
     std::map<std::string, std::string> _headers;
@@ -18,11 +18,15 @@ private:
 
 
 public:
-    CgiResponse();
-    ~CgiResponse();
-	CgiResponse(CgiResponse const & src);
-	CgiResponse &operator=(CgiResponse const & rhs);
+    CgiParser();
+    ~CgiParser();
+	CgiParser(CgiParser const & src);
+	CgiParser &operator=(CgiParser const & rhs);
     void parseCgiBuffer(std::string buffer);
+    int getStatus();
+    const std::map<std::string, std::string> &getHeaders() const;
+    std::string getBody();
+
     
 };
 

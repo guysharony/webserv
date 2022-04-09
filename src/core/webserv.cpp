@@ -85,7 +85,7 @@ bool		Webserv::run(void) {
 	while (this->_run) {
 		if (g_sigint == 1)
 			break; // Perhaps we need to shutdown/send messages to active clients first
-		// std::cout<< YELLOW << "waiting for a connection..."<< RESET<<std::endl;
+	//	std::cout<< YELLOW << "waiting for a connection..."<< RESET<<std::endl;
 		if (this->_sockets.listen() <= 0) {
 			continue ; // Allow server to continue after a failure or timeout in poll
 		}
@@ -159,27 +159,26 @@ bool		Webserv::run(void) {
 					Message::debug("Server wasn't found: handling error\n");
 					req.setRet(STATUS_INTERNAL_SERVER_ERROR);
 				}
-				 char buffer[2000];
+				char buffer[2000];
+				Response res(req);
 				 if (req.isCgi(server)){
 					 CGI new_cgi("/usr/bin/php-cgi");								// Create a new CGI connection with the path to CGI
-					 int pipefd = new_cgi.launch_cgi("/sgoinfre/goinfre/Perso/tmorris/webserv/www/php/index.php");			// Launch the CGI command with the path to requested file (returns file descriptor to read)
+					 int pipefd = new_cgi.launch_cgi("/home/user42/Bureau/web/www/php/index.php");			// Launch the CGI command with the path to requested file (returns file descriptor to read)
 					this->_sockets.sockets_poll.append_pipe(pipefd, POLLIN);	// Add the new file descriptor to poll
-			
+					sleep(2);
 					read(pipefd, (void*)buffer, 2000);
-					std::cout << YELLOW << "***" << buffer <<std::endl;	
-					CgiResponse  cgiRes;
+					std::cout << buffer <<std::endl;	
+					CgiParser  cgiRes;
 					cgiRes.parseCgiBuffer(buffer);
+					res.createCgiResponse(cgiRes);
 				 }
 				 else {
-					Response res(req);
 					res.createResponse();
-
+				 }
 					// queue response instead of sending directly
-
-					send(this->current_iterator->fd, res.getResponse().c_str(), res.getResponse().size(), 0);
-					std::cout <<RED<< "Response :" <<RESET<< std::endl;
-					std::cout << "[" << GREEN << res.getResponse() << RESET << "]" << std::endl << std::endl;
-				}
+				send(this->current_iterator->fd, res.getResponse().c_str(), res.getResponse().size(), 0);
+				std::cout <<RED<< "Response :" <<RESET<< std::endl;
+				std::cout << "[" << GREEN << res.getResponse() << RESET << "]" << std::endl << std::endl;
 				client->addRequest(req);
 			}
 			else if (!is_server && (this->current_iterator->revents & POLLOUT))

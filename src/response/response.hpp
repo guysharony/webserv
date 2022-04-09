@@ -11,6 +11,7 @@
 # include "../config/config.hpp"
 # include "../request/request.hpp"
 # include "../formats/temporary.hpp"
+#include "../cgi/CgiParser.hpp"
 # include<cstdlib>
 
 
@@ -25,8 +26,7 @@ public:
 
 	std::string		getResponse(void);
 	void		createResponse();
-
-
+	void createCgiResponse(CgiParser p);
 
 private:
 	Request						_req;
@@ -44,6 +44,7 @@ private:
 	std::string     getUrl(std::string dirent, bool isFolder);
 	std::string   	getListOfDirectories(const char *path);
 	std::string getPathAfterreplacinglocationByRoot();
+
 
 
 };
