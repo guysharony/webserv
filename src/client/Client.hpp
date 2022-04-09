@@ -54,6 +54,8 @@ class Client {
 		void					appendRequest(std::string packet);
 		int					appendResponse(std::string packet);
 		int					appendRequestBody(std::string packet);
+		void					displayRequestBody(void);
+		void					clearRequestBody(void);
 		int					prepareResponse(void);
 		void					displayResponse(void);
 		void					clearResponse(void);

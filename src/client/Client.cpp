@@ -189,6 +189,16 @@ int				Client::appendResponse(std::string packet)
 	return 0;
 }
 
+int				Client::appendRequestBody(std::string packet)
+{
+	if (this->_temporary.create(1)) {
+		this->_temporary.append(1, packet);
+		return 1;
+	}
+
+	return 0;
+}
+
 
 int				Client::prepareResponse(void) {
 	std::cout << "EXECUTE" << std::endl;
@@ -235,6 +245,12 @@ void				Client::displayResponse(void)
 void				Client::clearResponse(void)
 { this->_temporary.close(0); }
 
+void				Client::displayRequestBody(void)
+{ this->_temporary.display(1); }
+
+void				Client::clearRequestBody(void)
+{ this->_temporary.close(1); }
+
 int				Client::execute(void) {
 	int	res;
 
@@ -265,9 +281,8 @@ int				Client::execute(void) {
 						this->_chunk_size = hexToInt(this->_current);
 						this->_remaining = this->_chunk_size;
 						this->_chunked = true;
+						Message::debug("CHUNK SIZE [" + toString(this->_chunk_size) + "]\n");
 					}
-
-					Message::debug("CHUNK SIZE [" + toString(this->_chunk_size) + "]\n");
 				} else {
 					if (!this->_chunk_size) {
 						Message::debug("FINISHED\n");
@@ -284,7 +299,7 @@ int				Client::execute(void) {
 
 					Message::debug("CHUNK BODY [" + this->_current + "]\n");
 
-					this->appendResponse(this->_current);
+					this->appendRequestBody(this->_current);
 
 					if (this->_remaining == 0) {
 						this->_chunked = false;
@@ -294,51 +309,14 @@ int				Client::execute(void) {
 		}
 	}
 
-	if (this->_end)
+	if (this->_end) {
+		std::cout << "___ START ___" << std::endl;
+		this->displayRequestBody();
+		std::cout << "_____________" << std::endl;
 		this->prepareResponse();
-
-	return this->_end;
-
-	/*
-	if (this->_event < EVT_REQUEST_BODY)
-	{
-		while (this->_event < EVT_REQUEST_BODY && this->getLine()) {
-			if (this->_event == EVT_REQUEST_LINE) {
-				this->_end = 0;
-				this->_encoding = NONE;
-
-				if (!this->_requestLine())
-					Message::error("Bad request");
-			} else if (this->_event == EVT_REQUEST_HEADERS) {
-				if (this->_current.length() == 0) {
-					this->_event = EVT_REQUEST_BODY;
-
-					if (this->_encoding == NONE) {
-						this->_end = 1;
-					}
-					break;
-				}
-
-				this->_requestHeaders();
-			}
-		}
 	}
 
-	if (this->_event == EVT_REQUEST_BODY) {
-		if (this->_encoding == CHUNKED) {
-			while (this->getLine()) {
-				std::cout << "CHUNKED [" << this->_current << "]" << std::endl;
-			}
-
-			std::cout << "CHUNKED [" << this->_current << "]" << std::endl;
-		}
-	}
-
-	if (this->_end)
-		this->prepareResponse();
-
 	return this->_end;
-	*/
 }
 
 int			Client::_requestLine(void)
