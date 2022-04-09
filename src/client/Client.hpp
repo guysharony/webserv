@@ -100,9 +100,10 @@ class Client {
 		*/
 		int					_event;
 		int					_encoding;
-		size_t				_remaining;
-		size_t				_chunk_size;
-		// int					_status;
+		ssize_t				_content_length;
+		ssize_t				_body_size;
+		ssize_t				_chunk_size;
+		int					_status;
 		int					_connection;
 		bool					_chunked;
 		request_line_type		_request_line;

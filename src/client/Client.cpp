@@ -9,7 +9,8 @@ Client::Client(void)
 	_server_port(-1),
 	_event(NONE),
 	_encoding(NONE),
-	_remaining(-1),
+	_content_length(-1),
+	_body_size(-1),
 	_temporary(),
 	_end(0)
 { }
@@ -23,7 +24,8 @@ Client::Client(int socket_fd)
 	_server_port(-1),
 	_event(NONE),
 	_encoding(NONE),
-	_remaining(-1),
+	_content_length(-1),
+	_body_size(-1),
 	_temporary(),
 	_end(0)
 {
@@ -201,7 +203,7 @@ int				Client::appendRequestBody(std::string packet)
 
 
 int				Client::prepareResponse(void) {
-	std::cout << "EXECUTE" << std::endl;
+	std::cout << "EXECUTE [" << this->_status << "]" << std::endl;
 
 	if (this->getMethod() == METHOD_GET) {
 		// std::cout << "GET RESPONSE" << std::endl;
@@ -252,34 +254,55 @@ void				Client::clearRequestBody(void)
 { this->_temporary.close(1); }
 
 int				Client::execute(void) {
-	int	res;
+	std::size_t	chunk_extention;
+	int			res;
 
 	while ((res = this->getLine()) > 0) {
 		if (this->getEvent() == EVT_REQUEST_LINE) {
 			Message::debug("REQUEST LINE [" + this->_current + "]\n");
 			this->_end = 0;
 			this->_encoding = NONE;
+			this->_content_length = -1;
 
-			this->_requestLine();
+			if (!this->_requestLine()) {
+				this->_end = 1;
+				break;
+			}
 		} else if (this->getEvent() == EVT_REQUEST_HEADERS) {
 			if (this->_current.length() == 0) {
+				if (this->_request_headers.host.empty()) {
+					this->_status = STATUS_BAD_REQUEST;
+					this->_end = 1;
+					break;
+				}
+
 				Message::debug("SEPARATOR\n");
 				this->_event = EVT_REQUEST_BODY;
 				if (this->_encoding == NONE) {
 					this->_end = 1;
+					break;
 				}
 				continue;
 			}
 
 			Message::debug("REQUEST HEADER [" + this->_current + "]\n");
 
-			this->_requestHeaders();
+			if (!this->_requestHeaders()) {
+				this->_status = STATUS_BAD_REQUEST;
+				this->_end = 1;
+				break;
+			}
+
 		} else if (this->getEvent() == EVT_REQUEST_BODY) {
 			if (this->_encoding == CHUNKED) {
 				if (!this->_chunked) {
 					if (this->_current.length()) {
+						chunk_extention = this->_current.find(";");
+						if (chunk_extention != std::string::npos)
+							this->_current = this->_current.substr(0, chunk_extention);
+
 						this->_chunk_size = hexToInt(this->_current);
-						this->_remaining = this->_chunk_size;
+						this->_body_size = this->_chunk_size;
 						this->_chunked = true;
 						Message::debug("CHUNK SIZE [" + toString(this->_chunk_size) + "]\n");
 					}
@@ -290,27 +313,49 @@ int				Client::execute(void) {
 						break;
 					}
 
-					this->_remaining -= this->_current.length();
+					this->_body_size -= this->_current.length();
 
-					if (this->_remaining > 0 && res == 2) {
-						this->_remaining -= 2;
+					if (this->_body_size > 0 && res == 2) {
+						this->_body_size -= 2;
 						this->_current.append("\r\n");
 					}
 
 					Message::debug("CHUNK BODY [" + this->_current + "]\n");
 
+					this->_content_length += this->_current.length();
 					this->appendRequestBody(this->_current);
 
-					if (this->_remaining == 0) {
+					if (this->_body_size == 0) {
 						this->_chunked = false;
 					}
+				}
+			} else if (this->_encoding == LENGTH) {
+				if (this->_current.length() > static_cast<size_t>(this->_body_size)) {
+					this->_current = this->_current.substr(0, this->_body_size);
+				}
+
+				this->_body_size -= this->_current.length();
+
+				if (this->_body_size > 0 && res == 2) {
+					this->_body_size -= 2;
+					this->_current.append("\r\n");
+				}
+
+				Message::debug("LENGTH BODY [" + toString(this->_body_size) + "] - [" + this->_current + "]\n");
+
+				this->appendRequestBody(this->_current);
+
+				if (this->_body_size == 0) {
+					Message::debug("FINISHED\n");
+					this->_end = 1;
+					break;
 				}
 			}
 		}
 	}
 
 	if (this->_end) {
-		std::cout << "___ START ___" << std::endl;
+		std::cout << "___ BODY [" << toString(this->_content_length) << "] ___" << std::endl;
 		this->displayRequestBody();
 		std::cout << "_____________" << std::endl;
 		this->prepareResponse();
@@ -325,17 +370,25 @@ int			Client::_requestLine(void)
 	std::string	target;
 	std::string	version;
 
-	if (occurence(this->_current, " ") != 2)
+	if (occurence(this->_current, " ") != 2) {
+		this->_status = STATUS_INTERNAL_SERVER_ERROR;
 		return (0);
+	}
 
-	if (!this->_requestMethod(this->_current, method))
+	if (!this->_requestMethod(this->_current, method)) {
+		this->_status = STATUS_NOT_IMPLEMENTED;
 		return (0);
+	}
 
-	if (!this->_requestTarget(this->_current, target))
+	if (!this->_requestTarget(this->_current, target)) {
+		this->_status = STATUS_BAD_REQUEST;
 		return (0);
+	}
 
-	if (!this->_requestVersion(this->_current, version))
+	if (!this->_requestVersion(this->_current, version)) {
+		this->_status = STATUS_HTTP_VERSION_NOT_SUPPORTED;
 		return (0);
+	}
 
 	this->_request_line.method = method;
 	this->_request_line.target = target;
@@ -401,13 +454,18 @@ int			Client::_requestHeaders(void)
 		else if (!key.compare("accept-encoding")) this->_request_headers.accept_encoding = value;
 		else if (!key.compare("accept-language")) this->_request_headers.accept_language = value;
 		else if (!key.compare("content-length")) {
+			if (this->_content_length >= 0 || !isPositiveNumber(value))
+				return 0;
+
 			this->_encoding = LENGTH;
-			this->_remaining = toInteger(value);
+			this->_content_length = toInteger(value);
+			this->_body_size = this->_content_length;
 		}
 		else if (!key.compare("transfer-encoding")) {
 			if (!value.compare("chunked")) {
 				this->_encoding = CHUNKED;
-				this->_remaining = 0;
+				this->_content_length = 0;
+				this->_body_size = 0;
 				this->_chunked = 0;
 			}
 		}
@@ -416,7 +474,7 @@ int			Client::_requestHeaders(void)
 		}
 	}
 
-	return 0;
+	return 1;
 }
 
 int			Client::_requestHeader(std::string source, std::string & key, std::string & value)

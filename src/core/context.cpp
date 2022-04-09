@@ -106,6 +106,7 @@ int			Context::contextExecute(void) {
 			if (this->context.client->execute()) {
 				this->context.poll->events = POLLOUT;
 				this->context.client->setEvent(EVT_SEND_RESPONSE);
+				return 0;
 			}
 		} else if (this->context.client->getEvent() == EVT_SEND_RESPONSE) {
 			if (this->context.is_write) {

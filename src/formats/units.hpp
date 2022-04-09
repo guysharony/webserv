@@ -6,7 +6,7 @@
 /*   By: gsharony <gsharony@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/06 09:02:47 by gsharony          #+#    #+#             */
-/*   Updated: 2022/03/24 08:45:39 by gsharony         ###   ########.fr       */
+/*   Updated: 2022/04/09 12:57:49 by gsharony         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 # include <iostream>
 # include <string>
 # include <vector>
+# include <cstdlib>
 
 #if __linux__
 	# include <sys/types.h>
@@ -25,6 +26,7 @@
 int				toInteger(std::string str);
 int				toInteger(char c);
 int				toInteger(char * str);
+bool				isPositiveNumber(std::string num);
 
 /* floats */
 float 			toFloat(std::string str);
