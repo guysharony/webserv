@@ -24,8 +24,6 @@ class Webserv {
 		struct 						context_struct
 		{
 			bool						is_server;
-			bool						is_read;
-			bool						is_write;
 			poll_type					poll;
 			client_type				client;
 		};
@@ -68,7 +66,7 @@ class Webserv {
 		bool							_compress_array;
 
 		client_type					_clientFind(void);
-		void							_clientReject(void);
+		void							_clientReject(bool lingering = false);
 
 		bool							_listen(void);
 		bool							_contextInitialize(void);

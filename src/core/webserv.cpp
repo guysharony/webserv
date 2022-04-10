@@ -53,20 +53,24 @@ bool		Webserv::run(void) {
 		if (!this->listen())
 			continue; // Allow server to continue after a failure or timeout in poll
 
-		for (this->polls_index = 0; this->polls_index != this->polls_size; ++this->polls_index) {
+		for (this->polls_index = 0; this->polls_index < this->polls_size; ++this->polls_index) {
 			if (!this->contextInitialize())
 				continue;
 
 			if (this->serverAccept()) {
 				break;
 			} else if (!this->context.is_server) {
-				if ((*this->context.client)->getEvent() < EVT_REQUEST) {
+				if (this->context.poll->revents & (POLLHUP|POLLERR|POLLNVAL)) {
+					this->_clientReject(true);
+					break;
+				} else if ((*this->context.client)->getEvent() < EVT_REQUEST) {
 					if (this->context.poll->revents & POLLIN) {
 						if ((*this->context.client)->getEvent() == NONE)
 							(*this->context.client)->setEvent(EVT_REQUEST_LINE);
 
-						if (this->clientReceive() <= 0)
+						if (this->clientReceive() <= 0) {
 							break;
+						}
 					}
 
 					if ((*this->context.client)->execute()) {
@@ -83,6 +87,7 @@ bool		Webserv::run(void) {
 						this->context.poll->events = POLLIN;
 						(*this->context.client)->setEvent(NONE);
 						(*this->context.client)->clearResponse();
+						break;
 					}
 				}
 			}
@@ -95,7 +100,7 @@ bool		Webserv::run(void) {
 }
 
 bool			Webserv::listen(void) {
-	if (this->sockets.listen() < 0)
+	if (this->sockets.listen() <= 0)
 		return false;
 
 	this->polls_size = this->sockets.sockets_poll.nfds;
@@ -133,9 +138,7 @@ void			Webserv::cleanConnections(void) {
 
 
 /* Context */
-bool			Webserv::contextInitialize(void) {
-	usleep(100);
-
+bool					Webserv::contextInitialize(void) {
 	this->context.poll = this->sockets.sockets_poll.fds.begin() + this->polls_index;
 	this->context.is_server = this->sockets.isListener(this->context.poll->fd);
 	this->context.client = this->_clientFind();
@@ -160,16 +163,23 @@ Webserv::client_type	Webserv::_clientFind(void) {
 	return (this->_clients.end() - 1);
 }
 
-void					Webserv::_clientReject(void) {
+void					Webserv::_clientReject(bool lingering) {
 	Message::debug("Closing connection: ");
 	Message::debug(this->context.poll->fd);
 	Message::debug("\n");
+
+	if (lingering) {
+		struct linger sl;
+		sl.l_onoff = 1;
+		sl.l_linger = 0;
+		setsockopt(this->context.poll->fd, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl));
+	}
 
 	close(this->context.poll->fd);
 	this->context.poll->fd = -1;
 	this->_compress_array = true;
 	delete (*this->context.client);
-	this->context.client = this->_clients.erase(this->context.client);
+	this->_clients.erase(this->context.client);
 }
 
 int				Webserv::clientReceive(void) {
