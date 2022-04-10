@@ -36,7 +36,7 @@ bool		Sockets::isListener(int fd) {
 }
 
 int		Sockets::listen(void) {
-	return poll(this->sockets_poll.fds.data(), this->sockets_poll.nfds, 1000);
+	return poll(this->sockets_poll.fds.data(), this->sockets_poll.fds.size(), 1000);
 }
 
 void		Sockets::accept(int fd) {
@@ -94,7 +94,7 @@ void		Sockets::_initializeSocket(socketsListenerType::iterator socket_iterator) 
 		return;
 	}
 
-	if (::listen(socketfd, 1000) < 0)
+	if (::listen(socketfd, 100000) < 0)
 	{
 		Message::error("listen() failed");
 		close(socketfd);

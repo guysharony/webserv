@@ -66,7 +66,7 @@ class Webserv {
 		bool							_compress_array;
 
 		client_type					_clientFind(void);
-		void							_clientReject(bool lingering = false);
+		void							_clientReject(void);
 
 		bool							_listen(void);
 		bool							_contextInitialize(void);

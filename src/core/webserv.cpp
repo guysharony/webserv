@@ -53,15 +53,44 @@ bool		Webserv::run(void) {
 		if (!this->listen())
 			continue; // Allow server to continue after a failure or timeout in poll
 
-		for (this->polls_index = 0; this->polls_index < this->polls_size; ++this->polls_index) {
+		for (this->polls_index = 0; this->polls_index < this->polls_size; this->polls_index++) {
 			if (!this->contextInitialize())
 				continue;
 
+			if (this->context.poll->revents & POLLHUP || this->context.poll->revents & POLLERR) {
+				this->_clientReject();
+			} else if (this->context.is_server) {
+				if (this->context.poll->revents & POLLIN)
+					this->sockets.accept(this->context.poll->fd);
+			} else if (this->context.poll->revents & POLLIN) {
+				if ((*this->context.client)->getEvent() == NONE)
+					(*this->context.client)->setEvent(EVT_REQUEST_LINE);
+
+				this->clientReceive();
+
+				if ((*this->context.client)->execute()) {
+					this->context.poll->events = POLLOUT;
+					(*this->context.client)->setEvent(EVT_SEND_RESPONSE);
+				}
+			} else if (this->context.poll->revents & POLLOUT) {
+				if ((*this->context.client)->getEvent() == EVT_SEND_RESPONSE) {
+					std::string packet;
+
+					while ((*this->context.client)->getResponse(packet))
+						this->clientSend(packet);
+
+					this->context.poll->events = POLLIN;
+					(*this->context.client)->setEvent(NONE);
+					(*this->context.client)->clearResponse();
+				}
+			}
+
+			/*
 			if (this->serverAccept()) {
 				break;
 			} else if (!this->context.is_server) {
 				if (this->context.poll->revents & (POLLHUP|POLLERR|POLLNVAL)) {
-					this->_clientReject(true);
+					this->_clientReject();
 					break;
 				} else if ((*this->context.client)->getEvent() < EVT_REQUEST) {
 					if (this->context.poll->revents & POLLIN) {
@@ -77,6 +106,7 @@ bool		Webserv::run(void) {
 						this->context.poll->events = POLLOUT;
 						(*this->context.client)->setEvent(EVT_SEND_RESPONSE);
 					}
+					break;
 				} else if ((*this->context.client)->getEvent() == EVT_SEND_RESPONSE) {
 					if (this->context.poll->revents & POLLOUT) {
 						std::string packet;
@@ -87,10 +117,15 @@ bool		Webserv::run(void) {
 						this->context.poll->events = POLLIN;
 						(*this->context.client)->setEvent(NONE);
 						(*this->context.client)->clearResponse();
+
+						if ((*this->context.client)->getConnection() == CLOSE)
+							close(this->context.poll->fd);
+
 						break;
 					}
 				}
 			}
+			*/
 		}
 
 		this->cleanConnections();
@@ -100,7 +135,7 @@ bool		Webserv::run(void) {
 }
 
 bool			Webserv::listen(void) {
-	if (this->sockets.listen() <= 0)
+	if (this->sockets.listen() < 0)
 		return false;
 
 	this->polls_size = this->sockets.sockets_poll.nfds;
@@ -163,17 +198,10 @@ Webserv::client_type	Webserv::_clientFind(void) {
 	return (this->_clients.end() - 1);
 }
 
-void					Webserv::_clientReject(bool lingering) {
+void					Webserv::_clientReject(void) {
 	Message::debug("Closing connection: ");
 	Message::debug(this->context.poll->fd);
 	Message::debug("\n");
-
-	if (lingering) {
-		struct linger sl;
-		sl.l_onoff = 1;
-		sl.l_linger = 0;
-		setsockopt(this->context.poll->fd, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl));
-	}
 
 	close(this->context.poll->fd);
 	this->context.poll->fd = -1;
