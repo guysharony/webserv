@@ -71,9 +71,8 @@ bool		Webserv::run(void) {
 				if ((*this->context.client)->getEvent() == NONE)
 					(*this->context.client)->setEvent(EVT_REQUEST_LINE);
 
-				if (this->clientReceive() <= 0) {
+				if (this->clientReceive() <= 0)
 					break;
-				}
 
 				if ((*this->context.client)->execute()) {
 					this->context.poll->events = POLLOUT;
@@ -83,8 +82,10 @@ bool		Webserv::run(void) {
 				if ((*this->context.client)->getEvent() == EVT_SEND_RESPONSE) {
 					std::string packet;
 
-					while ((*this->context.client)->getResponse(packet))
+					while ((*this->context.client)->getResponse(packet)) {
+						std::cout << "SEND [" << packet << "]" << std::endl;
 						this->clientSend(packet);
+					}
 
 					this->context.poll->events = POLLIN;
 					(*this->context.client)->setEvent(NONE);
@@ -103,6 +104,7 @@ bool			Webserv::listen(void) {
 	if (this->sockets.listen() < 0)
 		return false;
 
+	std::cout << "POLL" << std::endl;
 	this->polls_size = this->sockets.sockets_poll.nfds;
 
 	return true;
@@ -183,6 +185,7 @@ int				Webserv::clientReceive(void) {
 
 	memset(buffer, 0, BUFFER_SIZE);
 
+	std::cout << "RECV" << std::endl;
 	res = recv(this->context.poll->fd, buffer, BUFFER_SIZE - 1, 0);
 
 	if (res == 0)
@@ -205,6 +208,7 @@ int				Webserv::clientSend(std::string value) {
 	if (this->context.is_server)
 		return -1;
 
+	std::cout << "SEND" << std::endl;
 	int rc = send(this->context.poll->fd, value.c_str(), value.length(), 0);
 	if (rc < 0)
 	{

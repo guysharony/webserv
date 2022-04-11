@@ -3,6 +3,8 @@
 
 # include <iostream>
 # include <string>
+# include <cstdlib>
+# include <ctime>
 # include <cstdio>
 # include <stdlib.h>
 # include <fcntl.h>
@@ -21,27 +23,28 @@
 class TmpFile
 {
 	public:
-		TmpFile(void);
-		TmpFile(TmpFile const & src);
+		TmpFile(std::string const &filename);
 		~TmpFile();
 
-		TmpFile			&operator=(const TmpFile &src);
-
-		int				create(std::string filename);
-		int				display(void);
-		size_t			size(void);
-		int				clear(void);
-		int				close(void);
-		int				read(std::string & value);
-		int				write(std::string value);
-		void				position(ssize_t value);
-		size_t			getPosition(void);
+		/* Getters */
 		std::string		getFilename(void);
-		ssize_t			findline(std::string value);
+		std::string		getPath(void);
+
+		void				resetCursor(void);
+		int				read(std::string & value);
+		int				write(std::string const & value);
+		int				display(void);
 
 	private:
-		size_t			_position;
+		int				_fd;
+		std::string		_path;
 		std::string		_filename;
+
+		std::string		_generate_filepath(void);
+
+		TmpFile(void);
+		TmpFile(TmpFile const & src);
+		TmpFile	&operator=(TmpFile const &other);
 };
 
 #endif

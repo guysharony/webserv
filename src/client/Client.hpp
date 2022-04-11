@@ -38,6 +38,7 @@ class Client {
 		int					getStatus(void);
 		int					getLine(void);
 		int					getResponse(std::string &packet);
+		int					getEnd(void);
 
 		// Setters
 		void					setClientAddr(std::string const &addr);

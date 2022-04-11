@@ -50,7 +50,6 @@ Client::Client(int socket_fd)
 	this->_socket_fd = socket_fd;
 	this->_server_addr = inet_ntoa(sock_addr.sin_addr);
 	this->_server_port = ntohs(sock_addr.sin_port);
-	this->_temporary.socket(this->_socket_fd);
 }
 
 Client::Client(Client const &src)
@@ -69,7 +68,6 @@ Client	&Client::operator=(Client const &rhs)
 		this->_response = rhs._response;
 		this->_request = rhs._request;
 		*/
-		this->_temporary = rhs._temporary;
 		this->_event = rhs._event;
 	}
 	return (*this);
@@ -123,6 +121,9 @@ int				Client::getConnection(void)
 int				Client::getStatus(void)
 { return (this->_status); }
 
+int				Client::getEnd(void)
+{ return (this->_end); }
+
 int				Client::getLine(void) {
 	this->_current.clear();
 
@@ -154,7 +155,7 @@ int				Client::getLine(void) {
 }
 
 int				Client::getResponse(std::string &packet)
-{ return this->_temporary.read(0, packet); }
+{ return this->_temporary.read("response", packet); }
 
 
 // Setters
@@ -190,8 +191,9 @@ void				Client::appendRequest(std::string packet)
 
 int				Client::appendResponse(std::string packet)
 {
-	if (this->_temporary.create(0)) {
-		this->_temporary.append(0, packet);
+	if (this->_temporary.create("response")) {
+		std::cout << "WRITE 1" << std::endl;
+		this->_temporary.append("response", packet);
 		return 1;
 	}
 
@@ -200,8 +202,9 @@ int				Client::appendResponse(std::string packet)
 
 int				Client::appendRequestBody(std::string packet)
 {
-	if (this->_temporary.create(1)) {
-		this->_temporary.append(1, packet);
+	if (this->_temporary.create("request_body")) {
+		std::cout << "WRITE 2" << std::endl;
+		this->_temporary.append("request_body", packet);
 		return 1;
 	}
 
@@ -243,24 +246,44 @@ int				Client::prepareResponse(void) {
 		this->appendResponse("all files..");
 	}
 
-	this->_temporary.cursor(0, 0);
+	this->_temporary.resetCursor("response");
 
 	return 1;
 }
 
 void				Client::displayResponse(void)
-{ this->_temporary.display(0); }
+{ this->_temporary.display("response"); }
 
 void				Client::clearResponse(void)
-{ this->_temporary.close(0); }
+{ this->_temporary.close("response"); }
 
 void				Client::displayRequestBody(void)
-{ this->_temporary.display(1); }
+{ this->_temporary.display("request_body"); }
 
 void				Client::clearRequestBody(void)
-{ this->_temporary.close(1); }
+{ this->_temporary.close("request_body"); }
 
 int				Client::execute(void) {
+	if (this->_current.length() > 0 && this->getEvent() == EVT_REQUEST_BODY) {
+		this->appendRequestBody(this->_current);
+		this->_current.clear();
+	}
+
+	this->_request();
+
+	if (this->_end) {
+		#ifdef DEBUG
+			std::cout << "___ BODY [" << toString(this->_content_length) << "] ___" << std::endl;
+			this->displayRequestBody();
+			std::cout << "_____________" << std::endl;
+		#endif
+		this->prepareResponse();
+	}
+
+	return this->_end;
+}
+
+void			Client::_request(void) {
 	std::size_t	chunk_extention;
 	int			res;
 
@@ -275,23 +298,23 @@ int				Client::execute(void) {
 
 			if (!this->_requestLine()) {
 				this->_end = 1;
-				break;
+				return;
 			}
 		} else if (this->getEvent() == EVT_REQUEST_HEADERS) {
 			if (this->_current.length() == 0) {
 				if (this->_request_headers.host.empty()) {
 					this->_status = STATUS_BAD_REQUEST;
 					this->_end = 1;
-					break;
+					return;
 				}
 
 				Message::debug("SEPARATOR\n");
 				this->_event = EVT_REQUEST_BODY;
 				if (this->_encoding == NONE) {
 					this->_end = 1;
-					break;
+					return;
 				}
-				continue;
+				return;
 			}
 
 			Message::debug("REQUEST HEADER [" + this->_current + "]\n");
@@ -299,7 +322,7 @@ int				Client::execute(void) {
 			if (!this->_requestHeaders()) {
 				this->_status = STATUS_BAD_REQUEST;
 				this->_end = 1;
-				break;
+				return;
 			}
 
 		} else if (this->getEvent() == EVT_REQUEST_BODY) {
@@ -313,7 +336,7 @@ int				Client::execute(void) {
 						if (!isPositiveBase16(this->_current)) {
 							this->_status = STATUS_BAD_REQUEST;
 							this->_end = 1;
-							break;
+							return;
 						}
 
 						this->_chunk_size = hexToInt(this->_current);
@@ -325,7 +348,7 @@ int				Client::execute(void) {
 					if (!this->_chunk_size) {
 						Message::debug("FINISHED\n");
 						this->_end = 1;
-						break;
+						return;
 					}
 
 					this->_body_size -= this->_current.length();
@@ -338,17 +361,17 @@ int				Client::execute(void) {
 					Message::debug("CHUNK BODY [" + this->_current + "]\n");
 
 					this->_content_length += this->_current.length();
-					this->appendRequestBody(this->_current);
 
 					if (this->_body_size == 0) {
 						this->_chunked = false;
 					}
+					return;
 				}
 			} else if (this->_encoding == LENGTH) {
 				if (this->_current.length() > static_cast<size_t>(this->_body_size)) {
 					this->_status = STATUS_BAD_REQUEST;
 					this->_end = 1;
-					break;
+					return;
 				}
 
 				this->_body_size -= this->_current.length();
@@ -365,22 +388,11 @@ int				Client::execute(void) {
 				if (this->_body_size == 0) {
 					Message::debug("FINISHED\n");
 					this->_end = 1;
-					break;
+					return;
 				}
 			}
 		}
 	}
-
-	if (this->_end) {
-		#ifdef DEBUG
-			std::cout << "___ BODY [" << toString(this->_content_length) << "] ___" << std::endl;
-			this->displayRequestBody();
-			std::cout << "_____________" << std::endl;
-		#endif
-		this->prepareResponse();
-	}
-
-	return this->_end;
 }
 
 int			Client::_requestLine(void)
