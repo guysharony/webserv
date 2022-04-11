@@ -219,16 +219,16 @@ void Request::parseRequest(std::string request_buffer)
 			// Handle error here
 			//throw e; // delete this once error is handled properly
 		}
-
 		if (_ret < STATUS_BAD_REQUEST){
-			Config::location_type loc = selectLocation(server);
-			if (loc != server.locations.end()){
-				std::cout<<YELLOW<< "location = "<< selectLocation(server)->location<<RESET<<std::endl;	
+			try{
+				Config::location_type loc = selectLocation(server);
+				if (loc != server.locations.end()){
+					std::cout<<YELLOW<< "location = "<< selectLocation(server)->location<<RESET<<std::endl;	
+				}
 			}
-			else
-			{
-				_ret = STATUS_NOT_FOUND;
-				std::cerr<<RED <<"location not found"<<RESET<<std::endl;
+			catch(const Config::LocationNotFoundException& e){
+					_ret = STATUS_NOT_FOUND;
+					std::cerr<<RED <<"location not found"<<RESET<<std::endl;
 			}
 			
 		}
@@ -402,7 +402,7 @@ bool 	Request::isCgi(Config::configuration_struct server){
 		else
 			it++;
 	}
-	if (it != server.cgi_extentions.end() && isFiley("www/php/index.php") == 1)
+	if (it != server.cgi_extentions.end() && isFiley("www/php/index.php") == 1 && (_method.compare("POST") == 0 || _method.compare("GET") == 0))
 		return true;
 	return false;
 }

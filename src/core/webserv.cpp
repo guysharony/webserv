@@ -163,7 +163,7 @@ bool		Webserv::run(void) {
 				Response res(req);
 				 if (req.isCgi(server)){
 					 CGI new_cgi("/usr/bin/php-cgi");								// Create a new CGI connection with the path to CGI
-					 int pipefd = new_cgi.launch_cgi("/home/user42/Bureau/web/www/php/index.php");			// Launch the CGI command with the path to requested file (returns file descriptor to read)
+					 int pipefd = new_cgi.launch_cgi("/home/user42/Bureau/web/www/php/index.php", req);			// Launch the CGI command with the path to requested file (returns file descriptor to read)
 					this->_sockets.sockets_poll.append_pipe(pipefd, POLLIN);	// Add the new file descriptor to poll
 					sleep(2);
 					read(pipefd, (void*)buffer, 2000);

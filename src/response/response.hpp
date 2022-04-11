@@ -44,7 +44,8 @@ private:
 	std::string     getUrl(std::string dirent, bool isFolder);
 	std::string   	getListOfDirectories(const char *path);
 	std::string getPathAfterreplacinglocationByRoot();
-
+	void 	deleteMethod();
+	
 
 
 };

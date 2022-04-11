@@ -126,11 +126,6 @@ Temporary   Response::createBody(){
         tmp.append(_unique_id,readHtmlFile(_server.error_page[413]));
     else if (_codeDeRetour == STATUS_FORBIDDEN)
         tmp.append(_unique_id,readHtmlFile(_server.error_page[403]));
-    else
-    {
-        tmp.append(_unique_id, "this response is not handled yet!!");
-
-    }
     return(tmp);      
 }
 
@@ -159,7 +154,8 @@ std::string Response::getStat(){
 }
 
 void Response::createResponse(){
-
+    if (_req.getMethod().compare("DELETE") == 0)
+        deleteMethod();
     Temporary body = createBody();
     create_headers(body.size(_unique_id));
     _response.append("HTTP/1.1 ");
@@ -266,4 +262,16 @@ void Response::createCgiResponse(CgiParser p){
     _response.append(D_CRLF);
     _response.append(p.getBody());
     _response.append(CRLF);
+}
+
+void		Response::deleteMethod(){
+    std::string p = getPathAfterreplacinglocationByRoot();
+	if (isFiley(p) == 1){
+		if (remove(p.c_str()) == 0)
+			_codeDeRetour = STATUS_NO_CONTENT;
+		else
+			_codeDeRetour = STATUS_FORBIDDEN;
+	}
+	else
+		_codeDeRetour = STATUS_NOT_FOUND;
 }
