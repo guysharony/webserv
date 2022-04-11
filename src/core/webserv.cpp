@@ -17,7 +17,13 @@ Webserv::Webserv(void)
 { }
 
 Webserv::~Webserv()
-{ }
+{
+	client_type ite = this->_clients.end();
+	for (client_type it = this->_clients.begin(); it != ite; ++it)
+		delete *it;
+
+	this->_clients.clear();
+}
 
 
 int			Webserv::load(char *filename)
