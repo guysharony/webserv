@@ -53,20 +53,21 @@ bool		Webserv::run(void) {
 		if (!this->listen())
 			continue; // Allow server to continue after a failure or timeout in poll
 
-		for (this->polls_index = 0; this->polls_index < this->polls_size; this->polls_index++) {
+		for (this->polls_index = 0; this->polls_index < this->polls_size; ++this->polls_index) {
 			if (!this->contextInitialize())
 				continue;
 
-			if (this->context.poll->revents & POLLHUP || this->context.poll->revents & POLLERR) {
-				this->_clientReject();
-			} else if (this->context.is_server) {
+			if (this->context.is_server) {
 				if (this->context.poll->revents & POLLIN)
 					this->sockets.accept(this->context.poll->fd);
+				break;
 			} else if (this->context.poll->revents & POLLIN) {
 				if ((*this->context.client)->getEvent() == NONE)
 					(*this->context.client)->setEvent(EVT_REQUEST_LINE);
 
-				this->clientReceive();
+				if (this->clientReceive() <= 0) {
+					break;
+				}
 
 				if ((*this->context.client)->execute()) {
 					this->context.poll->events = POLLOUT;
@@ -84,48 +85,6 @@ bool		Webserv::run(void) {
 					(*this->context.client)->clearResponse();
 				}
 			}
-
-			/*
-			if (this->serverAccept()) {
-				break;
-			} else if (!this->context.is_server) {
-				if (this->context.poll->revents & (POLLHUP|POLLERR|POLLNVAL)) {
-					this->_clientReject();
-					break;
-				} else if ((*this->context.client)->getEvent() < EVT_REQUEST) {
-					if (this->context.poll->revents & POLLIN) {
-						if ((*this->context.client)->getEvent() == NONE)
-							(*this->context.client)->setEvent(EVT_REQUEST_LINE);
-
-						if (this->clientReceive() <= 0) {
-							break;
-						}
-					}
-
-					if ((*this->context.client)->execute()) {
-						this->context.poll->events = POLLOUT;
-						(*this->context.client)->setEvent(EVT_SEND_RESPONSE);
-					}
-					break;
-				} else if ((*this->context.client)->getEvent() == EVT_SEND_RESPONSE) {
-					if (this->context.poll->revents & POLLOUT) {
-						std::string packet;
-
-						while ((*this->context.client)->getResponse(packet))
-							this->clientSend(packet);
-
-						this->context.poll->events = POLLIN;
-						(*this->context.client)->setEvent(NONE);
-						(*this->context.client)->clearResponse();
-
-						if ((*this->context.client)->getConnection() == CLOSE)
-							close(this->context.poll->fd);
-
-						break;
-					}
-				}
-			}
-			*/
 		}
 
 		this->cleanConnections();
