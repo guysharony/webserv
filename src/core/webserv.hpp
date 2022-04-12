@@ -24,7 +24,6 @@ class Webserv {
 		struct 						context_struct
 		{
 			bool						is_server;
-			int						event;
 			poll_type					poll;
 			client_type				client;
 		};
