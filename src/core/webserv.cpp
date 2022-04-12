@@ -39,7 +39,7 @@ int			Webserv::load(std::string const filename)
 			this->sockets.prepare(it->host, toInteger(it->port));
 		}
 
-		this->sockets.initialize();
+		this->serversInitialize();
 
 		return 1;
 	} catch (const std::exception& e) {
@@ -62,37 +62,14 @@ bool		Webserv::run(void) {
 		for (this->polls_index = 0; this->polls_index < this->polls_size; ++this->polls_index) {
 			this->contextInitialize();
 
-			if (this->context.is_server) {
-				if (this->context.poll->revents & POLLIN) {
-					this->sockets.accept(this->context.poll->fd);
+			if (this->context.type == "server") {
+				if (this->handleServer())
 					break;
-				}
-			} else if ((*this->context.client)->getEvent() < EVT_SEND_RESPONSE) {
-				if (this->context.poll->revents & POLLIN) {
-					if (this->clientReceive() <= 0) {
-						std::cout << "CLOSE" << std::endl;
-						this->_clientReject();
-						break;
-					}
-				}
+			}
 
-				if ((*this->context.client)->execute()) {
-					this->context.poll->events = POLLOUT;
-					(*this->context.client)->setEvent(EVT_SEND_RESPONSE);
-				}
-			} else if ((*this->context.client)->getEvent() == EVT_SEND_RESPONSE) {
-				if (this->context.poll->revents & POLLOUT) {
-					std::string packet;
-
-					if ((*this->context.client)->getResponse(packet)) {
-						std::cout << "SEND [" << packet << "]" << std::endl;
-						this->clientSend(packet);
-					}
-
-					this->context.poll->events = POLLIN;
-					(*this->context.client)->setEvent(NONE);
-					(*this->context.client)->clearResponse();
-				}
+			if (this->context.type == "client") {
+				if (this->handleClient())
+					break;
 			}
 		}
 
@@ -111,10 +88,46 @@ bool			Webserv::listen(void) {
 	return true;
 }
 
-bool			Webserv::serverAccept(void) {
-	if (this->context.is_server && this->context.poll->revents & POLLIN) {
-		this->sockets.accept(this->context.poll->fd);
-		return true;
+bool			Webserv::handleServer(void) {
+	int		fd;
+
+	if (this->context.poll->revents & POLLIN) {
+		if ((fd = this->sockets.accept(this->context.poll->fd)) > 0) {
+			this->setDescriptorType(fd, "client");
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool			Webserv::handleClient(void) {
+	if ((*this->context.client)->getEvent() < EVT_SEND_RESPONSE) {
+		if (this->context.poll->revents & POLLIN) {
+			if (this->clientReceive() <= 0) {
+				std::cout << "CLOSE" << std::endl;
+				this->_clientReject();
+				return true;
+			}
+		}
+
+		if ((*this->context.client)->execute()) {
+			this->context.poll->events = POLLOUT;
+			(*this->context.client)->setEvent(EVT_SEND_RESPONSE);
+		}
+	} else if ((*this->context.client)->getEvent() == EVT_SEND_RESPONSE) {
+		if (this->context.poll->revents & POLLOUT) {
+			std::string packet;
+
+			if ((*this->context.client)->getResponse(packet)) {
+				std::cout << "SEND [" << packet << "]" << std::endl;
+				this->clientSend(packet);
+			}
+
+			this->context.poll->events = POLLIN;
+			(*this->context.client)->setEvent(NONE);
+			(*this->context.client)->clearResponse();
+		}
 	}
 
 	return false;
@@ -142,21 +155,21 @@ void			Webserv::cleanConnections(void) {
 /* Context */
 bool					Webserv::contextInitialize(void) {
 	this->context.poll = this->sockets.sockets_poll.fds.begin() + this->polls_index;
-	this->context.is_server = this->sockets.isListener(this->context.poll->fd);
+	this->context.type = this->getDescriptorType(this->context.poll->fd);
 	this->context.client = this->_clientFind();
 
 	return this->context.poll->revents != 0;
 }
 
 Webserv::client_type	Webserv::_clientFind(void) {
-	if (this->context.is_server)
+	if (this->context.type != "client")
 		return this->_clients.end();
 
 	client_type ite = this->_clients.end();
 	for (client_type it = this->_clients.begin(); it != ite; ++it) {
 		if ((*it)->getSocketFd() == this->context.poll->fd) {
 			Message::debug("Client already exists\n");
-			return (it);
+			return it;
 		}
 	}
 
@@ -173,6 +186,7 @@ void					Webserv::_clientReject(void) {
 	close(this->context.poll->fd);
 	this->context.poll->fd = -1;
 	this->_compress_array = true;
+	this->deleteDescriptor(this->context.poll->fd);
 	delete (*this->context.client);
 	this->_clients.erase(this->context.client);
 }
@@ -208,7 +222,7 @@ int				Webserv::clientReceive(void) {
 }
 
 int				Webserv::clientSend(std::string value) {
-	if (this->context.is_server)
+	if (this->context.type != "client")
 		return -1;
 
 	std::cout << "SEND" << std::endl;

@@ -20,36 +20,34 @@
 # include "./socketsListener.hpp"
 # include "./socketsPoll.hpp"
 
-class Sockets
-{
+class Sockets {
 	public:
 		Sockets(void);
 		Sockets(Sockets const & src);
 		~Sockets();
+
+		SocketsPoll::pollfd_type::iterator		current;
+
+		typedef std::vector<SocketsListener>	socketsListenerType;
 
 		void		prepare(int port);
 		void		prepare(std::string const & ip_addr);
 		void		prepare(std::string const & ip_addr, int port);
 		void		prepare(std::string const & ip_addr, int port, std::string const & server_name);
 
-		void		initialize(void);
 		int		listen(void);
-		void		accept(int fd);
+		int		accept(int fd);
 
 		bool		isListener(int fd);
 
-		SocketsPoll::pollfd_type::iterator		current;
-
-		typedef std::vector<SocketsListener>	socketsListenerType;
+		int		initialize(socketsListenerType::iterator server_iterator);
 
 		SocketsPoll						sockets_poll;
+		socketsListenerType					sockets;
 		int								index;
 
 	private:
-		socketsListenerType					_sockets;
 		std::set<int>						_listener;
-
-		void		_initializeSocket(socketsListenerType::iterator socket_iterator);
 };
 
 #endif

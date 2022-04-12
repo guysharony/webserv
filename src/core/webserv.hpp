@@ -5,12 +5,12 @@
 # include <cstring> // memset
 # include <unistd.h>
 # include "../formats/temporary.hpp"
-# include "../sockets/sockets.hpp"
 # include "../request/request.hpp"
 # include "../response/response.hpp"
 # include "../client/Client.hpp"
+# include "descriptors.hpp"
 
-class Webserv {
+class Webserv: public virtual Descriptors {
 	public:
 		Webserv(void);
 		~Webserv();
@@ -18,12 +18,9 @@ class Webserv {
 		typedef std::vector<Client*>		clients_type;
 		typedef clients_type::iterator	client_type;
 
-		typedef std::vector<pollfd>		polls_type;
-		typedef polls_type::iterator		poll_type;
-
 		struct 						context_struct
 		{
-			bool						is_server;
+			std::string				type;
 			poll_type					poll;
 			client_type				client;
 		};
@@ -35,29 +32,22 @@ class Webserv {
 
 		Config						config;
 		context_type					context;
-		Sockets						sockets;
 
 		int							load(char *filename);
 		int							load(std::string const filename);
 
 		bool							run(void);
 		bool							listen(void);
-		bool							serverAccept(void);
-
-		int							setConfig(std::string const filename);
 
 		/* Status */
-		bool							isRunning(void);
-		bool							isServer(int fd);
 		void							cleanConnections(void);
 
 		/* Events */
-		void							eventInitialize(void);
+		bool							handleServer(void);
+		bool							handleClient(void);
 
 		/* Context */
 		bool							contextInitialize(void);
-		int							contextEvent(void);
-		int							contextExecute(void);
 
 		int							clientReceive(void);
 		int							clientSend(std::string value);
@@ -70,15 +60,6 @@ class Webserv {
 
 		client_type					_clientFind(void);
 		void							_clientReject(void);
-
-		bool							_listen(void);
-		bool							_contextInitialize(void);
-		bool							_isServer(void);
-		bool							_serverAccept(void);
-		bool							_clientRevents(short revents);
-		int							_clientReceive(void);
-		void 						_clientUpdate(void);
-		void							_compress(void);
 };
 
 #endif
