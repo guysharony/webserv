@@ -39,6 +39,7 @@ class Client {
 		int					getLine(void);
 		int					getResponse(std::string &packet);
 		int					getEnd(void);
+		bool					getClose(void);
 
 		// Setters
 		void					setClientAddr(std::string const &addr);
@@ -49,6 +50,7 @@ class Client {
 		void					setRequest(Config &config);
 		void					setResponse(void);
 		void					setEvent(int event);
+		void					setClose(bool value);
 
 		// Debug functions
 		void					print();
@@ -114,8 +116,7 @@ class Client {
 		std::string			_current;
 		Temporary				_temporary;
 		int					_end;
-
-		int					_close(void);
+		bool					_close;
 
 		int					_receive(std::string & content);
 		int					_send(std::string content);

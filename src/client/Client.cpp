@@ -14,7 +14,8 @@ Client::Client(void)
 	_chunk_size(-1),
 	_status(0),
 	_temporary(),
-	_end(0)
+	_end(0),
+	_close(false)
 { }
 
 Client::Client(int socket_fd)
@@ -31,7 +32,8 @@ Client::Client(int socket_fd)
 	_chunk_size(-1),
 	_status(0),
 	_temporary(),
-	_end(0)
+	_end(0),
+	_close(false)
 {
 	struct sockaddr_in sock_addr;
 	struct sockaddr_in peer_addr;
@@ -157,6 +159,9 @@ int				Client::getLine(void) {
 int				Client::getResponse(std::string &packet)
 { return this->_temporary.read("response", packet); }
 
+bool				Client::getClose(void)
+{ return this->_close; }
+
 
 // Setters
 void				Client::setClientAddr(std::string const &addr)
@@ -185,6 +190,8 @@ void				Client::setResponse(void)
 void				Client::setEvent(int value)
 { this->_event = value; }
 
+void				Client::setClose(bool value)
+{ this->_close = value; }
 
 void				Client::appendRequest(std::string packet)
 { this->_temp.append(packet); }
@@ -192,7 +199,6 @@ void				Client::appendRequest(std::string packet)
 int				Client::appendResponse(std::string packet)
 {
 	if (this->_temporary.create("response")) {
-		std::cout << "WRITE 1" << std::endl;
 		this->_temporary.append("response", packet);
 		return 1;
 	}
@@ -203,7 +209,6 @@ int				Client::appendResponse(std::string packet)
 int				Client::appendRequestBody(std::string packet)
 {
 	if (this->_temporary.create("request_body")) {
-		std::cout << "WRITE 2 [" << packet << "]" << std::endl;
 		this->_temporary.append("request_body", packet);
 		return 1;
 	}
@@ -247,6 +252,7 @@ int				Client::prepareResponse(void) {
 	}
 
 	this->_temporary.resetCursor("response");
+	this->_end = 0;
 
 	return 1;
 }
@@ -264,25 +270,30 @@ void				Client::clearRequestBody(void)
 { this->_temporary.close("request_body"); }
 
 int				Client::execute(void) {
-	this->_request();
-
-	if (this->_end) {
-		#ifdef DEBUG
-			std::cout << "___ BODY [" << toString(this->_content_length) << "] ___" << std::endl;
-			this->displayRequestBody();
-			std::cout << "_____________" << std::endl;
-		#endif
-		this->prepareResponse();
+	if (this->_current.length() > 0) {
+		this->appendRequestBody(this->_current);
+		this->_current.clear();
 	}
 
-	return this->_end;
+	this->_request();
+
+	if (!this->_end)
+		return 0;
+
+	#ifdef DEBUG
+		std::cout << "___ BODY [" << toString(this->_content_length) << "] ___" << std::endl;
+		this->displayRequestBody();
+		std::cout << "_____________" << std::endl;
+	#endif
+	this->prepareResponse();
+	return 1;
 }
 
 void			Client::_request(void) {
 	std::size_t	chunk_extention;
 	int			res;
 
-	while ((res = this->getLine()) > 0) {
+	if ((res = this->getLine()) > 0) {
 		if (this->getEvent() == EVT_REQUEST_LINE) {
 			Message::debug("REQUEST LINE [" + this->_current + "]\n");
 			this->_end = 0;
@@ -356,7 +367,6 @@ void			Client::_request(void) {
 					Message::debug("CHUNK BODY [" + this->_current + "]\n");
 
 					this->_content_length += this->_current.length();
-					this->appendRequestBody(this->_current);
 
 					if (this->_body_size == 0) {
 						this->_chunked = false;
@@ -377,8 +387,6 @@ void			Client::_request(void) {
 				}
 
 				Message::debug("LENGTH BODY [" + toString(this->_body_size) + "] - [" + this->_current + "]\n");
-
-				this->appendRequestBody(this->_current);
 
 				if (this->_body_size == 0) {
 					Message::debug("FINISHED\n");

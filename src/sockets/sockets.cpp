@@ -36,7 +36,7 @@ bool		Sockets::isListener(int fd) {
 }
 
 int		Sockets::listen(void) {
-	return poll(this->sockets_poll.fds.data(), this->sockets_poll.fds.size(), 1000);
+	return poll(this->sockets_poll.fds.data(), this->sockets_poll.fds.size(), 0);
 }
 
 void		Sockets::accept(int fd) {

@@ -67,22 +67,24 @@ bool		Webserv::run(void) {
 					this->sockets.accept(this->context.poll->fd);
 					break;
 				}
-			} else if (this->context.event == EVT_READ) {
-				if ((*this->context.client)->getEvent() == NONE)
-					(*this->context.client)->setEvent(EVT_REQUEST_LINE);
-
-				if (this->clientReceive() <= 0)
-					break;
+			} else if ((*this->context.client)->getEvent() < EVT_SEND_RESPONSE) {
+				if (this->context.event == EVT_READ) {
+					if (this->clientReceive() <= 0) {
+						std::cout << "CLOSE" << std::endl;
+						this->_clientReject();
+						break;
+					}
+				}
 
 				if ((*this->context.client)->execute()) {
 					this->context.poll->events = POLLOUT;
 					(*this->context.client)->setEvent(EVT_SEND_RESPONSE);
 				}
-			} else if (this->context.event == EVT_WRITE) {
-				if ((*this->context.client)->getEvent() == EVT_SEND_RESPONSE) {
+			} else if ((*this->context.client)->getEvent() == EVT_SEND_RESPONSE) {
+				if (this->context.event == EVT_WRITE) {
 					std::string packet;
 
-					while ((*this->context.client)->getResponse(packet)) {
+					if ((*this->context.client)->getResponse(packet)) {
 						std::cout << "SEND [" << packet << "]" << std::endl;
 						this->clientSend(packet);
 					}
@@ -104,7 +106,6 @@ bool			Webserv::listen(void) {
 	if (this->sockets.listen() < 0)
 		return false;
 
-	std::cout << "POLL" << std::endl;
 	this->polls_size = this->sockets.sockets_poll.nfds;
 
 	return true;
@@ -185,17 +186,20 @@ int				Webserv::clientReceive(void) {
 	char			buffer[BUFFER_SIZE];
 	int			res;
 
-	this->_close_connection = false;
-
 	memset(buffer, 0, BUFFER_SIZE);
 
 	std::cout << "RECV" << std::endl;
 	res = recv(this->context.poll->fd, buffer, BUFFER_SIZE - 1, 0);
 
 	if (res == 0)
-		this->_clientReject();
+		(*this->context.client)->setClose(true);
 	else if (res > 0) {
+		if ((*this->context.client)->getEvent() == NONE)
+			(*this->context.client)->setEvent(EVT_REQUEST_LINE);
+
 		std::string packet = std::string(buffer);
+
+		std::cout << "RECV [" << packet << "]" << std::endl;
 
 		#ifdef DEBUG
 			std::cout << RESET << "=== [" << this->context.poll->fd << "] - (" << res << ")" << std::endl;
@@ -217,7 +221,7 @@ int				Webserv::clientSend(std::string value) {
 	if (rc < 0)
 	{
 		Message::error("send() failed.");
-		this->_close_connection = true;
+		(*this->context.client)->setClose(true);
 		return 0;
 	}
 
