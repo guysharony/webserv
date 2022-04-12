@@ -32,6 +32,8 @@ class Temporary
 		int					append(std::string const &filename, std::string const & source);
 		int					display(std::string const &filename);
 		void					close(std::string const &filename);
+		short				getEvents(std::string const &filename);
+		void					setEvents(std::string const &filename, short event);
 		void					resetCursor(std::string const &filename);
 
 		typedef std::vector<TmpFile*>		tmpfiles_type;

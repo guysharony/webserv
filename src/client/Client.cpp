@@ -16,7 +16,10 @@ Client::Client(void)
 	_temporary(),
 	_end(0),
 	_close(false)
-{ }
+{
+	this->_temporary.create("response");
+	this->_temporary.create("request_body");
+}
 
 Client::Client(int socket_fd)
 :
@@ -52,6 +55,8 @@ Client::Client(int socket_fd)
 	this->_socket_fd = socket_fd;
 	this->_server_addr = inet_ntoa(sock_addr.sin_addr);
 	this->_server_port = ntohs(sock_addr.sin_port);
+	this->_temporary.create("response");
+	this->_temporary.create("request_body");
 }
 
 Client::Client(Client const &src)
@@ -198,21 +203,26 @@ void				Client::appendRequest(std::string packet)
 
 int				Client::appendResponse(std::string packet)
 {
-	if (this->_temporary.create("response")) {
-		this->_temporary.append("response", packet);
-		return 1;
+	if (!(this->_temporary.getEvents("response") & POLLOUT)) {
+		this->_temporary.setEvents("response", POLLOUT);
+		return 0;
 	}
 
-	return 0;
+	this->_temporary.append("response", packet);
+	return 1;
 }
 
 int				Client::appendRequestBody(std::string packet)
 {
-	if (this->_temporary.create("request_body")) {
+	// std::cout << "REQUEST_BODY 2 [" << this->_temporary.getEvents("request_body") << "]" << std::endl;
+	if (this->_temporary.getEvents("request_body") & POLLOUT) {
+		std::cout << "APPENING TO FILE" << std::endl;
 		this->_temporary.append("request_body", packet);
 		return 1;
 	}
 
+	this->_temporary.setEvents("request_body", POLLOUT);
+	// std::cout << "APPEND REQUEST" << std::endl;
 	return 0;
 }
 
@@ -240,7 +250,7 @@ int				Client::prepareResponse(void) {
 		this->appendResponse("server_name: Michello\r\n");
 		this->appendResponse("\r\n");
 	} else {
-		// std::cout << "POST RESPONSE" << std::endl;
+		std::cout << "POST RESPONSE" << std::endl;
 		this->appendResponse("HTTP/1.1 405 Not Allowed\r\n");
 		this->appendResponse("content-length: 11\r\n");
 		this->appendResponse("content-location: /\r\n");
@@ -271,7 +281,8 @@ void				Client::clearRequestBody(void)
 
 int				Client::execute(void) {
 	if (this->_current.length() > 0) {
-		this->appendRequestBody(this->_current);
+		if (!this->appendRequestBody(this->_current))
+			return 0;
 		this->_current.clear();
 	}
 
@@ -348,6 +359,7 @@ void			Client::_request(void) {
 						this->_chunk_size = hexToInt(this->_current);
 						this->_body_size = this->_chunk_size;
 						this->_chunked = true;
+
 						Message::debug("CHUNK SIZE [" + toString(this->_chunk_size) + "]\n");
 					}
 				} else {
@@ -367,6 +379,7 @@ void			Client::_request(void) {
 					Message::debug("CHUNK BODY [" + this->_current + "]\n");
 
 					this->_content_length += this->_current.length();
+					this->_temporary.setEvents("request_body", POLLOUT);
 
 					if (this->_body_size == 0) {
 						this->_chunked = false;
@@ -387,6 +400,7 @@ void			Client::_request(void) {
 				}
 
 				Message::debug("LENGTH BODY [" + toString(this->_body_size) + "] - [" + this->_current + "]\n");
+				this->_temporary.setEvents("request_body", POLLOUT);
 
 				if (this->_body_size == 0) {
 					Message::debug("FINISHED\n");

@@ -93,6 +93,9 @@ bool			Webserv::handleServer(void) {
 
 	if (this->context.poll->revents & POLLIN) {
 		if ((fd = this->sockets.accept(this->context.poll->fd)) > 0) {
+			Message::debug("Adding client\n");
+			this->_clients.push_back(new Client(fd));
+
 			this->setDescriptorType(fd, "client");
 			return true;
 		}
@@ -173,9 +176,7 @@ Webserv::client_type	Webserv::_clientFind(void) {
 		}
 	}
 
-	Message::debug("Adding client\n");
-	this->_clients.push_back(new Client(this->context.poll->fd));
-	return (this->_clients.end() - 1);
+	return this->_clients.end();
 }
 
 void					Webserv::_clientReject(void) {

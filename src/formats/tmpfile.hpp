@@ -15,12 +15,13 @@
 # include <sys/socket.h>
 # include <fstream>
 # include "../core/message.hpp"
+# include "../core/descriptors.hpp"
 # include "files.hpp"
 # include "units.hpp"
 # include "strings.hpp"
 
 
-class TmpFile
+class TmpFile: public virtual Descriptors
 {
 	public:
 		TmpFile(std::string const &filename);
@@ -29,6 +30,11 @@ class TmpFile
 		/* Getters */
 		std::string		getFilename(void);
 		std::string		getPath(void);
+		poll_type			getPoll(void);
+		short			getEvents(void);
+
+		/* Setters */
+		void				setEvents(short events);
 
 		void				resetCursor(void);
 		int				read(std::string & value);

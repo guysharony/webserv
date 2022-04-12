@@ -21,7 +21,30 @@ bool		Temporary::create(std::string const &filename)
 	}
 
 	this->_tmpfiles.push_back(new TmpFile(filename));
-	return true;
+	return false;
+}
+
+short	Temporary::getEvents(std::string const &filename)
+{
+	tmpfile_type	ite = this->_tmpfiles.end();
+	for (tmpfile_type it = this->_tmpfiles.begin(); it != ite; ++it) {
+		if ((*it)->getFilename() == filename) {
+			return (*it)->getEvents();
+		}
+	}
+
+	return 0;
+}
+
+void		Temporary::setEvents(std::string const &filename, short event)
+{
+	tmpfile_type	ite = this->_tmpfiles.end();
+	for (tmpfile_type it = this->_tmpfiles.begin(); it != ite; ++it) {
+		if ((*it)->getFilename() == filename) {
+			(*it)->setEvents(event);
+			return;
+		}
+	}
 }
 
 int		Temporary::read(std::string const &filename, std::string &dest)
