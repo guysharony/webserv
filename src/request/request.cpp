@@ -322,15 +322,20 @@ Config::configuration_struct &Request::selectServer(){
 	Config::configuration_type it;
 	Config::configuration_type default_server = this->_config.configuration.end();
 	for (it = this->_config.configuration.begin(); it != this->_config.configuration.end(); it++) {
-		if (it->port.compare(this->_port) == 0)
-		{
-			if (default_server == this->_config.configuration.end())
-			{
-				default_server = it;
-			}
-			if (it->server_name.compare(this->_host) == 0)
-			{
-				return (*it);
+		for (Config::listen_type::iterator it2 = it->listen.begin(); it2 != it->listen.end(); it2++) {
+			for (Config::ports_type::iterator it3 = it2->second.begin(); it3 != it2->second.end(); it3++) {
+				if ((*it3).compare(this->_port) == 0)
+				{
+					if (default_server == this->_config.configuration.end())
+					{
+						default_server = it;
+					}
+
+					if (it->server_name.compare(it2->first) == 0)
+					{
+						return (*it);
+					}
+				}
 			}
 		}
 	}

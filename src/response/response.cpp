@@ -214,8 +214,8 @@ std::string    Response::getListOfDirectories(const char *path) {
     return html;
 }
 
-std::string       Response::getUrl(std::string dirent, bool isFolder) {
-    std::string folder = "&#128193;";
+  std::string       Response::getUrl(std::string dirent, bool isFolder) {
+  std::string folder = "&#128193;";
 	std::string file = "&#128462;";
     std::string image = file;
     if (isFolder)

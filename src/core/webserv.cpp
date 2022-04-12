@@ -30,7 +30,11 @@ int			Webserv::load(std::string const filename)
 			return 0;
 
 		for (Config::configuration_type it = this->_config.configuration.begin(); it != this->_config.configuration.end(); it++) {
-			this->_sockets.prepare(it->host, toInteger(it->port));
+			for (Config::listen_type::iterator it2 = it->listen.begin(); it2 != it->listen.end(); it2++) {
+				for (Config::ports_type::iterator it3 = it2->second.begin(); it3 != it2->second.end(); it3++) {
+					this->_sockets.prepare(it2->first, toInteger(*it3));
+				}
+			}
 		}
 
 		this->_sockets.initialize();
