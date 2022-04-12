@@ -33,35 +33,25 @@ int	CGI::launch_cgi(std::string const & filename, request_type &request)
 	Config::configuration_struct        &server = request.selectServer();
 	Config::location_type             	location = request.selectLocation(server);
 
-	Message::debug("Launching CGI\n");
+	Message::debug("Launching CGI: ");
+	Message::debugln(this->_cgi_path);
+	Message::debug("Filename: ");
+	Message::debugln(filename);	
 
 	if (pipe2(fd, O_NONBLOCK))
 		Message::error("pipe2() failed");
-	Message::debug("Fd: ");
-	Message::debug(fd[0]);
-	Message::debug("\n");
-
-	Message::debug("CGI Path: ");
-	Message::debug(this->_cgi_path);
-	Message::debug("\n");
-
-	Message::debug("Filename: ");
-	Message::debug(filename);
-	Message::debug("\n");
 
 	std::map<std::string, std::string>headers = request.getHeader();
-	Message::debug("Headers\n");
+	Message::debugln("Headers");
 	for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it)
 	{
 		std::string key(it->first);
 		key = "HTTP_" + key;
 		Message::debug(key);
 		Message::debug(" = ");
-		Message::debug(it->second.c_str());
-		Message::debug("\n");
+		Message::debugln(it->second.c_str());
 		setenv(key.c_str(), it->second.c_str(), true);
 	}
-
 
 	pid = fork();
 	if (pid < 0)
@@ -75,10 +65,9 @@ int	CGI::launch_cgi(std::string const & filename, request_type &request)
 		close(fd[1]);
 
 		// Prepare environment for execve
-		setenv("SERVER_SOFTWARE", SERVER_NAME, true);						// *** This value must be agreed on
+		setenv("SERVER_SOFTWARE", SERVER_NAME, true);						// *** This value should be confirmed
 		setenv("SERVER_NAME", server.server_name.c_str(), true);
 		setenv("GATEWAY_INTERFACE", "CGI/1.1", true);						// *** This value should be confirmed
-
 		setenv("SERVER_PROTOCOL", "HTTP/1.1", true);
 		setenv("SERVER_PORT", server.port.c_str(), true);
 		setenv("PATH_INFO", filename.c_str(), true);
@@ -97,8 +86,10 @@ int	CGI::launch_cgi(std::string const & filename, request_type &request)
 		char * const argv[3] = {executable, argument, NULL};
 
 		int ret = execve(executable, argv, environ); //pathname, argv, envp
-		std::cout << "ret: " << ret << std::endl;
-		std::cout << "errno: " << errno << std::endl;
+		Message::debug("ret: ");
+		Message::debugln(ret);
+		Message::debug("errno: ");
+		Message::debugln(errno);
 		Message::error("execve() failed");
 	}
 		
