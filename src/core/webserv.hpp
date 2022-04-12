@@ -24,6 +24,7 @@ class Webserv {
 		struct 						context_struct
 		{
 			bool						is_server;
+			int						event;
 			poll_type					poll;
 			client_type				client;
 		};
@@ -50,6 +51,9 @@ class Webserv {
 		bool							isRunning(void);
 		bool							isServer(int fd);
 		void							cleanConnections(void);
+
+		/* Events */
+		void							eventInitialize(void);
 
 		/* Context */
 		bool							contextInitialize(void);

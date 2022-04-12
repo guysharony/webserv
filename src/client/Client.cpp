@@ -203,7 +203,7 @@ int				Client::appendResponse(std::string packet)
 int				Client::appendRequestBody(std::string packet)
 {
 	if (this->_temporary.create("request_body")) {
-		std::cout << "WRITE 2" << std::endl;
+		std::cout << "WRITE 2 [" << packet << "]" << std::endl;
 		this->_temporary.append("request_body", packet);
 		return 1;
 	}
@@ -264,11 +264,6 @@ void				Client::clearRequestBody(void)
 { this->_temporary.close("request_body"); }
 
 int				Client::execute(void) {
-	if (this->_current.length() > 0 && this->getEvent() == EVT_REQUEST_BODY) {
-		this->appendRequestBody(this->_current);
-		this->_current.clear();
-	}
-
 	this->_request();
 
 	if (this->_end) {
@@ -361,11 +356,11 @@ void			Client::_request(void) {
 					Message::debug("CHUNK BODY [" + this->_current + "]\n");
 
 					this->_content_length += this->_current.length();
+					this->appendRequestBody(this->_current);
 
 					if (this->_body_size == 0) {
 						this->_chunked = false;
 					}
-					return;
 				}
 			} else if (this->_encoding == LENGTH) {
 				if (this->_current.length() > static_cast<size_t>(this->_body_size)) {

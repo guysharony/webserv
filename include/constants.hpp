@@ -22,6 +22,9 @@
 # define EVT_PREPARE_RESPONSE 			5
 # define EVT_SEND_RESPONSE 				6
 
+# define EVT_READ						1
+# define EVT_WRITE						2
+
 
 /* STATUS */
 # define STATUS_OK 						200
