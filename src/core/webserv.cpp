@@ -60,14 +60,14 @@ bool		Webserv::run(void) {
 			continue; // Allow server to continue after a failure or timeout in poll
 
 		for (this->polls_index = 0; this->polls_index < this->polls_size; ++this->polls_index) {
-			if (!this->contextInitialize())
-				continue;
+			this->contextInitialize();
 
 			if (this->context.is_server) {
-				if (this->context.poll->revents & POLLIN)
+				if (this->context.event == EVT_READ) {
 					this->sockets.accept(this->context.poll->fd);
-				break;
-			} else if (this->context.poll->revents & POLLIN) {
+					break;
+				}
+			} else if (this->context.event == EVT_READ) {
 				if ((*this->context.client)->getEvent() == NONE)
 					(*this->context.client)->setEvent(EVT_REQUEST_LINE);
 
@@ -78,7 +78,7 @@ bool		Webserv::run(void) {
 					this->context.poll->events = POLLOUT;
 					(*this->context.client)->setEvent(EVT_SEND_RESPONSE);
 				}
-			} else if (this->context.poll->revents & POLLOUT) {
+			} else if (this->context.event == EVT_WRITE) {
 				if ((*this->context.client)->getEvent() == EVT_SEND_RESPONSE) {
 					std::string packet;
 
@@ -138,12 +138,16 @@ void			Webserv::cleanConnections(void) {
 	}
 }
 
-
 /* Context */
 bool					Webserv::contextInitialize(void) {
 	this->context.poll = this->sockets.sockets_poll.fds.begin() + this->polls_index;
 	this->context.is_server = this->sockets.isListener(this->context.poll->fd);
 	this->context.client = this->_clientFind();
+	this->context.event = NONE;
+	if (this->context.poll->revents & POLLIN)
+		this->context.event = EVT_READ;
+	if (this->context.poll->revents & POLLOUT)
+		this->context.event = EVT_WRITE;
 
 	return this->context.poll->revents != 0;
 }
