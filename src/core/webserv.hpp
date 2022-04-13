@@ -55,7 +55,6 @@ class Webserv: public virtual Descriptors {
 	private:
 		bool							_run;
 		clients_type					_clients;
-		bool							_close_connection;
 		bool							_compress_array;
 
 		client_type					_clientFind(void);

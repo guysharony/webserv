@@ -11,10 +11,12 @@ TmpFile::TmpFile(std::string const &filename)
 	this->_path = this->_generate_filepath();
 
 	this->_fd = open(this->_path.c_str(), O_CREAT | O_TRUNC | O_RDWR, S_IRWXU);
+	if (this->_fd < 0)
+		Message::error("Failed in creating file.");
 
 	fcntl(this->_fd, F_SETFL, O_NONBLOCK);
 
-	this->sockets.sockets_poll.append(this->_fd, POLLOUT);
+	this->sockets.sockets_poll.append(this->_fd, POLLIN);
 	this->setDescriptorType(this->_fd, "file");
 }
 

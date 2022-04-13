@@ -12,7 +12,6 @@ void signalHandler(int sig)
 Webserv::Webserv(void)
 :
 	_run(true),
-	_close_connection(false),
 	_compress_array(false)
 { }
 
@@ -59,17 +58,19 @@ bool		Webserv::run(void) {
 		if (!this->listen())
 			continue; // Allow server to continue after a failure or timeout in poll
 
-		for (this->polls_index = 0; this->polls_index < this->polls_size; ++this->polls_index) {
+		for (this->polls_index = 0; this->polls_index < this->polls_size; this->polls_index++) {
 			this->contextInitialize();
+
+			std::cout << "ITERATE [" << this->polls_index << "]" << std::endl;
 
 			if (this->context.type == "server") {
 				if (this->handleServer())
 					break;
-			}
-
-			if (this->context.type == "client") {
+			} else if (this->context.type == "client") {
 				if (this->handleClient())
 					break;
+			} else {
+				std::cout << "ITERATE [" << this->polls_index << "]" << std::endl;
 			}
 		}
 
@@ -82,6 +83,8 @@ bool		Webserv::run(void) {
 bool			Webserv::listen(void) {
 	if (this->sockets.listen() < 0)
 		return false;
+
+	std::cout << "SIZE [" << this->sockets.sockets_poll.nfds << "]" << std::endl;
 
 	this->polls_size = this->sockets.sockets_poll.nfds;
 
@@ -142,6 +145,7 @@ void			Webserv::cleanConnections(void) {
 
 	if (this->_compress_array) {
 		for (i = 0; i < this->sockets.sockets_poll.nfds; i++) {
+			std::cout << GREEN << "REMOVING [" << i << "]: " << this->sockets.sockets_poll.fds[i].fd << RESET << std::endl;
 			if (this->sockets.sockets_poll.fds[i].fd == -1) {
 				for (j = i; j < this->sockets.sockets_poll.nfds - 1; j++) {
 					this->sockets.sockets_poll.fds[j].fd = this->sockets.sockets_poll.fds[j + 1].fd;

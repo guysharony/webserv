@@ -21,11 +21,11 @@
 # include "strings.hpp"
 
 
-class TmpFile: public virtual Descriptors
+class TmpFile: virtual public Descriptors
 {
 	public:
 		TmpFile(std::string const &filename);
-		~TmpFile();
+		virtual ~TmpFile();
 
 		/* Getters */
 		std::string		getFilename(void);
