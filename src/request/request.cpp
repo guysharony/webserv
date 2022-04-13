@@ -402,7 +402,7 @@ bool 	Request::isCgi(Config::configuration_struct server){
 		else
 			it++;
 	}
-	if (it != server.cgi_extentions.end() && isFiley("www/php/index.php") == 1 && (_method.compare("POST") == 0 || _method.compare("GET") == 0))
+	if (it != server.cgi_extentions.end() && isFiley(server.root + _path) == 1 && (_method.compare("POST") == 0 || _method.compare("GET") == 0))
 		return true;
 	return false;
 }
