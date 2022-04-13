@@ -41,3 +41,22 @@ void			Descriptors::deleteDescriptor(int descriptor)
 		}
 	}
 }
+
+void			Descriptors::compressDescriptors(void) {
+	size_t	i;
+	size_t	j;
+	size_t	descriptors_size;
+
+	descriptors_size = this->descriptors.size();
+
+	for (i = 0; i < descriptors_size; i++) {
+		if (this->descriptors[i].fd == -1) {
+			for (j = i; j < descriptors_size - 1; j++) {
+				this->descriptors[j].fd = this->descriptors[j + 1].fd;
+			}
+
+			i--;
+			this->descriptors.pop_back();
+		}
+	}
+}

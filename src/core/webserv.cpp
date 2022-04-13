@@ -62,7 +62,7 @@ bool		Webserv::run(void) {
 		if (!this->listen())
 			continue; // Allow server to continue after a failure or timeout in poll
 
-		for (this->polls_index = 0; this->polls_index < this->polls_size; this->polls_index++) {
+		for (this->polls_index = 0; this->polls_index < this->polls_size; ++this->polls_index) {
 			this->contextInitialize();
 
 			if (this->context.type == "server") {
@@ -74,7 +74,10 @@ bool		Webserv::run(void) {
 			}
 		}
 
-		this->cleanConnections();
+		if (this->_compress_array) {
+			this->_compress_array = false;
+			this->descriptors.compressDescriptors();
+		}
 	}
 
 	return true;
@@ -83,10 +86,6 @@ bool		Webserv::run(void) {
 bool			Webserv::listen(void) {
 	if (this->sockets.listen() < 0)
 		return false;
-
-	if (static_cast<size_t>(this->polls_size) != this->descriptors.descriptors.size()) {
-		std::cout << "SIZE [" << this->descriptors.descriptors.size() << "]" << std::endl;
-	}
 
 	this->polls_size = this->descriptors.descriptors.size();
 
@@ -138,28 +137,6 @@ bool			Webserv::handleClient(void) {
 	}
 
 	return false;
-}
-
-void			Webserv::cleanConnections(void) {
-	size_t	i;
-	size_t	j;
-	size_t	descriptors_size;
-
-	descriptors_size = this->descriptors.descriptors.size();
-
-	if (this->_compress_array) {
-		for (i = 0; i < descriptors_size; i++) {
-			std::cout << GREEN << "REMOVING [" << i << "]: " << this->descriptors.descriptors[i].fd << RESET << std::endl;
-			if (this->descriptors.descriptors[i].fd == -1) {
-				for (j = i; j < descriptors_size - 1; j++) {
-					this->descriptors.descriptors[j].fd = this->descriptors.descriptors[j + 1].fd;
-				}
-
-				i--;
-				this->descriptors.descriptors.pop_back();
-			}
-		}
-	}
 }
 
 /* Context */

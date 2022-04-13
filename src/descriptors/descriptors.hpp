@@ -38,6 +38,7 @@ class Descriptors {
 
 		/* Methods */
 		void							deleteDescriptor(int descriptor);
+		void							compressDescriptors(void);
 
 };
 
