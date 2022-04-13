@@ -35,8 +35,6 @@ Client::Client(Descriptors *descriptors, int socket_fd)
 	this->_server_addr = inet_ntoa(sock_addr.sin_addr);
 	this->_server_port = ntohs(sock_addr.sin_port);
 	this->_temporary.setDescriptors(descriptors);
-	this->_temporary.create("response");
-	this->_temporary.create("request_body");
 }
 
 Client::Client(Client const &src)
@@ -141,9 +139,6 @@ int				Client::getLine(void) {
 	return (1);
 }
 
-int				Client::getResponse(std::string &packet)
-{ return this->_temporary.read("response", packet); }
-
 bool				Client::getClose(void)
 { return this->_close; }
 
@@ -181,95 +176,99 @@ void				Client::setClose(bool value)
 void				Client::appendRequest(std::string packet)
 { this->_temp.append(packet); }
 
-int				Client::appendResponse(std::string packet)
+
+/* Temporary */
+int				Client::createTemporary(std::string const & filename)
+{ return this->_temporary.create(filename); }
+
+int				Client::appendTemporary(std::string const & filename, std::string packet)
 {
-	if (!(this->_temporary.getEvents("response") & POLLOUT)) {
-		this->_temporary.setEvents("response", POLLOUT);
+	if (!(this->_temporary.getEvents(filename) & POLLOUT)) {
+		this->_temporary.setEvents(filename, POLLOUT);
 		return 0;
 	}
 
-	this->_temporary.append("response", packet);
+	this->_temporary.append(filename, packet);
 	return 1;
 }
 
-int				Client::appendRequestBody(std::string packet)
-{
-	if (!(this->_temporary.getEvents("request_body") & POLLOUT)) {
-		this->_temporary.setEvents("request_body", POLLOUT);
-		return 0;
-	}
+int				Client::readTemporary(std::string const & filename, std::string & packet)
+{ return this->_temporary.read(filename, packet); }
 
-	std::cout << "APPENING TO FILE" << std::endl;
-	this->_temporary.append("request_body", packet);
-	return 1;
-}
+int				Client::displayTemporary(std::string const & filename)
+{ return this->_temporary.display(filename); }
+
+int				Client::resetCursorTemporary(std::string const & filename)
+{ return this->_temporary.resetCursor(filename); };
+
+int				Client::clearTemporary(std::string const & filename)
+{ return this->_temporary.clear(filename); }
+
+int				Client::closeTemporary(std::string const & filename)
+{ return this->_temporary.close(filename); }
 
 
+/* Response */
 int				Client::prepareResponse(void) {
 	Message::debug("EXECUTE [" + toString(this->_status) + "]");
 
 	if (this->getMethod() == METHOD_GET) {
 		// std::cout << "GET RESPONSE" << std::endl;
-		this->appendResponse("HTTP/1.1 200 OK\r\n");
-		this->appendResponse("content-length: 11\r\n");
-		this->appendResponse("content-location: /\r\n");
-		this->appendResponse("content-type: text/html\r\n");
-		this->appendResponse("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
-		this->appendResponse("server_name: Michello\r\n");
-		this->appendResponse("\r\n");
-		this->appendResponse("all files..");
+		this->appendTemporary("response", "HTTP/1.1 200 OK\r\n");
+		this->appendTemporary("response", "content-length: 11\r\n");
+		this->appendTemporary("response", "content-location: /\r\n");
+		this->appendTemporary("response", "content-type: text/html\r\n");
+		this->appendTemporary("response", "date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
+		this->appendTemporary("response", "server_name: Michello\r\n");
+		this->appendTemporary("response", "\r\n");
+		this->appendTemporary("response", "all files..");
 	} else if (this->getMethod() == METHOD_HEAD) {
 		// std::cout << "HEAD RESPONSE" << std::endl;
-		this->appendResponse("HTTP/1.1 405 Not Allowed\r\n");
-		this->appendResponse("content-length: 11\r\n");
-		this->appendResponse("content-location: /\r\n");
-		this->appendResponse("content-type: text/html\r\n");
-		this->appendResponse("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
-		this->appendResponse("server_name: Michello\r\n");
-		this->appendResponse("\r\n");
+		this->appendTemporary("response", "HTTP/1.1 405 Not Allowed\r\n");
+		this->appendTemporary("response", "content-length: 11\r\n");
+		this->appendTemporary("response", "content-location: /\r\n");
+		this->appendTemporary("response", "content-type: text/html\r\n");
+		this->appendTemporary("response", "date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
+		this->appendTemporary("response", "server_name: Michello\r\n");
+		this->appendTemporary("response", "\r\n");
 	} else {
 		// std::cout << "POST RESPONSE" << std::endl;
-		this->appendResponse("HTTP/1.1 405 Not Allowed\r\n");
-		this->appendResponse("content-length: 11\r\n");
-		this->appendResponse("content-location: /\r\n");
-		this->appendResponse("content-type: text/html\r\n");
-		this->appendResponse("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
-		this->appendResponse("server_name: Michello\r\n");
-		this->appendResponse("\r\n");
-		this->appendResponse("all files..");
+		this->appendTemporary("response", "HTTP/1.1 405 Not Allowed\r\n");
+		this->appendTemporary("response", "content-length: 11\r\n");
+		this->appendTemporary("response", "content-location: /\r\n");
+		this->appendTemporary("response", "content-type: text/html\r\n");
+		this->appendTemporary("response", "date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
+		this->appendTemporary("response", "server_name: Michello\r\n");
+		this->appendTemporary("response", "\r\n");
+		this->appendTemporary("response", "all files..");
 	}
 
-	this->_temporary.resetCursor("response");
+	this->resetCursorTemporary("response");
 	this->_end = 0;
 
 	return 1;
 }
 
-void				Client::displayResponse(void)
-{ this->_temporary.display("response"); }
-
-void				Client::clearResponse(void)
-{ this->_temporary.close("response"); }
-
-void				Client::displayRequestBody(void)
-{ this->_temporary.display("request_body"); }
-
-void				Client::clearRequestBody(void)
-{ this->_temporary.close("request_body"); }
-
 int				Client::execute(void) {
+	if (this->getEvent() == EVT_PREPARE_RESPONSE) {
+		#ifdef DEBUG
+			std::cout << "___ BODY [" << toString(this->_content_length) << "] ___" << std::endl;
+			this->displayTemporary("request");
+			std::cout << "_____________" << std::endl;
+		#endif
+		this->prepareResponse();
+		return 1;
+	}
+
 	this->_request();
 
-	if (!this->_end)
-		return 0;
+	if (this->_end == 1) {
+		this->_event = EVT_PREPARE_RESPONSE;
+		this->closeTemporary("request");
+		this->createTemporary("response");
+	}
 
-	#ifdef DEBUG
-		std::cout << "___ BODY [" << toString(this->_content_length) << "] ___" << std::endl;
-		this->displayRequestBody();
-		std::cout << "_____________" << std::endl;
-	#endif
-	this->prepareResponse();
-	return 1;
+	return 0;
 }
 
 void			Client::_request(void) {
@@ -303,6 +302,7 @@ void			Client::_request(void) {
 					this->_end = 1;
 					return;
 				}
+				this->_temporary.create("request_body");
 				return;
 			}
 
@@ -352,7 +352,7 @@ void			Client::_request(void) {
 					Message::debug("CHUNK BODY [" + this->_current + "]\n");
 
 					this->_content_length += this->_current.length();
-					this->appendRequestBody(this->_current);
+					this->appendTemporary("request", this->_current);
 
 					if (this->_body_size == 0) {
 						this->_chunked = false;
@@ -522,13 +522,6 @@ int			Client::_requestHeader(std::string source, std::string & key, std::string 
 	}
 
 	return (0);
-}
-
-void				Client::displayRequest(void)
-{
-	if (this->_temporary.create(0)) {
-		this->_temporary.display(0);
-	}
 }
 
 void				Client::print()

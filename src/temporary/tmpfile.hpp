@@ -40,6 +40,7 @@ class TmpFile
 		int					read(std::string & value);
 		int					write(std::string const & value);
 		int					display(void);
+		bool					clear(void);
 
 	private:
 		int					_fd;

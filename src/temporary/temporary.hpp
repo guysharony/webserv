@@ -15,11 +15,12 @@ class Temporary
 		int					read(std::string const & filename, std::string &dest);
 		int					append(std::string const &filename, std::string const & source);
 		int					display(std::string const &filename);
-		void					close(std::string const &filename);
+		bool					close(std::string const &filename);
+		bool					clear(std::string const &filename);
 		short				getEvents(std::string const &filename);
-		void					setEvents(std::string const &filename, short event);
+		bool					setEvents(std::string const &filename, short event);
 		void					setDescriptors(Descriptors *descriptors);
-		void					resetCursor(std::string const &filename);
+		bool					resetCursor(std::string const &filename);
 
 		typedef std::vector<TmpFile*>		tmpfiles_type;
 		typedef tmpfiles_type::iterator	tmpfile_type;

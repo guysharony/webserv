@@ -30,6 +30,17 @@ bool		Temporary::create(std::string const &filename)
 	return false;
 }
 
+bool		Temporary::clear(std::string const &filename)
+{
+	tmpfile_type	ite = this->_tmpfiles.end();
+	for (tmpfile_type it = this->_tmpfiles.begin(); it != ite; ++it) {
+		if ((*it)->getFilename() == filename)
+			return (*it)->clear();
+	}
+
+	return false;
+}
+
 short	Temporary::getEvents(std::string const &filename)
 {
 	tmpfile_type	ite = this->_tmpfiles.end();
@@ -42,15 +53,17 @@ short	Temporary::getEvents(std::string const &filename)
 	return 0;
 }
 
-void		Temporary::setEvents(std::string const &filename, short event)
+bool		Temporary::setEvents(std::string const &filename, short event)
 {
 	tmpfile_type	ite = this->_tmpfiles.end();
 	for (tmpfile_type it = this->_tmpfiles.begin(); it != ite; ++it) {
 		if ((*it)->getFilename() == filename) {
 			(*it)->setEvents(event);
-			return;
+			return true;
 		}
 	}
+
+	return false;
 }
 
 int		Temporary::read(std::string const &filename, std::string &dest)
@@ -89,24 +102,31 @@ int		Temporary::display(std::string const &filename)
 	return -1;
 }
 
-void		Temporary::close(std::string const &filename)
+bool		Temporary::close(std::string const &filename)
 {
 	tmpfile_type	ite = this->_tmpfiles.end();
 	for (tmpfile_type it = this->_tmpfiles.begin(); it != ite; ++it) {
 		if ((*it)->getFilename() == filename) {
 			delete *it;
 			it = this->_tmpfiles.erase(it);
+			return true;
 		}
 	}
+
+	return false;
 }
 
-void		Temporary::resetCursor(std::string const &filename)
+bool		Temporary::resetCursor(std::string const &filename)
 {
 	tmpfile_type	ite = this->_tmpfiles.end();
 	for (tmpfile_type it = this->_tmpfiles.begin(); it != ite; ++it) {
-		if ((*it)->getFilename() == filename)
+		if ((*it)->getFilename() == filename) {
 			(*it)->resetCursor();
+			return true;
+		}
 	}
+
+	return false;
 }
 
 void		Temporary::setDescriptors(Descriptors *descriptors)

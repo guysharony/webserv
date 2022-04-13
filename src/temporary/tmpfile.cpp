@@ -48,6 +48,15 @@ Descriptors::poll_type	TmpFile::getPoll(void)
 	return ite;
 }
 
+bool			TmpFile::clear(void)
+{
+	std::ofstream	ofs;
+	ofs.open(this->_path.c_str(), std::ofstream::out | std::ofstream::trunc);
+	ofs.close();
+
+	return true;
+}
+
 short		TmpFile::getEvents(void)
 {
 	Descriptors::poll_type	it = this->getPoll();

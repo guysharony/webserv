@@ -124,14 +124,14 @@ bool			Webserv::handleClient(void) {
 		if (this->context.poll->revents & POLLOUT) {
 			std::string packet;
 
-			if ((*this->context.client)->getResponse(packet)) {
+			if ((*this->context.client)->readTemporary("response", packet)) {
 				// std::cout << "SEND [" << packet << "]" << std::endl;
 				this->clientSend(packet);
 			}
 
 			this->context.poll->events = POLLIN;
 			(*this->context.client)->setEvent(NONE);
-			(*this->context.client)->clearResponse();
+			(*this->context.client)->closeTemporary("response");
 		}
 	}
 
