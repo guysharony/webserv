@@ -1,10 +1,8 @@
 #include "sockets.hpp"
 
-Sockets::Sockets(void)
+Sockets::Sockets(Descriptors *descriptors)
+: _descriptors(descriptors)
 { }
-
-Sockets::Sockets(Sockets const & src)
-{ *this = src; }
 
 Sockets::~Sockets()
 { }
@@ -25,7 +23,7 @@ void		Sockets::prepare(std::string const & ip_addr, int port, std::string const 
 	this->sockets.push_back(SocketsListener(ip_addr, port, server_name));
 }
 
-int		Sockets::initialize(socketsListenerType::iterator	server_iterator) {
+int		Sockets::initialize(socket_listener_type server_iterator) {
 	struct sockaddr_in	addr;
 
 	int socketfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -75,12 +73,13 @@ int		Sockets::initialize(socketsListenerType::iterator	server_iterator) {
 		return -1;
 	}
 
-	this->sockets_poll.append(socketfd, POLLIN);
+	this->_descriptors->setDescriptor(socketfd, POLLIN);
+	this->_descriptors->setDescriptorType(socketfd, "server");
 	return socketfd;
 }
 
 int		Sockets::listen(void)
-{ return poll(this->sockets_poll.fds.data(), this->sockets_poll.fds.size(), -1); }
+{ return poll(this->_descriptors->descriptors.data(), this->_descriptors->descriptors.size(), 0); }
 
 int		Sockets::accept(int fd) {
 	int new_client = ::accept(fd, NULL, NULL);
@@ -91,6 +90,7 @@ int		Sockets::accept(int fd) {
 	if (fcntl(new_client, F_SETFL, O_NONBLOCK) < 0)
 		close(new_client);
 
-	this->sockets_poll.append(new_client, POLLIN);
+	this->_descriptors->setDescriptor(new_client, POLLIN);
+	this->_descriptors->setDescriptorType(new_client, "client");
 	return new_client;
 }

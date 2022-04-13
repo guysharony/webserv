@@ -1,30 +1,14 @@
 #ifndef TEMPORARY_HPP
 # define TEMPORARY_HPP
 
-# include <iostream>
-# include <string>
-# include <cstdlib>
-# include <ctime>
-# include <cstdio>
-# include <stdlib.h>
-# include <fcntl.h>
-# include <sys/stat.h>
-# include <unistd.h>
-# include <vector>
-# include <sys/time.h>
-# include <sys/socket.h>
-# include <fstream>
-# include "../core/message.hpp"
-# include "files.hpp"
-# include "units.hpp"
-# include "strings.hpp"
 # include "tmpfile.hpp"
 
 
 class Temporary
 {
 	public:
-		Temporary(void);
+		Temporary();
+		Temporary(Descriptors *descriptors);
 		~Temporary();
 
 		bool					create(std::string const & name);
@@ -34,13 +18,15 @@ class Temporary
 		void					close(std::string const &filename);
 		short				getEvents(std::string const &filename);
 		void					setEvents(std::string const &filename, short event);
+		void					setDescriptors(Descriptors *descriptors);
 		void					resetCursor(std::string const &filename);
 
 		typedef std::vector<TmpFile*>		tmpfiles_type;
 		typedef tmpfiles_type::iterator	tmpfile_type;
 
 	private:
-		tmpfiles_type		_tmpfiles;
+		tmpfiles_type					_tmpfiles;
+		Descriptors					*_descriptors;
 
 		Temporary(Temporary const & src);
 		Temporary	&operator=(Temporary const &other);

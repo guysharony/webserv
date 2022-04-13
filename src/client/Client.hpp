@@ -11,15 +11,13 @@
 # include <netinet/in.h> // sockaddr_in, inet_addr
 # include <arpa/inet.h>	// htons, inet_addr
 
-# include "../formats/temporary.hpp"
-# include "../formats/strings.hpp"
+# include "../temporary/temporary.hpp"
 # include "../request/request.hpp"
 # include "../response/response.hpp"
-# include "../core/message.hpp"
 
 class Client {
 	public:
-		Client(int socket_fd);
+		Client(Descriptors *descriptors, int socket_fd);
 		Client(Client const &src);
 		Client				&operator=(Client const &rhs);
 		~Client();

@@ -4,13 +4,13 @@
 # include <csignal> // signal, SIGINT, SIG_DFL
 # include <cstring> // memset
 # include <unistd.h>
-# include "../formats/temporary.hpp"
+# include "../temporary/temporary.hpp"
 # include "../request/request.hpp"
 # include "../response/response.hpp"
 # include "../client/Client.hpp"
-# include "descriptors.hpp"
+# include "../sockets/sockets.hpp"
 
-class Webserv: public virtual Descriptors {
+class Webserv {
 	public:
 		Webserv(void);
 		~Webserv();
@@ -21,7 +21,7 @@ class Webserv: public virtual Descriptors {
 		struct 						context_struct
 		{
 			std::string				type;
-			poll_type					poll;
+			Descriptors::poll_type		poll;
 			client_type				client;
 		};
 
@@ -32,6 +32,9 @@ class Webserv: public virtual Descriptors {
 
 		Config						config;
 		context_type					context;
+		Descriptors					descriptors;
+
+		Sockets						sockets;
 
 		int							load(char *filename);
 		int							load(std::string const filename);

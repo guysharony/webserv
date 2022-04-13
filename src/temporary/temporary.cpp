@@ -3,6 +3,12 @@
 Temporary::Temporary(void)
 { srand(time(NULL)); }
 
+Temporary::Temporary(Descriptors *descriptors)
+: _descriptors(descriptors)
+{
+	srand(time(NULL));
+}
+
 Temporary::~Temporary()
 {
 	tmpfile_type	ite = this->_tmpfiles.end();
@@ -20,7 +26,7 @@ bool		Temporary::create(std::string const &filename)
 			return true;
 	}
 
-	this->_tmpfiles.push_back(new TmpFile(filename));
+	this->_tmpfiles.push_back(new TmpFile(this->_descriptors, filename));
 	return false;
 }
 
@@ -101,4 +107,10 @@ void		Temporary::resetCursor(std::string const &filename)
 		if ((*it)->getFilename() == filename)
 			(*it)->resetCursor();
 	}
+}
+
+void		Temporary::setDescriptors(Descriptors *descriptors)
+{
+	std::cout << "SET DESCRIPTORS" << std::endl;
+	this->_descriptors = descriptors;
 }

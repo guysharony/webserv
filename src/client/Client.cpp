@@ -1,27 +1,6 @@
 #include "Client.hpp"
 
-Client::Client(void)
-:
-	_client_addr(),
-	_client_port(-1),
-	_socket_fd(-1),
-	_server_addr(),
-	_server_port(-1),
-	_event(NONE),
-	_encoding(NONE),
-	_content_length(-1),
-	_body_size(-1),
-	_chunk_size(-1),
-	_status(0),
-	_temporary(),
-	_end(0),
-	_close(false)
-{
-	this->_temporary.create("response");
-	this->_temporary.create("request_body");
-}
-
-Client::Client(int socket_fd)
+Client::Client(Descriptors *descriptors, int socket_fd)
 :
 	_client_addr(),
 	_client_port(-1),
@@ -55,6 +34,7 @@ Client::Client(int socket_fd)
 	this->_socket_fd = socket_fd;
 	this->_server_addr = inet_ntoa(sock_addr.sin_addr);
 	this->_server_port = ntohs(sock_addr.sin_port);
+	this->_temporary.setDescriptors(descriptors);
 	this->_temporary.create("response");
 	this->_temporary.create("request_body");
 }

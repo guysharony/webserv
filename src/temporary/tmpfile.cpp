@@ -1,6 +1,6 @@
 #include "tmpfile.hpp"
 
-TmpFile::TmpFile(std::string const &filename)
+TmpFile::TmpFile(Descriptors *descriptors, std::string const &filename)
 :
 	_fd(-1),
 	_path(),
@@ -16,13 +16,14 @@ TmpFile::TmpFile(std::string const &filename)
 
 	fcntl(this->_fd, F_SETFL, O_NONBLOCK);
 
-	this->sockets.sockets_poll.append(this->_fd, POLLIN);
-	this->setDescriptorType(this->_fd, "file");
+	this->_descriptors = descriptors;
+	this->_descriptors->setDescriptor(this->_fd, POLLIN);
+	this->_descriptors->setDescriptorType(this->_fd, "file");
 }
 
 TmpFile::~TmpFile()
 {
-	this->deleteDescriptor(this->_fd);
+	this->_descriptors->deleteDescriptor(this->_fd);
 	close(this->_fd);
 	unlink(this->_path.c_str());
 }
@@ -37,8 +38,8 @@ std::string			TmpFile::getPath(void)
 
 Descriptors::poll_type	TmpFile::getPoll(void)
 {
-	poll_type	ite = this->sockets.sockets_poll.fds.end();
-	for (poll_type	it = this->sockets.sockets_poll.fds.begin(); it != ite; ++it) {
+	Descriptors::poll_type	ite = this->_descriptors->descriptors.end();
+	for (Descriptors::poll_type	it = this->_descriptors->descriptors.begin(); it != ite; ++it) {
 		if (it->fd == this->_fd) {
 			return it;
 		}
@@ -50,7 +51,7 @@ Descriptors::poll_type	TmpFile::getPoll(void)
 short		TmpFile::getEvents(void)
 {
 	Descriptors::poll_type	it = this->getPoll();
-	if (it != this->sockets.sockets_poll.fds.end()) {
+	if (it != this->_descriptors->descriptors.end()) {
 		return it->revents;
 	}
 
@@ -62,7 +63,7 @@ short		TmpFile::getEvents(void)
 void			TmpFile::setEvents(short events)
 {
 	Descriptors::poll_type	it = this->getPoll();
-	if (it != this->sockets.sockets_poll.fds.end()) {
+	if (it != this->_descriptors->descriptors.end()) {
 		it->events = events;
 	}
 }
@@ -82,7 +83,7 @@ int			TmpFile::read(std::string & value)
 
 	memset(buffer, 0, BUFFER_SIZE);
 
-	if ((it = this->getPoll()) == this->sockets.sockets_poll.fds.end())
+	if ((it = this->getPoll()) == this->_descriptors->descriptors.end())
 		return -1;
 
 	value.clear();

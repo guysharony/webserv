@@ -11,6 +11,8 @@ void signalHandler(int sig)
 
 Webserv::Webserv(void)
 :
+	descriptors(),
+	sockets(&descriptors),
 	_run(true),
 	_compress_array(false)
 { }
@@ -38,7 +40,9 @@ int			Webserv::load(std::string const filename)
 			this->sockets.prepare(it->host, toInteger(it->port));
 		}
 
-		this->serversInitialize();
+		for (Sockets::socket_listener_type	it = this->sockets.sockets.begin(); it != this->sockets.sockets.end(); it++) {
+			this->sockets.initialize(it);
+		}
 
 		return 1;
 	} catch (const std::exception& e) {
@@ -61,16 +65,12 @@ bool		Webserv::run(void) {
 		for (this->polls_index = 0; this->polls_index < this->polls_size; this->polls_index++) {
 			this->contextInitialize();
 
-			std::cout << "ITERATE [" << this->polls_index << "]" << std::endl;
-
 			if (this->context.type == "server") {
 				if (this->handleServer())
 					break;
 			} else if (this->context.type == "client") {
 				if (this->handleClient())
 					break;
-			} else {
-				std::cout << "ITERATE [" << this->polls_index << "]" << std::endl;
 			}
 		}
 
@@ -84,9 +84,11 @@ bool			Webserv::listen(void) {
 	if (this->sockets.listen() < 0)
 		return false;
 
-	std::cout << "SIZE [" << this->sockets.sockets_poll.nfds << "]" << std::endl;
+	if (static_cast<size_t>(this->polls_size) != this->descriptors.descriptors.size()) {
+		std::cout << "SIZE [" << this->descriptors.descriptors.size() << "]" << std::endl;
+	}
 
-	this->polls_size = this->sockets.sockets_poll.nfds;
+	this->polls_size = this->descriptors.descriptors.size();
 
 	return true;
 }
@@ -97,9 +99,8 @@ bool			Webserv::handleServer(void) {
 	if (this->context.poll->revents & POLLIN) {
 		if ((fd = this->sockets.accept(this->context.poll->fd)) > 0) {
 			Message::debug("Adding client\n");
-			this->_clients.push_back(new Client(fd));
-
-			this->setDescriptorType(fd, "client");
+			std::cout << "Creating client" << std::endl;
+			this->_clients.push_back(new Client(&this->descriptors, fd));
 			return true;
 		}
 	}
@@ -140,20 +141,22 @@ bool			Webserv::handleClient(void) {
 }
 
 void			Webserv::cleanConnections(void) {
-	int	i;
-	int	j;
+	size_t	i;
+	size_t	j;
+	size_t	descriptors_size;
+
+	descriptors_size = this->descriptors.descriptors.size();
 
 	if (this->_compress_array) {
-		for (i = 0; i < this->sockets.sockets_poll.nfds; i++) {
-			std::cout << GREEN << "REMOVING [" << i << "]: " << this->sockets.sockets_poll.fds[i].fd << RESET << std::endl;
-			if (this->sockets.sockets_poll.fds[i].fd == -1) {
-				for (j = i; j < this->sockets.sockets_poll.nfds - 1; j++) {
-					this->sockets.sockets_poll.fds[j].fd = this->sockets.sockets_poll.fds[j + 1].fd;
+		for (i = 0; i < descriptors_size; i++) {
+			std::cout << GREEN << "REMOVING [" << i << "]: " << this->descriptors.descriptors[i].fd << RESET << std::endl;
+			if (this->descriptors.descriptors[i].fd == -1) {
+				for (j = i; j < descriptors_size - 1; j++) {
+					this->descriptors.descriptors[j].fd = this->descriptors.descriptors[j + 1].fd;
 				}
 
 				i--;
-				this->sockets.sockets_poll.nfds--;
-				this->sockets.sockets_poll.fds.pop_back();
+				this->descriptors.descriptors.pop_back();
 			}
 		}
 	}
@@ -161,8 +164,8 @@ void			Webserv::cleanConnections(void) {
 
 /* Context */
 bool					Webserv::contextInitialize(void) {
-	this->context.poll = this->sockets.sockets_poll.fds.begin() + this->polls_index;
-	this->context.type = this->getDescriptorType(this->context.poll->fd);
+	this->context.poll = this->descriptors.descriptors.begin() + this->polls_index;
+	this->context.type = this->descriptors.getDescriptorType(this->context.poll->fd);
 	this->context.client = this->_clientFind();
 
 	return this->context.poll->revents != 0;
@@ -191,7 +194,7 @@ void					Webserv::_clientReject(void) {
 	close(this->context.poll->fd);
 	this->context.poll->fd = -1;
 	this->_compress_array = true;
-	this->deleteDescriptor(this->context.poll->fd);
+	this->descriptors.deleteDescriptor(this->context.poll->fd);
 	delete (*this->context.client);
 	this->_clients.erase(this->context.client);
 }

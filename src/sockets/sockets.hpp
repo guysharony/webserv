@@ -17,18 +17,17 @@
 # include <queue>		// queue
 
 # include "../config/config.hpp"
+# include "../descriptors/descriptors.hpp"
 # include "./socketsListener.hpp"
 # include "./socketsPoll.hpp"
 
 class Sockets {
 	public:
-		Sockets(void);
-		Sockets(Sockets const & src);
+		Sockets(Descriptors *descriptors);
 		~Sockets();
 
-		SocketsPoll::pollfd_type::iterator		current;
-
-		typedef std::vector<SocketsListener>	socketsListenerType;
+		typedef std::vector<SocketsListener>	sockets_listener_type;
+		typedef sockets_listener_type::iterator	socket_listener_type;
 
 		void		prepare(int port);
 		void		prepare(std::string const & ip_addr);
@@ -40,14 +39,12 @@ class Sockets {
 
 		bool		isListener(int fd);
 
-		int		initialize(socketsListenerType::iterator server_iterator);
+		int		initialize(socket_listener_type server_iterator);
 
-		SocketsPoll						sockets_poll;
-		socketsListenerType					sockets;
-		int								index;
+		sockets_listener_type	sockets;
 
 	private:
-		std::set<int>						_listener;
+		Descriptors			*_descriptors;
 };
 
 #endif
