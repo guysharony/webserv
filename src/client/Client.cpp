@@ -194,16 +194,14 @@ int				Client::appendResponse(std::string packet)
 
 int				Client::appendRequestBody(std::string packet)
 {
-	// std::cout << "REQUEST_BODY 2 [" << this->_temporary.getEvents("request_body") << "]" << std::endl;
-	if (this->_temporary.getEvents("request_body") & POLLOUT) {
-		std::cout << "APPENING TO FILE" << std::endl;
-		this->_temporary.append("request_body", packet);
-		return 1;
+	if (!(this->_temporary.getEvents("request_body") & POLLOUT)) {
+		this->_temporary.setEvents("request_body", POLLOUT);
+		return 0;
 	}
 
-	this->_temporary.setEvents("request_body", POLLOUT);
-	// std::cout << "APPEND REQUEST" << std::endl;
-	return 0;
+	std::cout << "APPENING TO FILE" << std::endl;
+	this->_temporary.append("request_body", packet);
+	return 1;
 }
 
 
@@ -260,12 +258,6 @@ void				Client::clearRequestBody(void)
 { this->_temporary.close("request_body"); }
 
 int				Client::execute(void) {
-	if (this->_current.length() > 0) {
-		if (!this->appendRequestBody(this->_current))
-			return 0;
-		this->_current.clear();
-	}
-
 	this->_request();
 
 	if (!this->_end)
@@ -338,6 +330,7 @@ void			Client::_request(void) {
 
 						this->_chunk_size = hexToInt(this->_current);
 						this->_body_size = this->_chunk_size;
+						this->_current.clear();
 						this->_chunked = true;
 
 						Message::debug("CHUNK SIZE [" + toString(this->_chunk_size) + "]\n");
@@ -359,7 +352,7 @@ void			Client::_request(void) {
 					Message::debug("CHUNK BODY [" + this->_current + "]\n");
 
 					this->_content_length += this->_current.length();
-					this->_temporary.setEvents("request_body", POLLOUT);
+					this->appendRequestBody(this->_current);
 
 					if (this->_body_size == 0) {
 						this->_chunked = false;

@@ -17,7 +17,7 @@ TmpFile::TmpFile(Descriptors *descriptors, std::string const &filename)
 	fcntl(this->_fd, F_SETFL, O_NONBLOCK);
 
 	this->_descriptors = descriptors;
-	this->_descriptors->setDescriptor(this->_fd, POLLIN);
+	this->_descriptors->setDescriptor(this->_fd, POLLOUT);
 	this->_descriptors->setDescriptorType(this->_fd, "file");
 }
 
