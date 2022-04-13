@@ -110,7 +110,4 @@ void		Temporary::resetCursor(std::string const &filename)
 }
 
 void		Temporary::setDescriptors(Descriptors *descriptors)
-{
-	std::cout << "SET DESCRIPTORS" << std::endl;
-	this->_descriptors = descriptors;
-}
+{ this->_descriptors = descriptors; }

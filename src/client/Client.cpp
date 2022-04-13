@@ -228,7 +228,7 @@ int				Client::prepareResponse(void) {
 		this->appendResponse("server_name: Michello\r\n");
 		this->appendResponse("\r\n");
 	} else {
-		std::cout << "POST RESPONSE" << std::endl;
+		// std::cout << "POST RESPONSE" << std::endl;
 		this->appendResponse("HTTP/1.1 405 Not Allowed\r\n");
 		this->appendResponse("content-length: 11\r\n");
 		this->appendResponse("content-location: /\r\n");

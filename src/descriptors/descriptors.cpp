@@ -12,14 +12,16 @@ void			Descriptors::setDescriptor(int descriptor, short events)
 	new_pollfd->fd = descriptor;
 	new_pollfd->events = events;
 
-	std::cout << "CREATE [" << descriptor << "]" << std::endl;
+	// std::cout << "CREATE [" << descriptor << "]" << std::endl;
 
 	this->descriptors.push_back(*new_pollfd);
 
+	/*
 	poll_type ite = this->descriptors.end();
 	for (poll_type it = this->descriptors.begin(); it != ite; ++it) {
 		std::cout << RED << "FILE [" << it->fd << "]" << RESET << std::endl;
 	}
+	*/
 
 	delete new_pollfd;
 }
