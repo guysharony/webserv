@@ -27,6 +27,8 @@ public:
 	std::string		getResponse(void);
 	void		createResponse();
 	void createCgiResponse(CgiParser p);
+	Config::location_type getLoc();
+
 
 private:
 	Request						_req;

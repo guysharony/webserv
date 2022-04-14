@@ -165,7 +165,7 @@ bool		Webserv::run(void) {
 					if (req.isCgi(server)){
 						CGI new_cgi("/usr/bin/php-cgi");								// Create a new CGI connection with the path to CGI
 					//	 std::cout << RED<<"***********"<<server.root + req.getPath()<<RESET<<std::endl;
-						int pipefd = new_cgi.launch_cgi(server.root + req.getPath(), req);			// Launch the CGI command with the path to requested file (returns file descriptor to read)
+						int pipefd = new_cgi.launch_cgi(res.getLoc()->root + req.getPath(), req);			// Launch the CGI command with the path to requested file (returns file descriptor to read)
 						this->_sockets.sockets_poll.append_pipe(pipefd, POLLIN);	// Add the new file descriptor to poll
 						sleep(2);
 						read(pipefd, (void*)buffer, 2000);

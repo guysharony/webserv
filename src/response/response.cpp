@@ -15,6 +15,7 @@ Response & Response::operator=(const Response & src)
 	_codeDeRetour = src._codeDeRetour;
     _autoIndex = src._autoIndex;
     _server   = src._server;
+    _loc = src._loc;
 	return (*this);
 }
 
@@ -32,6 +33,7 @@ Response::Response(Request & request){
     this->_req = request;
     this->_codeDeRetour = request.getRet();
     this->_response = "";
+    Config::location_type loc;
     if (_codeDeRetour < STATUS_BAD_REQUEST){
         try{
             this->_server = request.selectServer();
@@ -42,7 +44,9 @@ Response::Response(Request & request){
         }
         this->_path = request.getPath();
         try{
-        this->_autoIndex = request.selectLocation(_server)->auto_index;}
+            loc = _req.selectLocation(_server);
+            this->_loc = loc;
+            this->_autoIndex = _loc->auto_index;}
         catch(const Config::LocationNotFoundException& e){
             _codeDeRetour = STATUS_NOT_FOUND;
         }
@@ -244,30 +248,23 @@ std::string       Response::getUrl(std::string dirent, bool isFolder) {
 
 
 std::string Response::getPathAfterreplacinglocationByRoot(){
-    Config::location_type loc;
-    try{
-             loc = _req.selectLocation(_server);
-             this->_loc = loc;
-        }
-    catch(const Config::LocationNotFoundException& e){
-                _codeDeRetour = STATUS_NOT_FOUND;
-                return "";
-        }
-    std::string loc_p = loc->location;
+    if (_codeDeRetour == STATUS_NOT_FOUND)
+        return "";
+    std::string loc_p = _loc->location;
     std::string p = _req.getPath();
-
     size_t i;
     i = p.find(loc_p);
     if (i != std::string::npos){
         if (loc_p.compare("/") != 0)
             p.erase(i, loc_p.size());
-        p.insert(i, loc->root);
+        p.insert(i, _loc->root);
         return(p);
     }
     return "";
 }
 
 void Response::createCgiResponse(CgiParser p){
+    _codeDeRetour = p.getStatus();
     create_headers(p.getBody().size());
     //append cgi headers if does not exist in _headers or replace the old value by the new one
     std::map<std::string, std::string> header = p.getHeaders();
@@ -330,4 +327,8 @@ std::string Response::createErrorPages(std::string path){
             return ("<!DOCTYPE html><html><title>405</title><body>405 NOT ALLOWED</body></html>");
     }
     return html;
+}
+
+Config::location_type Response::getLoc(){
+    return(this->_loc);
 }

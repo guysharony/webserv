@@ -351,7 +351,9 @@ Config::location_type Request::selectLocation(Config::configuration_struct &serv
 	Config::location_type ret = server.locations.end();
 	bool  				firstTime = true;
 
-	std::string tmp = _path + "/"; //to do check if path doesn't end with /
+	std::string tmp = _path;
+	if (_path[_path.size() - 1] != '/')
+		tmp = _path + "/";
 	for(it_location = server.locations.begin(); it_location != server.locations.end(); it_location++){
 		if ((it_location->location == "/" || tmp.find(it_location->location + "/") == 0) && (firstTime || it_location->location.size() > ret->location.size())
 			&& checkMethodBylocation(it_location->methods)){
@@ -393,6 +395,16 @@ void    Request::setRet(int code){
 
 bool 	Request::isCgi(Config::configuration_struct server){
 	size_t i;
+
+	if (_method.compare("POST") == 0){
+		if (server.cgi_path.size() > 0)
+			return true;
+		else
+		{
+			_ret = STATUS_INTERNAL_SERVER_ERROR;
+			return false;
+		}
+	}
 	i = _path.find_last_of(".");
 	if (i == std::string ::npos)
 		return false;
@@ -404,7 +416,7 @@ bool 	Request::isCgi(Config::configuration_struct server){
 		else
 			it++;
 	}
-	if (it != server.cgi_extentions.end() && isFiley(server.root + _path) == 1 && (_method.compare("POST") == 0 || _method.compare("GET") == 0))
+	if (it != server.cgi_extentions.end() && isFiley(server.root + _path) == 1)
 		return true;
 	return false;
 }
