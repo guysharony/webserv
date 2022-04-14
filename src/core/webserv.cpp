@@ -123,7 +123,7 @@ bool			Webserv::handleClient(void) {
 		if (this->context.poll->revents & POLLOUT) {
 			std::string packet;
 
-			if ((*this->context.client)->readTemporary("response", packet)) {
+			if ((packet = (*this->context.client)->popResponse()).lenght() > 0) {
 				this->clientSend(packet);
 			}
 

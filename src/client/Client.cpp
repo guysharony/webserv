@@ -209,6 +209,11 @@ int				Client::clearTemporary(std::string const & filename)
 int				Client::closeTemporary(std::string const & filename)
 { return this->_temporary.close(filename); }
 
+void			Client::pushResponse(std::string const & value)
+{ this->_response.push(value); }
+
+std::string		Client::popResponse(void)
+{ return this->_response.pop(); }
 
 /* Response */
 int				Client::prepareResponse(void) {
@@ -216,33 +221,34 @@ int				Client::prepareResponse(void) {
 
 	if (this->getMethod() == METHOD_GET) {
 		// std::cout << "GET RESPONSE" << std::endl;
-		this->appendTemporary("response", "HTTP/1.1 200 OK\r\n");
-		this->appendTemporary("response", "content-length: 11\r\n");
-		this->appendTemporary("response", "content-location: /\r\n");
-		this->appendTemporary("response", "content-type: text/html\r\n");
-		this->appendTemporary("response", "date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
-		this->appendTemporary("response", "server_name: Michello\r\n");
-		this->appendTemporary("response", "\r\n");
-		this->appendTemporary("response", "all files..");
+
+		this->pushResponse("HTTP/1.1 200 OK\r\n");
+		this->pushResponse("content-length: 11\r\n");
+		this->pushResponse("content-location: /\r\n");
+		this->pushResponse("content-type: text/html\r\n");
+		this->pushResponse("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
+		this->pushResponse("server_name: Michello\r\n");
+		this->pushResponse("\r\n");
+		this->pushResponse("all files..");
 	} else if (this->getMethod() == METHOD_HEAD) {
 		// std::cout << "HEAD RESPONSE" << std::endl;
-		this->appendTemporary("response", "HTTP/1.1 405 Not Allowed\r\n");
-		this->appendTemporary("response", "content-length: 11\r\n");
-		this->appendTemporary("response", "content-location: /\r\n");
-		this->appendTemporary("response", "content-type: text/html\r\n");
-		this->appendTemporary("response", "date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
-		this->appendTemporary("response", "server_name: Michello\r\n");
-		this->appendTemporary("response", "\r\n");
+		this->pushResponse("HTTP/1.1 405 Not Allowed\r\n");
+		this->pushResponse("content-length: 11\r\n");
+		this->pushResponse("content-location: /\r\n");
+		this->pushResponse("content-type: text/html\r\n");
+		this->pushResponse("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
+		this->pushResponse("server_name: Michello\r\n");
+		this->pushResponse("\r\n");
 	} else {
 		// std::cout << "POST RESPONSE" << std::endl;
-		this->appendTemporary("response", "HTTP/1.1 405 Not Allowed\r\n");
-		this->appendTemporary("response", "content-length: 11\r\n");
-		this->appendTemporary("response", "content-location: /\r\n");
-		this->appendTemporary("response", "content-type: text/html\r\n");
-		this->appendTemporary("response", "date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
-		this->appendTemporary("response", "server_name: Michello\r\n");
-		this->appendTemporary("response", "\r\n");
-		this->appendTemporary("response", "all files..");
+		this->pushResponse("HTTP/1.1 405 Not Allowed\r\n");
+		this->pushResponse("content-length: 11\r\n");
+		this->pushResponse("content-location: /\r\n");
+		this->pushResponse("content-type: text/html\r\n");
+		this->pushResponse("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
+		this->pushResponse("server_name: Michello\r\n");
+		this->pushResponse("\r\n");
+		this->pushResponse("all files..");
 	}
 
 	this->resetCursorTemporary("response");
