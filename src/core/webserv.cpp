@@ -166,9 +166,9 @@ void					Webserv::_clientReject(void) {
 	Message::debug("\n");
 
 	close(this->context.poll->fd);
-	this->context.poll->fd = -1;
 	this->_compress_array = true;
 	this->descriptors.deleteDescriptor(this->context.poll->fd);
+	this->context.poll->fd = -1;
 	delete (*this->context.client);
 	this->_clients.erase(this->context.client);
 }
