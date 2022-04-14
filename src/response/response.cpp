@@ -40,7 +40,11 @@ Response::Response(Request & request){
         this->_codeDeRetour = STATUS_INTERNAL_SERVER_ERROR;
 	}
     this->_path = request.getPath();
-    this->_autoIndex = request.selectLocation(_server)->auto_index;
+    try{
+       this->_autoIndex = request.selectLocation(_server)->auto_index;}
+    catch(const Config::LocationNotFoundException& e){
+        _codeDeRetour = STATUS_NOT_FOUND;
+    }
 
 }
 
@@ -88,7 +92,13 @@ std::string			Response::findContentType()
 Temporary   Response::createBody(){
     Temporary tmp(_unique_id);
     tmp.create(_unique_id);
-    Config::location_type loc = _req.selectLocation(_server);
+    Config::location_type loc;
+    try{ 
+        loc = _req.selectLocation(_server);
+    }
+    catch(const Config::LocationNotFoundException& e){
+        _codeDeRetour = STATUS_NOT_FOUND;
+    }
     if (_codeDeRetour == STATUS_NOT_FOUND)
         tmp.append(_unique_id, readHtmlFile(_server.error_page[404]));
     else if (_codeDeRetour == STATUS_OK){
@@ -154,7 +164,7 @@ std::string Response::getStat(){
 }
 
 void Response::createResponse(){
-    if (_req.getMethod().compare("DELETE") == 0)
+    if (_req.getMethod().compare("DELETE") == 0 && _codeDeRetour == STATUS_OK)
         deleteMethod();
     Temporary body = createBody();
     create_headers(body.size(_unique_id));
@@ -226,7 +236,14 @@ std::string       Response::getUrl(std::string dirent, bool isFolder) {
 
 
 std::string Response::getPathAfterreplacinglocationByRoot(){
-    Config::location_type loc = _req.selectLocation(_server);
+    Config::location_type loc;
+    try{
+             loc = _req.selectLocation(_server);
+        }
+    catch(const Config::LocationNotFoundException& e){
+                _codeDeRetour = STATUS_NOT_FOUND;
+                return "";
+        }
     std::string loc_p = loc->location;
     std::string p = _req.getPath();
 

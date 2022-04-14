@@ -182,7 +182,7 @@ size_t Request::headerParsing(std::string request_buffer)
 		return -1;
 	}
 	i = request_buffer.find(CRLF) + 1;
-	while (_ret != STATUS_BAD_REQUEST && (line = getNextLine(request_buffer, &i)) != "" && i < header_length)
+	while (_ret != STATUS_BAD_REQUEST && (line = getNextLine(request_buffer, &i)) != "" && i <= header_length)
 	{
 		key = line.substr(0, line.find_first_of(':'));
 		value = line.substr(line.find_first_of(':') + 1, line.size() - (line.find_first_of(':') + 1));
@@ -351,7 +351,7 @@ Config::location_type Request::selectLocation(Config::configuration_struct &serv
 	Config::location_type ret = server.locations.end();
 	bool  				firstTime = true;
 
-	std::string tmp = _path + "/";
+	std::string tmp = _path + "/"; //to do check if path doesn't end with /
 	for(it_location = server.locations.begin(); it_location != server.locations.end(); it_location++){
 		if ((it_location->location == "/" || tmp.find(it_location->location + "/") == 0) && (firstTime || it_location->location.size() > ret->location.size())
 			&& checkMethodBylocation(it_location->methods)){
@@ -359,6 +359,8 @@ Config::location_type Request::selectLocation(Config::configuration_struct &serv
 			firstTime = false;
 		}
 	}
+	if (firstTime) //no location found
+		throw Config::LocationNotFoundException();
 	return (ret);
 }
 
