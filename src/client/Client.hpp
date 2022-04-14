@@ -61,7 +61,7 @@ class Client {
 		int						clearTemporary(std::string const & filename);
 		int						closeTemporary(std::string const & filename);
 		void					pushResponse(std::string const & value);
-		std::string				popResponse(void);
+		bool					popResponse(std::string & packet);
 		int						prepareResponse(void);
 		int						execute(void);
 

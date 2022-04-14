@@ -212,8 +212,18 @@ int				Client::closeTemporary(std::string const & filename)
 void			Client::pushResponse(std::string const & value)
 { this->_response.push(value); }
 
-std::string		Client::popResponse(void)
-{ return this->_response.pop(); }
+int				Client::popResponse(std::string & packet)
+{
+	packet.clear();
+
+	if (this->_response.size() > 0) {
+		packet = this->_response.pop();
+
+		return 1;
+	}
+
+	return this->readTemporary("response", packet);
+}
 
 /* Response */
 int				Client::prepareResponse(void) {
@@ -229,7 +239,7 @@ int				Client::prepareResponse(void) {
 		this->pushResponse("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
 		this->pushResponse("server_name: Michello\r\n");
 		this->pushResponse("\r\n");
-		this->pushResponse("all files..");
+		this->appendTemporary("response", "all files...");
 	} else if (this->getMethod() == METHOD_HEAD) {
 		// std::cout << "HEAD RESPONSE" << std::endl;
 		this->pushResponse("HTTP/1.1 405 Not Allowed\r\n");
@@ -248,7 +258,7 @@ int				Client::prepareResponse(void) {
 		this->pushResponse("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
 		this->pushResponse("server_name: Michello\r\n");
 		this->pushResponse("\r\n");
-		this->pushResponse("all files..");
+		this->appendTemporary("response", "all files...");
 	}
 
 	this->resetCursorTemporary("response");
