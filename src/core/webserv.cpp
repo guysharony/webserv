@@ -150,32 +150,35 @@ bool		Webserv::run(void) {
 				//parsing the request
 				Request req(this->_config);
 				req.parseRequest(buffer);
-				Config::configuration_struct server;
-				try
-				{
-					server =req.selectServer();		
-				}
-				catch(const Config::ServerNotFoundException& e){
-					Message::debug("Server wasn't found: handling error\n");
-					req.setRet(STATUS_INTERNAL_SERVER_ERROR);
-				}
-				char buffer[2000];
 				Response res(req);
-				 if (req.isCgi(server)){
-					 CGI new_cgi("/usr/bin/php-cgi");								// Create a new CGI connection with the path to CGI
-				//	 std::cout << RED<<"***********"<<server.root + req.getPath()<<RESET<<std::endl;
-					 int pipefd = new_cgi.launch_cgi(server.root + req.getPath(), req);			// Launch the CGI command with the path to requested file (returns file descriptor to read)
-					this->_sockets.sockets_poll.append_pipe(pipefd, POLLIN);	// Add the new file descriptor to poll
-					sleep(2);
-					read(pipefd, (void*)buffer, 2000);
-					std::cout << buffer <<std::endl;	
-					CgiParser  cgiRes;
-					cgiRes.parseCgiBuffer(buffer);
-					res.createCgiResponse(cgiRes);
-				 }
-				 else {
+				if (req.getRet() < STATUS_BAD_REQUEST){
+					Config::configuration_struct server;
+					try
+					{
+						server =req.selectServer();		
+					}
+					catch(const Config::ServerNotFoundException& e){
+						Message::debug("Server wasn't found: handling error\n");
+						req.setRet(STATUS_BAD_REQUEST);
+					}
+					char buffer[2000];
+					if (req.isCgi(server)){
+						CGI new_cgi("/usr/bin/php-cgi");								// Create a new CGI connection with the path to CGI
+					//	 std::cout << RED<<"***********"<<server.root + req.getPath()<<RESET<<std::endl;
+						int pipefd = new_cgi.launch_cgi(server.root + req.getPath(), req);			// Launch the CGI command with the path to requested file (returns file descriptor to read)
+						this->_sockets.sockets_poll.append_pipe(pipefd, POLLIN);	// Add the new file descriptor to poll
+						sleep(2);
+						read(pipefd, (void*)buffer, 2000);
+						std::cout << buffer <<std::endl;	
+						CgiParser  cgiRes;
+						cgiRes.parseCgiBuffer(buffer);
+						res.createCgiResponse(cgiRes);
+					}
+					else
+						res.createResponse();
+				}
+				 else
 					res.createResponse();
-				 }
 					// queue response instead of sending directly
 				send(this->current_iterator->fd, res.getResponse().c_str(), res.getResponse().size(), 0);
 				std::cout <<RED<< "Response :" <<RESET<< std::endl;

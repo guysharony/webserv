@@ -35,6 +35,7 @@ private:
 	std::string					_path;
 	int							_codeDeRetour;
     int                        	_autoIndex;
+    Config::location_type 		_loc;
 	std::map<std::string, std::string> _headers;
 	void 	create_headers(int body_length);
 	std::string	findDate();
@@ -44,7 +45,10 @@ private:
 	std::string     getUrl(std::string dirent, bool isFolder);
 	std::string   	getListOfDirectories(const char *path);
 	std::string getPathAfterreplacinglocationByRoot();
-	void 	deleteMethod();
+	void 								deleteMethod();
+    void                                 checkPath();
+	std::string 	createErrorPages(std::string path);
+
 	
 
 

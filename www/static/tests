@@ -1,0 +1,18 @@
+GET /tuto/index.html HTTP/1.1
+Host : 127.0.0.1:8085
+
+
+
+
+GET /test/test1/../../index.html HTTP/1.1
+Host: 127.0.0.1:8081
+Connection: keep-alive
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Accept-Language: fr-TN,fr-FR;q=0.9,fr;q=0.8,en-US;q=0.7,en;q=0.6,ar;q=0.5
+
+
+
+
+

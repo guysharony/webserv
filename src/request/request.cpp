@@ -408,3 +408,5 @@ bool 	Request::isCgi(Config::configuration_struct server){
 		return true;
 	return false;
 }
+
+
