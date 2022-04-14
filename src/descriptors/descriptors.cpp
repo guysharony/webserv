@@ -37,8 +37,8 @@ void			Descriptors::deleteDescriptor(int descriptor)
 	poll_type	ite = this->descriptors.end();
 	for (poll_type it = this->descriptors.begin(); it != ite; ++it) {
 		if (it->fd == descriptor) {
-			it->fd = -1;
 			this->descriptors_type.erase(descriptor);
+			this->descriptors.erase(it);
 			return;
 		}
 	}
