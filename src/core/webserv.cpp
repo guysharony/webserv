@@ -74,7 +74,10 @@ bool		Webserv::run(void) {
 			}
 		}
 
-		this->descriptors.compressDescriptors();
+		if (this->_compress_array) {
+			this->_compress_array = false;
+			this->descriptors.compressDescriptors();
+		}
 	}
 
 	return true;
@@ -162,6 +165,9 @@ void					Webserv::_clientReject(void) {
 	Message::debug(this->context.poll->fd);
 	Message::debug("\n");
 
+	close(this->context.poll->fd);
+	this->context.poll->fd = -1;
+	this->_compress_array = true;
 	this->descriptors.deleteDescriptor(this->context.poll->fd);
 	delete (*this->context.client);
 	this->_clients.erase(this->context.client);

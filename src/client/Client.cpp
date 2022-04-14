@@ -35,6 +35,8 @@ Client::Client(Descriptors *descriptors, int socket_fd)
 	this->_server_addr = inet_ntoa(sock_addr.sin_addr);
 	this->_server_port = ntohs(sock_addr.sin_port);
 	this->_temporary.setDescriptors(descriptors);
+	this->createTemporary("request");
+	this->createTemporary("response");
 }
 
 Client::Client(Client const &src)
@@ -264,8 +266,6 @@ int				Client::execute(void) {
 
 	if (this->_end == 1) {
 		this->_event = EVT_PREPARE_RESPONSE;
-		this->closeTemporary("request");
-		this->createTemporary("response");
 	}
 
 	return 0;
@@ -302,7 +302,6 @@ void			Client::_request(void) {
 					this->_end = 1;
 					return;
 				}
-				this->_temporary.create("request_body");
 				return;
 			}
 
@@ -373,7 +372,7 @@ void			Client::_request(void) {
 				}
 
 				Message::debug("LENGTH BODY [" + toString(this->_body_size) + "] - [" + this->_current + "]\n");
-				this->_temporary.setEvents("request_body", POLLOUT);
+				this->_temporary.setEvents("request", POLLOUT);
 
 				if (this->_body_size == 0) {
 					Message::debug("FINISHED\n");

@@ -40,9 +40,6 @@ class Descriptors {
 		void							deleteDescriptor(int descriptor);
 		void							compressDescriptors(void);
 
-	private:
-		bool							_compress_array;
-
 };
 
 #endif

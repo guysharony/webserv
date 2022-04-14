@@ -1,7 +1,6 @@
 #include "descriptors.hpp"
 
 Descriptors::Descriptors()
-: _compress_array(false)
 { }
 
 Descriptors::~Descriptors()
@@ -38,10 +37,8 @@ void			Descriptors::deleteDescriptor(int descriptor)
 	poll_type	ite = this->descriptors.end();
 	for (poll_type it = this->descriptors.begin(); it != ite; ++it) {
 		if (it->fd == descriptor) {
-			this->_compress_array = true;
-			close(it->fd);
-			this->descriptors_type.erase(it->fd);
 			it->fd = -1;
+			this->descriptors_type.erase(descriptor);
 			return;
 		}
 	}
@@ -52,19 +49,16 @@ void			Descriptors::compressDescriptors(void) {
 	size_t	j;
 	size_t	descriptors_size;
 
-	if (this->_compress_array) {
-		this->_compress_array = false;
-		descriptors_size = this->descriptors.size();
+	descriptors_size = this->descriptors.size();
 
-		for (i = 0; i < descriptors_size; i++) {
-			if (this->descriptors[i].fd == -1) {
-				for (j = i; j < descriptors_size - 1; j++) {
-					this->descriptors[j].fd = this->descriptors[j + 1].fd;
-				}
-
-				i--;
-				this->descriptors.pop_back();
+	for (i = 0; i < descriptors_size; i++) {
+		if (this->descriptors[i].fd == -1) {
+			for (j = i; j < descriptors_size - 1; j++) {
+				this->descriptors[j].fd = this->descriptors[j + 1].fd;
 			}
+
+			i--;
+			this->descriptors.pop_back();
 		}
 	}
 }
