@@ -252,23 +252,18 @@ int				Client::prepareResponse(void) {
 }
 
 int				Client::execute(void) {
-	if (this->getEvent() == EVT_PREPARE_RESPONSE) {
-		#ifdef DEBUG
-			std::cout << "___ BODY [" << toString(this->_content_length) << "] ___" << std::endl;
-			this->displayTemporary("request");
-			std::cout << "_____________" << std::endl;
-		#endif
-		this->prepareResponse();
-		return 1;
-	}
-
 	this->_request();
 
-	if (this->_end == 1) {
-		this->_event = EVT_PREPARE_RESPONSE;
-	}
+	if (!this->_end)
+		return 0;
 
-	return 0;
+	#ifdef DEBUG
+		std::cout << "___ BODY [" << toString(this->_content_length) << "] ___" << std::endl;
+		this->displayTemporary("request");
+		std::cout << "_____________" << std::endl;
+	#endif
+	this->prepareResponse();
+	return 1;
 }
 
 void			Client::_request(void) {
