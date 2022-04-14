@@ -238,7 +238,7 @@ int				Client::prepareResponse(void) {
 		this->pushResponse("content-location: /\r\n");
 		this->pushResponse("content-type: text/html\r\n");
 		this->pushResponse("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
-		this->pushResponse("server_name: Michello\r\n");
+		this->pushResponse("server: Michello\r\n");
 		this->pushResponse("\r\n");
 		this->appendTemporary("response", "I'm sending this file content...");
 	} else if (this->getMethod() == METHOD_HEAD) {
@@ -248,7 +248,7 @@ int				Client::prepareResponse(void) {
 		this->pushResponse("content-location: /\r\n");
 		this->pushResponse("content-type: text/html\r\n");
 		this->pushResponse("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
-		this->pushResponse("server_name: Michello\r\n");
+		this->pushResponse("server: Michello\r\n");
 		this->pushResponse("\r\n");
 	} else {
 		// std::cout << "POST RESPONSE" << std::endl;
