@@ -217,7 +217,8 @@ int				Client::popResponse(std::string & packet)
 	packet.clear();
 
 	if (this->_response.size() > 0) {
-		packet = this->_response.pop();
+		packet = this->_response.front();
+		this->_response.pop();
 
 		return 1;
 	}
@@ -233,13 +234,13 @@ int				Client::prepareResponse(void) {
 		// std::cout << "GET RESPONSE" << std::endl;
 
 		this->pushResponse("HTTP/1.1 200 OK\r\n");
-		this->pushResponse("content-length: 11\r\n");
+		this->pushResponse("content-length: 31\r\n");
 		this->pushResponse("content-location: /\r\n");
 		this->pushResponse("content-type: text/html\r\n");
 		this->pushResponse("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
 		this->pushResponse("server_name: Michello\r\n");
 		this->pushResponse("\r\n");
-		this->appendTemporary("response", "all files...");
+		this->appendTemporary("response", "I'm sending this file content...");
 	} else if (this->getMethod() == METHOD_HEAD) {
 		// std::cout << "HEAD RESPONSE" << std::endl;
 		this->pushResponse("HTTP/1.1 405 Not Allowed\r\n");
@@ -252,13 +253,13 @@ int				Client::prepareResponse(void) {
 	} else {
 		// std::cout << "POST RESPONSE" << std::endl;
 		this->pushResponse("HTTP/1.1 405 Not Allowed\r\n");
-		this->pushResponse("content-length: 11\r\n");
+		this->pushResponse("content-length: 32\r\n");
 		this->pushResponse("content-location: /\r\n");
 		this->pushResponse("content-type: text/html\r\n");
 		this->pushResponse("date: Fri, 01 Apr 2022 15:39:15 GMT\r\n");
-		this->pushResponse("server_name: Michello\r\n");
+		this->pushResponse("server: Michello\r\n");
 		this->pushResponse("\r\n");
-		this->appendTemporary("response", "all files...");
+		this->appendTemporary("response", "I'm sending this file content...");
 	}
 
 	this->resetCursorTemporary("response");

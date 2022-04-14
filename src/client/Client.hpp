@@ -60,8 +60,8 @@ class Client {
 		int						resetCursorTemporary(std::string const & filename);
 		int						clearTemporary(std::string const & filename);
 		int						closeTemporary(std::string const & filename);
-		void					pushResponse(std::string const & value);
-		bool					popResponse(std::string & packet);
+		void						pushResponse(std::string const & value);
+		int						popResponse(std::string & packet);
 		int						prepareResponse(void);
 		int						execute(void);
 
