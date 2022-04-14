@@ -24,10 +24,10 @@ class Descriptors {
 		~Descriptors();
 
 		typedef std::vector<pollfd>		polls_type;
-		typedef polls_type::iterator		poll_type;
+		typedef polls_type::iterator	poll_type;
 
 		std::map<int, std::string>		descriptors_type;
-		polls_type					descriptors;
+		polls_type						descriptors;
 
 		/* Getters */
 		std::string 					getDescriptorType(int descriptor);
@@ -39,6 +39,9 @@ class Descriptors {
 		/* Methods */
 		void							deleteDescriptor(int descriptor);
 		void							compressDescriptors(void);
+
+	private:
+		bool							_compress_array;
 
 };
 

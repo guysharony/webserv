@@ -74,10 +74,7 @@ bool		Webserv::run(void) {
 			}
 		}
 
-		if (this->_compress_array) {
-			this->_compress_array = false;
-			this->descriptors.compressDescriptors();
-		}
+		this->descriptors.compressDescriptors();
 	}
 
 	return true;
@@ -110,7 +107,6 @@ bool			Webserv::handleClient(void) {
 	if ((*this->context.client)->getEvent() < EVT_SEND_RESPONSE) {
 		if (this->context.poll->revents & POLLIN) {
 			if (this->clientReceive() <= 0) {
-				// std::cout << "CLOSE" << std::endl;
 				this->_clientReject();
 				return true;
 			}
@@ -125,7 +121,6 @@ bool			Webserv::handleClient(void) {
 			std::string packet;
 
 			if ((*this->context.client)->readTemporary("response", packet)) {
-				// std::cout << "SEND [" << packet << "]" << std::endl;
 				this->clientSend(packet);
 			}
 
@@ -167,9 +162,6 @@ void					Webserv::_clientReject(void) {
 	Message::debug(this->context.poll->fd);
 	Message::debug("\n");
 
-	close(this->context.poll->fd);
-	this->context.poll->fd = -1;
-	this->_compress_array = true;
 	this->descriptors.deleteDescriptor(this->context.poll->fd);
 	delete (*this->context.client);
 	this->_clients.erase(this->context.client);
@@ -181,7 +173,6 @@ int				Webserv::clientReceive(void) {
 
 	memset(buffer, 0, BUFFER_SIZE);
 
-	// std::cout << "RECV" << std::endl;
 	res = recv(this->context.poll->fd, buffer, BUFFER_SIZE - 1, 0);
 
 	if (res == 0)
@@ -191,8 +182,6 @@ int				Webserv::clientReceive(void) {
 			(*this->context.client)->setEvent(EVT_REQUEST_LINE);
 
 		std::string packet = std::string(buffer);
-
-		// std::cout << "RECV [" << packet << "]" << std::endl;
 
 		#ifdef DEBUG
 			std::cout << RESET << "=== [" << this->context.poll->fd << "] - (" << res << ")" << std::endl;
@@ -209,7 +198,6 @@ int				Webserv::clientSend(std::string value) {
 	if (this->context.type != "client")
 		return -1;
 
-	// std::cout << "SEND" << std::endl;
 	int rc = send(this->context.poll->fd, value.c_str(), value.length(), 0);
 	if (rc < 0)
 	{

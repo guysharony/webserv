@@ -19,7 +19,6 @@
 # include "../config/config.hpp"
 # include "../descriptors/descriptors.hpp"
 # include "./socketsListener.hpp"
-# include "./socketsPoll.hpp"
 
 class Sockets {
 	public:
@@ -34,17 +33,17 @@ class Sockets {
 		void		prepare(std::string const & ip_addr, int port);
 		void		prepare(std::string const & ip_addr, int port, std::string const & server_name);
 
-		int		listen(void);
-		int		accept(int fd);
+		int			listen(void);
+		int			accept(int fd);
 
 		bool		isListener(int fd);
 
-		int		initialize(socket_listener_type server_iterator);
+		int			initialize(socket_listener_type server_iterator);
 
 		sockets_listener_type	sockets;
 
 	private:
-		Descriptors			*_descriptors;
+		Descriptors				*_descriptors;
 };
 
 #endif

@@ -24,7 +24,6 @@ TmpFile::TmpFile(Descriptors *descriptors, std::string const &filename)
 TmpFile::~TmpFile()
 {
 	this->_descriptors->deleteDescriptor(this->_fd);
-	close(this->_fd);
 	unlink(this->_path.c_str());
 }
 
