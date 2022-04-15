@@ -104,7 +104,7 @@ std::string	TmpFile::_generate_filepath(void) {
 
 void			TmpFile::close(void) {
 	::close(this->_fd);
-	unlink(this->_path.c_str());
+	remove(this->_path.c_str());
 	this->_descriptors->deleteDescriptor(this->_fd);
 }
 
