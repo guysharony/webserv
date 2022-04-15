@@ -5,6 +5,8 @@
 # include <algorithm>
 # include <sstream>
 # include <string>
+# include <limits.h>
+# include <stdlib.h>
 # include <stddef.h>
 # include <sys/types.h>
 # include <sys/stat.h>

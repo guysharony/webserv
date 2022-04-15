@@ -92,13 +92,13 @@ std::string		readHtmlFile(std::string path)
 	{
 		file.open(path.c_str(), std::ifstream::in);
 		if (file.is_open() == false)
-			return ("<!DOCTYPE html>\n<html><title>404</title><body>error page not found !!</body></html>\n");
+			return ("");
 		buffer << file.rdbuf();
 		file.close();
 		return (buffer.str());
 	}
 	else
-			return ("<!DOCTYPE html>\n<html><title>404</title><body>error page not found !!</body></html>\n");
+			return ("");
 		
 }
 

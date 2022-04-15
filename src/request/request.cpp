@@ -182,7 +182,7 @@ size_t Request::headerParsing(std::string request_buffer)
 		return -1;
 	}
 	i = request_buffer.find(CRLF) + 1;
-	while (_ret != STATUS_BAD_REQUEST && (line = getNextLine(request_buffer, &i)) != "" && i < header_length)
+	while (_ret != STATUS_BAD_REQUEST && (line = getNextLine(request_buffer, &i)) != "" && i <= header_length)
 	{
 		key = line.substr(0, line.find_first_of(':'));
 		value = line.substr(line.find_first_of(':') + 1, line.size() - (line.find_first_of(':') + 1));
@@ -219,16 +219,16 @@ void Request::parseRequest(std::string request_buffer)
 			// Handle error here
 			//throw e; // delete this once error is handled properly
 		}
-
 		if (_ret < STATUS_BAD_REQUEST){
-			Config::location_type loc = selectLocation(server);
-			if (loc != server.locations.end()){
-				std::cout<<YELLOW<< "location = "<< selectLocation(server)->location<<RESET<<std::endl;	
+			try{
+				Config::location_type loc = selectLocation(server);
+				if (loc != server.locations.end()){
+					std::cout<<YELLOW<< "location = "<< selectLocation(server)->location<<RESET<<std::endl;	
+				}
 			}
-			else
-			{
-				_ret = STATUS_NOT_FOUND;
-				std::cerr<<RED <<"location not found"<<RESET<<std::endl;
+			catch(const Config::LocationNotFoundException& e){
+					_ret = STATUS_NOT_FOUND;
+					std::cerr<<RED <<"location not found"<<RESET<<std::endl;
 			}
 			
 		}
@@ -356,7 +356,9 @@ Config::location_type Request::selectLocation(Config::configuration_struct &serv
 	Config::location_type ret = server.locations.end();
 	bool  				firstTime = true;
 
-	std::string tmp = _path + "/";
+	std::string tmp = _path;
+	if (_path[_path.size() - 1] != '/')
+		tmp = _path + "/";
 	for(it_location = server.locations.begin(); it_location != server.locations.end(); it_location++){
 		if ((it_location->location == "/" || tmp.find(it_location->location + "/") == 0) && (firstTime || it_location->location.size() > ret->location.size())
 			&& checkMethodBylocation(it_location->methods)){
@@ -364,6 +366,8 @@ Config::location_type Request::selectLocation(Config::configuration_struct &serv
 			firstTime = false;
 		}
 	}
+	if (firstTime) //no location found
+		throw Config::LocationNotFoundException();
 	return (ret);
 }
 
@@ -396,6 +400,16 @@ void    Request::setRet(int code){
 
 bool 	Request::isCgi(Config::configuration_struct server){
 	size_t i;
+
+	if (_method.compare("POST") == 0){
+		if (server.cgi_path.size() > 0)
+			return true;
+		else
+		{
+			_ret = STATUS_INTERNAL_SERVER_ERROR;
+			return false;
+		}
+	}
 	i = _path.find_last_of(".");
 	if (i == std::string ::npos)
 		return false;
@@ -407,7 +421,9 @@ bool 	Request::isCgi(Config::configuration_struct server){
 		else
 			it++;
 	}
-	if (it != server.cgi_extentions.end() && isFiley("www/php/index.php") == 1)
+	if (it != server.cgi_extentions.end() && isFiley(server.root + _path) == 1)
 		return true;
 	return false;
 }
+
+

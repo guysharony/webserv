@@ -28,6 +28,15 @@ class ConfigLocation
 			}
 		};
 
+		class LocationNotFoundException : public std::exception
+		{
+			public:
+			const char * what () const throw ()
+			{
+				return "Location Not Found";
+			}
+		};
+
 		ConfigLocation(void);
 		ConfigLocation(ConfigLocation const & src);
 		virtual ~ConfigLocation();
