@@ -85,7 +85,7 @@ bool		Webserv::run(void) {
 }
 
 bool			Webserv::listen(void) {
-	if (this->sockets.listen(this->_clients.size() > 0) < 0)
+	if (this->sockets.listen() < 0)
 		return false;
 
 	this->polls_size = this->descriptors.descriptors.size();

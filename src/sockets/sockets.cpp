@@ -78,8 +78,8 @@ int		Sockets::initialize(socket_listener_type server_iterator) {
 	return socketfd;
 }
 
-int		Sockets::listen(bool clients)
-{ return poll(this->_descriptors->descriptors.data(), this->_descriptors->descriptors.size(), clients ? 0 : -1); }
+int		Sockets::listen(void)
+{ return poll(this->_descriptors->descriptors.data(), this->_descriptors->descriptors.size(), -1); }
 
 int		Sockets::accept(int fd) {
 	int new_client = ::accept(fd, NULL, NULL);

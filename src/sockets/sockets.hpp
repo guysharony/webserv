@@ -33,7 +33,7 @@ class Sockets {
 		void					prepare(std::string const & ip_addr, int port);
 		void					prepare(std::string const & ip_addr, int port, std::string const & server_name);
 
-		int					listen(bool clients = false);
+		int					listen(void);
 		int					accept(int fd);
 
 		bool					isListener(int fd);
