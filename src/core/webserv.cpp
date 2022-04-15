@@ -20,8 +20,9 @@ Webserv::Webserv(void)
 Webserv::~Webserv()
 {
 	client_type ite = this->_clients.end();
-	for (client_type it = this->_clients.begin(); it != ite; ++it)
-		delete *it;
+	for (client_type it = this->_clients.begin(); it != ite; ++it) {
+		delete (*it);
+	}
 
 	this->_clients.clear();
 }
@@ -84,7 +85,7 @@ bool		Webserv::run(void) {
 }
 
 bool			Webserv::listen(void) {
-	if (this->sockets.listen() < 0)
+	if (this->sockets.listen(this->_clients.size() > 0) < 0)
 		return false;
 
 	this->polls_size = this->descriptors.descriptors.size();

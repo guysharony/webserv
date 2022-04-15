@@ -22,20 +22,20 @@ class Client {
 		Client				&operator=(Client const &rhs);
 		~Client();
 
-		bool				operator==(Client const &rhs);
+		bool					operator==(Client const &rhs);
 
 		// Getters
 		std::string const		&getClientAddr(void);
-		int						getClientPort(void);
-		int						getSocketFd(void);
+		int					getClientPort(void);
+		int					getSocketFd(void);
 		std::string const		&getServerAddr(void);
-		int						getServerPort(void);
-		int						getEvent(void);
-		int						getMethod(void);
-		int						getConnection(void);
-		int						getStatus(void);
-		int						getLine(void);
-		int						getEnd(void);
+		int					getServerPort(void);
+		int					getEvent(void);
+		int					getMethod(void);
+		int					getConnection(void);
+		int					getStatus(void);
+		int					getLine(void);
+		int					getEnd(void);
 		bool					getClose(void);
 
 		// Setters
@@ -53,17 +53,16 @@ class Client {
 		void					print();
 
 		void					appendRequest(std::string packet);
-		int						createTemporary(std::string const & filename);
-		int						readTemporary(std::string const & filename, std::string &packet);
-		int						appendTemporary(std::string const & filename, std::string packet);
-		int						displayTemporary(std::string const & filename);
-		int						resetCursorTemporary(std::string const & filename);
-		int						clearTemporary(std::string const & filename);
-		int						closeTemporary(std::string const & filename);
-		void						pushResponse(std::string const & value);
-		int						popResponse(std::string & packet);
-		int						prepareResponse(void);
-		int						execute(void);
+		int					createTemporary(std::string const & filename);
+		int					readTemporary(std::string const & filename, std::string &packet);
+		int					appendTemporary(std::string const & filename, std::string packet);
+		int					displayTemporary(std::string const & filename);
+		int					resetCursorTemporary(std::string const & filename);
+		int					closeTemporary(std::string const & filename);
+		void					pushResponse(std::string const & value);
+		int					popResponse(std::string & packet);
+		int					prepareResponse(void);
+		int					execute(void);
 
 		/* request line */
 		struct 								request_line_struct
@@ -98,8 +97,8 @@ class Client {
 		std::string				_server_addr;	// The IP address of the server
 		int						_server_port;	// The port of the server FROM which the client connected (the one on which the server is listening)
 		/*	
-		request				_request; // All of the request/response pairs associated with this client
-		response				_response;
+		request					_request; // All of the request/response pairs associated with this client
+		response					_response;
 		*/
 		int						_event;
 		int						_encoding;
@@ -108,34 +107,34 @@ class Client {
 		ssize_t					_chunk_size;
 		int						_status;
 		int						_connection;
-		bool					_chunked;
-		request_line_type		_request_line;
-		request_headers_type	_request_headers;
+		bool						_chunked;
+		request_line_type			_request_line;
+		request_headers_type		_request_headers;
 		std::string				_temp;
 		std::string				_current;
-		Temporary				_temporary;
-		std::queue<std::string>	_response;
+		Temporary					_temporary;
+		std::queue<std::string>		_response;
 		int						_end;
-		bool					_close;
+		bool						_close;
 
-		int					_receive(std::string & content);
-		int					_send(std::string content);
+		int						_receive(std::string & content);
+		int						_send(std::string content);
 
 		/* request */
-		void					_request(void);
+		void						_request(void);
 
-		int					_requestLine(void);
-		int					_requestMethod(std::string & source, int & dst);
-		int					_requestTarget(std::string & source, std::string & dst);
-		int					_requestVersion(std::string & source, std::string & dst);
+		int						_requestLine(void);
+		int						_requestMethod(std::string & source, int & dst);
+		int						_requestTarget(std::string & source, std::string & dst);
+		int						_requestVersion(std::string & source, std::string & dst);
 
-		int					_requestHeaders(void);
-		int					_requestHeader(std::string source, std::string & key, std::string & value);
+		int						_requestHeaders(void);
+		int						_requestHeader(std::string source, std::string & key, std::string & value);
 
-		int					_requestBody(void);
-		int					_requestBodyLength(void);
-		int					_requestBodyChunked(void);
-		int					_requestBodyFinished(void);
+		int						_requestBody(void);
+		int						_requestBodyLength(void);
+		int						_requestBodyChunked(void);
+		int						_requestBodyFinished(void);
 };
 
 #endif

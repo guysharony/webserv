@@ -16,7 +16,6 @@ class Temporary
 		int					append(std::string const &filename, std::string const & source);
 		int					display(std::string const &filename);
 		bool					close(std::string const &filename);
-		bool					clear(std::string const &filename);
 		short				getEvents(std::string const &filename);
 		bool					setEvents(std::string const &filename, short event);
 		void					setDescriptors(Descriptors *descriptors);

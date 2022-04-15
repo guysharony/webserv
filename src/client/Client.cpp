@@ -1,4 +1,4 @@
-#include "Client.hpp"
+#include "client.hpp"
 
 Client::Client(Descriptors *descriptors, int socket_fd)
 :
@@ -61,7 +61,10 @@ Client	&Client::operator=(Client const &rhs)
 }
 
 Client::~Client(void)
-{ }
+{
+	this->closeTemporary("request");
+	this->closeTemporary("response");
+}
 
 
 // Operators
@@ -203,9 +206,6 @@ int				Client::displayTemporary(std::string const & filename)
 int				Client::resetCursorTemporary(std::string const & filename)
 { return this->_temporary.resetCursor(filename); };
 
-int				Client::clearTemporary(std::string const & filename)
-{ return this->_temporary.clear(filename); }
-
 int				Client::closeTemporary(std::string const & filename)
 { return this->_temporary.close(filename); }
 
@@ -269,16 +269,23 @@ int				Client::prepareResponse(void) {
 }
 
 int				Client::execute(void) {
-	this->_request();
+	if (this->_event <= EVT_REQUEST_BODY) {
+		this->_request();
+	}
 
 	if (!this->_end)
 		return 0;
 
-	#ifdef DEBUG
-		std::cout << "___ BODY [" << toString(this->_content_length) << "] ___" << std::endl;
-		this->displayTemporary("request");
-		std::cout << "_____________" << std::endl;
-	#endif
+	if (this->_event == EVT_REQUEST_BODY) {
+		this->_event = EVT_PREPARE_RESPONSE;
+		#ifdef DEBUG
+			std::cout << "___ BODY [" << toString(this->_content_length) << "] ___" << std::endl;
+			this->displayTemporary("request");
+			std::cout << "_____________" << std::endl;
+		#endif
+		return 0;
+	}
+
 	this->prepareResponse();
 	return 1;
 }

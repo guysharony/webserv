@@ -12,8 +12,10 @@ Temporary::Temporary(Descriptors *descriptors)
 Temporary::~Temporary()
 {
 	tmpfile_type	ite = this->_tmpfiles.end();
-	for (tmpfile_type it = this->_tmpfiles.begin(); it != ite; ++it)
-		delete *it;
+	for (tmpfile_type it = this->_tmpfiles.begin(); it != ite; ++it) {
+		(*it)->close();
+		delete (*it);
+	}
 
 	this->_tmpfiles.clear();
 }
@@ -27,17 +29,6 @@ bool		Temporary::create(std::string const &filename)
 	}
 
 	this->_tmpfiles.push_back(new TmpFile(this->_descriptors, filename));
-	return false;
-}
-
-bool		Temporary::clear(std::string const &filename)
-{
-	tmpfile_type	ite = this->_tmpfiles.end();
-	for (tmpfile_type it = this->_tmpfiles.begin(); it != ite; ++it) {
-		if ((*it)->getFilename() == filename)
-			return (*it)->clear();
-	}
-
 	return false;
 }
 
@@ -109,11 +100,10 @@ bool		Temporary::close(std::string const &filename)
 		if ((*it)->getFilename() == filename) {
 			delete *it;
 			it = this->_tmpfiles.erase(it);
-			return true;
 		}
 	}
 
-	return false;
+	return true;
 }
 
 bool		Temporary::resetCursor(std::string const &filename)

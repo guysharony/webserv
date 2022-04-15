@@ -22,11 +22,7 @@ TmpFile::TmpFile(Descriptors *descriptors, std::string const &filename)
 }
 
 TmpFile::~TmpFile()
-{
-	this->_descriptors->deleteDescriptor(this->_fd);
-	close(this->_fd);
-	unlink(this->_path.c_str());
-}
+{ this->close(); }
 
 
 /* Getters */
@@ -46,15 +42,6 @@ Descriptors::poll_type	TmpFile::getPoll(void)
 	}
 
 	return ite;
-}
-
-bool			TmpFile::clear(void)
-{
-	std::ofstream	ofs;
-	ofs.open(this->_path.c_str(), std::ofstream::out | std::ofstream::trunc);
-	ofs.close();
-
-	return true;
 }
 
 short		TmpFile::getEvents(void)
@@ -113,6 +100,12 @@ std::string	TmpFile::_generate_filepath(void) {
 	name = "/tmp/webserv/" + intToHex(rand() % 9999999 + 1000000) + "_" + intToHex(rand() % 9999999 + 1000000);
 
 	return exists(name) ? this->_generate_filepath() : name;
+}
+
+void			TmpFile::close(void) {
+	::close(this->_fd);
+	unlink(this->_path.c_str());
+	this->_descriptors->deleteDescriptor(this->_fd);
 }
 
 int			TmpFile::display(void)
