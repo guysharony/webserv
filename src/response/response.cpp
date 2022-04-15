@@ -15,6 +15,7 @@ Response & Response::operator=(const Response & src)
 	_codeDeRetour = src._codeDeRetour;
     _autoIndex = src._autoIndex;
     _server   = src._server;
+    _loc = src._loc;
 	return (*this);
 }
 
@@ -32,15 +33,24 @@ Response::Response(Request & request){
     this->_req = request;
     this->_codeDeRetour = request.getRet();
     this->_response = "";
-	try{
-		this->_server = request.selectServer();
-	}
-	catch(const Config::ServerNotFoundException & e){
-		Message::debug("Server wasn't found: handling error\n");
-        this->_codeDeRetour = STATUS_INTERNAL_SERVER_ERROR;
-	}
-    this->_path = request.getPath();
-    this->_autoIndex = request.selectLocation(_server)->auto_index;
+    Config::location_type loc;
+    if (_codeDeRetour < STATUS_BAD_REQUEST){
+        try{
+            this->_server = request.selectServer();
+        }
+        catch(const Config::ServerNotFoundException & e){
+            Message::debug("Server wasn't found: handling error\n");
+            this->_codeDeRetour = STATUS_BAD_REQUEST;
+        }
+        this->_path = request.getPath();
+        try{
+            loc = _req.selectLocation(_server);
+            this->_loc = loc;
+            this->_autoIndex = _loc->auto_index;}
+        catch(const Config::LocationNotFoundException& e){
+            _codeDeRetour = STATUS_NOT_FOUND;
+        }
+    }
 
 }
 
@@ -88,20 +98,39 @@ std::string			Response::findContentType()
 Temporary   Response::createBody(){
     Temporary tmp(_unique_id);
     tmp.create(_unique_id);
-    Config::location_type loc = _req.selectLocation(_server);
+    Config::location_type loc;
+
+
     if (_codeDeRetour == STATUS_NOT_FOUND)
-        tmp.append(_unique_id, readHtmlFile(_server.error_page[404]));
+        tmp.append(_unique_id, createErrorPages(_server.error_page[404]));
+    else if (_codeDeRetour == STATUS_NOT_ALLOWED)
+        tmp.append(_unique_id, createErrorPages(_server.error_page[405]));
+    else if (_codeDeRetour == STATUS_INTERNAL_SERVER_ERROR)
+        tmp.append(_unique_id, createErrorPages(_server.error_page[500]));
+    else if (_codeDeRetour == STATUS_BAD_REQUEST)
+        tmp.append(_unique_id, createErrorPages(_server.error_page[400]));
+    else if (_codeDeRetour == STATUS_REQUEST_ENTITY_TOO_LARGE)
+        tmp.append(_unique_id,createErrorPages(_server.error_page[413]));
+    else if (_codeDeRetour == STATUS_FORBIDDEN)
+        tmp.append(_unique_id,createErrorPages(_server.error_page[403]));
     else if (_codeDeRetour == STATUS_OK){
+        try{ 
+            loc = _req.selectLocation(_server);
+        }
+        catch(const Config::LocationNotFoundException& e){
+            _codeDeRetour = STATUS_NOT_FOUND;
+            tmp.append(_unique_id, createErrorPages(_server.error_page[404]));
+        }
         if (loc->root.size() > 0){
             std::string new_p = getPathAfterreplacinglocationByRoot();
             if (isFiley(new_p) == 1)
-                tmp.append(_unique_id,readHtmlFile(new_p));
+                tmp.append(_unique_id,createErrorPages(new_p));
             else if (isFiley(new_p) == 2){
                 std::vector<std::string>::iterator it ;
                 for (it = loc->index.begin() ; it != loc->index.end() ; it++){
                      std::string path = loc->root + "/" + (*it);
                     if (isFiley(path) == 1){
-                        tmp.append(_unique_id,readHtmlFile(path));
+                        tmp.append(_unique_id,createErrorPages(path));
                         break;
                     }
                 }
@@ -109,28 +138,14 @@ Temporary   Response::createBody(){
                         tmp.append(_unique_id,getListOfDirectories(new_p.c_str()));
             else{
                 _codeDeRetour = STATUS_FORBIDDEN;
-                tmp.append(_unique_id, readHtmlFile(_server.error_page[403]));}
+                tmp.append(_unique_id, createErrorPages(_server.error_page[403]));}
             }
         else{
             _codeDeRetour = STATUS_NOT_FOUND;
-            tmp.append(_unique_id, readHtmlFile(_server.error_page[404]));}
+            tmp.append(_unique_id, createErrorPages(_server.error_page[404]));}
         }
     }
-    else if (_codeDeRetour == STATUS_NOT_ALLOWED)
-        tmp.append(_unique_id, readHtmlFile(_server.error_page[405]));
-    else if (_codeDeRetour == STATUS_INTERNAL_SERVER_ERROR)
-        tmp.append(_unique_id, readHtmlFile(_server.error_page[500]));
-    else if (_codeDeRetour == STATUS_BAD_REQUEST)
-        tmp.append(_unique_id, readHtmlFile(_server.error_page[400]));
-    else if (_codeDeRetour == STATUS_REQUEST_ENTITY_TOO_LARGE)
-        tmp.append(_unique_id,readHtmlFile(_server.error_page[413]));
-    else if (_codeDeRetour == STATUS_FORBIDDEN)
-        tmp.append(_unique_id,readHtmlFile(_server.error_page[403]));
-    else
-    {
-        tmp.append(_unique_id, "this response is not handled yet!!");
 
-    }
     return(tmp);      
 }
 
@@ -159,7 +174,10 @@ std::string Response::getStat(){
 }
 
 void Response::createResponse(){
-
+    if (_codeDeRetour < STATUS_BAD_REQUEST)
+        checkPath();
+    if (_req.getMethod().compare("DELETE") == 0 && _codeDeRetour == STATUS_OK)
+        deleteMethod();
     Temporary body = createBody();
     create_headers(body.size(_unique_id));
     _response.append("HTTP/1.1 ");
@@ -230,17 +248,87 @@ std::string       Response::getUrl(std::string dirent, bool isFolder) {
 
 
 std::string Response::getPathAfterreplacinglocationByRoot(){
-    Config::location_type loc = _req.selectLocation(_server);
-    std::string loc_p = loc->location;
+    if (_codeDeRetour == STATUS_NOT_FOUND)
+        return "";
+    std::string loc_p = _loc->location;
     std::string p = _req.getPath();
-
     size_t i;
     i = p.find(loc_p);
     if (i != std::string::npos){
         if (loc_p.compare("/") != 0)
             p.erase(i, loc_p.size());
-        p.insert(i, loc->root);
+        p.insert(i, _loc->root);
         return(p);
     }
     return "";
+}
+
+void Response::createCgiResponse(CgiParser p){
+    _codeDeRetour = p.getStatus();
+    create_headers(p.getBody().size());
+    //append cgi headers if does not exist in _headers or replace the old value by the new one
+    std::map<std::string, std::string> header = p.getHeaders();
+     for (std::map<std::string, std::string>::iterator itCgi = header.begin(); itCgi != header.end(); itCgi++){
+        _headers[itCgi->first] = itCgi->second;
+    } 
+    _response.append("HTTP/1.1 ");
+    _response.append(intToStr(p.getStatus()));
+    _response.append(" ");
+    _response.append(getStat());
+    _response.append(CRLF);
+    for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); it++){
+        _response.append(it->first);
+        _response.append(" : ");
+        _response.append(it->second);
+        _response.append(CRLF);
+    }
+    _response.append(D_CRLF);
+    _response.append(p.getBody());
+    _response.append(CRLF);
+}
+
+void		Response::deleteMethod(){
+    std::string p = getPathAfterreplacinglocationByRoot();
+	if (isFiley(p) == 1){
+		if (remove(p.c_str()) == 0)
+			_codeDeRetour = STATUS_NO_CONTENT;
+		else
+			_codeDeRetour = STATUS_FORBIDDEN;
+	}
+	else
+		_codeDeRetour = STATUS_NOT_FOUND;
+}
+
+void Response::checkPath(){
+    std::string p = getPathAfterreplacinglocationByRoot();
+	char actualPath[PATH_MAX+1];
+	realpath(&p[0], actualPath);
+	std::string pp(actualPath);
+	size_t i = pp.find(_loc->root, 0);
+	if (i == std::string::npos){
+		_codeDeRetour = STATUS_BAD_REQUEST;
+	}
+}
+
+std::string Response::createErrorPages(std::string path){
+    std::string html = readHtmlFile(path);
+    if (html.compare("") == 0){
+        if (_codeDeRetour == STATUS_NOT_FOUND)
+            return ("<!DOCTYPE html><html><title>404</title><body>404 NOT FOUND</body></html>");
+        else if (_codeDeRetour == STATUS_INTERNAL_SERVER_ERROR)
+            return ("<!DOCTYPE html><html><title>500</title><body>500 INTERNAL SERVER ERROR</body></html>");
+        else if (_codeDeRetour == STATUS_BAD_REQUEST)
+            return ("<!DOCTYPE html><html><title>400</title><body>400 BAD REQUEST</body></html>");
+        else if (_codeDeRetour == STATUS_FORBIDDEN)
+            return ("<!DOCTYPE html><html><title>403</title><body>403 FORBIDDEN</body></html>");
+        else if (_codeDeRetour == STATUS_REQUEST_ENTITY_TOO_LARGE)
+            return ("<!DOCTYPE html><html><title>413</title><body>413 ENTITY_TOO_LARGE</body></html>");
+        else if (_codeDeRetour == STATUS_NOT_ALLOWED)
+            return ("<!DOCTYPE html><html><title>405</title><body>405 NOT ALLOWED</body></html>");
+    }
+    return html;
+}
+
+Config::location_type Response::getLoc(){
+    return(this->_loc);
 }

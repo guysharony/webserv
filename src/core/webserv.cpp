@@ -79,11 +79,17 @@ bool		Webserv::run(void) {
 	close_connection = false;
 	compress_array = false;
 
+	/* CGI Demo
+	CGI new_cgi("/usr/bin/php-cgi");							// Create a new CGI connection with the path to CGI
+	int pipefd = new_cgi.launch_cgi("www/php/index.php");		// Launch the CGI command with the path to requested file (returns file descriptor to read)
+	this->_sockets.sockets_poll.append_pipe(pipefd, POLLIN);	// Add the new file descriptor to poll
+	*/
+
 	signal(SIGINT, &signalHandler);
 	while (this->_run) {
 		if (g_sigint == 1)
 			break; // Perhaps we need to shutdown/send messages to active clients first
-		std::cout<< YELLOW << "waiting for a connection..."<< RESET<<std::endl;
+	//	std::cout<< YELLOW << "waiting for a connection..."<< RESET<<std::endl;
 		if (this->_sockets.listen() <= 0) {
 			continue ; // Allow server to continue after a failure or timeout in poll
 		}
@@ -101,6 +107,26 @@ bool		Webserv::run(void) {
 			if (is_server && (this->current_iterator->revents & POLLIN)) {
 				this->_sockets.accept(this->current_iterator->fd);
 				break ;
+			} else if (this->_sockets.sockets_poll.pipe_fds.count(this->current_iterator->fd) && (this->current_iterator->revents & POLLIN)) { // Handle cgi response here
+				Message::debug("Reading from CGI pipe\n");
+				memset(buffer, 0, BUFFER_SIZE);
+				rc = read(this->current_iterator->fd, buffer, BUFFER_SIZE);
+				if(rc < 0)
+					Message::error("read() failed");
+				Message::debug(buffer);
+				Message::debug("\n");
+
+				// Create response from cgi buffer
+				// response(client->request, buffer);
+				// queue response
+
+				if (rc == 0) {
+					close(this->current_iterator->fd);
+					this->_sockets.sockets_poll.pipe_fds.erase(this->current_iterator->fd);
+					this->current_iterator->fd = -1;
+					close_connection = true;
+					break;
+				}
 			} else if (!is_server && (this->current_iterator->revents & POLLIN)) {
 				close_connection = false;
 
@@ -128,29 +154,47 @@ bool		Webserv::run(void) {
 				//parsing the request
 				Request req(this->_config);
 				req.parseRequest(buffer);
-				//std::cout<< RED <<req<<RESET<<std::endl;
-				//response
 				Response res(req);
-				try
-				{
-					req.selectServer();
-					res = Response(req);				
+				if (req.getRet() < STATUS_BAD_REQUEST){
+					Config::configuration_struct server;
+					try
+					{
+						server =req.selectServer();		
+					}
+					catch(const Config::ServerNotFoundException& e){
+						Message::debug("Server wasn't found: handling error\n");
+						req.setRet(STATUS_BAD_REQUEST);
+					}
+					char buffer[2000];
+					if (req.isCgi(server)){
+						CGI new_cgi("/usr/bin/php-cgi");								// Create a new CGI connection with the path to CGI
+					//	 std::cout << RED<<"***********"<<server.root + req.getPath()<<RESET<<std::endl;
+						int pipefd = new_cgi.launch_cgi(res.getLoc()->root + req.getPath(), req);			// Launch the CGI command with the path to requested file (returns file descriptor to read)
+						this->_sockets.sockets_poll.append_pipe(pipefd, POLLIN);	// Add the new file descriptor to poll
+						sleep(2);
+						read(pipefd, (void*)buffer, 2000);
+						std::cout << buffer <<std::endl;	
+						CgiParser  cgiRes;
+						cgiRes.parseCgiBuffer(buffer);
+						res.createCgiResponse(cgiRes);
+					}
+					else
+						res.createResponse();
 				}
-				catch(const Config::ServerNotFoundException& e){
-					Message::debug("Server wasn't found: handling error\n");
-					req.setRet(STATUS_INTERNAL_SERVER_ERROR);
-				}
+				 else
 					res.createResponse();
-				//	std::cout<<YELLOW<<res.getResponse()<<RESET<<std::endl;
-					send(this->current_iterator->fd, res.getResponse().c_str(), res.getResponse().size(), 0);
-					std::cout <<RED<< "Response :" <<RESET<< std::endl;
-					std::cout << "[" << GREEN << res.getResponse() << RESET << "]" << std::endl << std::endl;
+					// queue response instead of sending directly
+				send(this->current_iterator->fd, res.getResponse().c_str(), res.getResponse().size(), 0);
+				std::cout <<RED<< "Response :" <<RESET<< std::endl;
+				std::cout << "[" << GREEN << res.getResponse() << RESET << "]" << std::endl << std::endl;
 				client->addRequest(req);
 			}
 			else if (!is_server && (this->current_iterator->revents & POLLOUT))
 			{
 				len = rc;
 
+				// buffer = request's buffer
+				// send queued response
 				rc = send(this->current_iterator->fd, buffer, len, 0);
 				if (rc < 0)
 				{

@@ -3,11 +3,14 @@
 
 # include <csignal> // signal, SIGINT, SIG_DFL
 # include <cstring> // memset
+# include "../../include/constants.hpp"
 # include "../formats/temporary.hpp"
 # include "../sockets/sockets.hpp"
 # include "../request/request.hpp"
 # include "../response/response.hpp"
 # include "../client/Client.hpp"
+# include "../cgi/CGI.hpp"
+# include "../cgi/CgiParser.hpp"
 
 class Webserv
 {

@@ -5,6 +5,7 @@ int				isHttpStatus(int status)
 {
 	return (status == STATUS_OK
 	|| status == STATUS_CREATED
+	|| status == STATUS_FORBIDDEN
 	|| status == STATUS_NO_CONTENT
 	|| status == STATUS_BAD_REQUEST
 	|| status == STATUS_NOT_FOUND
