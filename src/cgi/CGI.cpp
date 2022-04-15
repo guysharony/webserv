@@ -29,6 +29,7 @@ int	CGI::launch_cgi(std::string const & filename, request_type &request)
 {
 	int fd[2];
 	pid_t pid;
+	//int	tmp_file_fd;
 
 	Config::configuration_struct        &server = request.selectServer();
 	Config::location_type             	location = request.selectLocation(server);
@@ -59,10 +60,19 @@ int	CGI::launch_cgi(std::string const & filename, request_type &request)
 	else if (pid == 0)
 	{
 		// Child
+		// Dup stdout into pipe
 		close(fd[0]);
 		if (dup2(fd[1], STDOUT_FILENO) < 0)
-			Message::error("dup2() failed");
+			Message::error("dup2() failed on pipe");
 		close(fd[1]);
+
+		// Open tmp file using TmpFileClass
+		// Dup tmp_file_fd to stdin
+		/*
+		if (dup2(tmp_file_fd, STDIN_FILENO) < 0)
+			Message::error("dup2() failed on tmp_file");
+		close(tmp_file_fd);
+		*/
 
 		// Prepare environment for execve
 		setenv("SERVER_SOFTWARE", SERVER_NAME, true);						// *** This value should be confirmed
