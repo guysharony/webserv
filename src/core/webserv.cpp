@@ -123,15 +123,11 @@ bool			Webserv::handleClient(void) {
 		if (this->context.poll->revents & POLLOUT) {
 			std::string packet;
 
-			std::cout << "AGAIN" << std::endl;
-
 			if ((*this->context.client)->popResponse(packet) > 0) {
-				std::cout << "SENDING [" << packet << "]" << std::endl;
 				this->clientSend(packet);
 				return false;
 			}
 
-			std::cout << "CLOSING" << std::endl;
 			this->context.poll->events = POLLIN;
 			(*this->context.client)->setEvent(NONE);
 			(*this->context.client)->closeTemporary("response");

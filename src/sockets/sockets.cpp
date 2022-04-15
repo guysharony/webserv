@@ -79,7 +79,7 @@ int		Sockets::initialize(socket_listener_type server_iterator) {
 }
 
 int		Sockets::listen(void)
-{ return poll(this->_descriptors->descriptors.data(), this->_descriptors->descriptors.size(), 0); }
+{ return poll(this->_descriptors->descriptors.data(), this->_descriptors->descriptors.size(), -1); }
 
 int		Sockets::accept(int fd) {
 	int new_client = ::accept(fd, NULL, NULL);
