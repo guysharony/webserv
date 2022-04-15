@@ -76,14 +76,11 @@ int		isFiley(std::string path)
 	if (stat(path.c_str(), &status) == 0 )
 	{
 		if (status.st_mode & S_IFDIR)
-			return 0;
+			return 2;
 		else if (status.st_mode & S_IFREG)
 			return 1;
-		else
-			return 0;
 	}
-	else
-		return 0;
+	return 0;
 }
 
 std::string		readHtmlFile(std::string path)
@@ -95,13 +92,13 @@ std::string		readHtmlFile(std::string path)
 	{
 		file.open(path.c_str(), std::ifstream::in);
 		if (file.is_open() == false)
-			return ("<!DOCTYPE html>\n<html><title>404</title><body>error page not found !!</body></html>\n");
+			return ("");
 		buffer << file.rdbuf();
 		file.close();
 		return (buffer.str());
 	}
 	else
-			return ("<!DOCTYPE html>\n<html><title>404</title><body>error page not found !!</body></html>\n");
+			return ("");
 		
 }
 
@@ -110,4 +107,14 @@ std::string	intToStr(int a){
     ss << a;
     std::string str = ss.str();
 	return (str);
+}
+
+int existingDir(std::string path){
+    DIR *dir = opendir(path.c_str());
+    if (dir){
+		closedir(dir);
+        return 1;
+	}
+	closedir(dir);
+    return 0;
 }

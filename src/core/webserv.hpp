@@ -5,8 +5,6 @@
 # include <cstring> // memset
 # include <unistd.h>
 # include "../temporary/temporary.hpp"
-# include "../request/request.hpp"
-# include "../response/response.hpp"
 # include "../client/client.hpp"
 # include "../sockets/sockets.hpp"
 

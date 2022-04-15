@@ -11,9 +11,7 @@
 # include <netinet/in.h> // sockaddr_in, inet_addr
 # include <arpa/inet.h>	// htons, inet_addr
 
-# include "../temporary/temporary.hpp"
 # include "../request/request.hpp"
-# include "../response/response.hpp"
 
 class Client {
 	public:
@@ -31,7 +29,7 @@ class Client {
 		std::string const		&getServerAddr(void);
 		int					getServerPort(void);
 		int					getEvent(void);
-		int					getMethod(void);
+		std::string			getMethod(void);
 		int					getConnection(void);
 		int					getStatus(void);
 		int					getLine(void);
@@ -45,12 +43,8 @@ class Client {
 		void					setServerAddr(std::string const &addr);
 		void					setServerPort(int port);
 		void					setRequest(Config &config);
-		void					setResponse(void);
 		void					setEvent(int event);
 		void					setClose(bool value);
-
-		// Debug functions
-		void					print();
 
 		void					appendRequest(std::string packet);
 		int					createTemporary(std::string const & filename);
@@ -96,10 +90,7 @@ class Client {
 		int						_socket_fd;	// The socket which is used to communicate between client and server
 		std::string				_server_addr;	// The IP address of the server
 		int						_server_port;	// The port of the server FROM which the client connected (the one on which the server is listening)
-		/*	
-		request					_request; // All of the request/response pairs associated with this client
-		response					_response;
-		*/
+		Request					_request; // All of the request/response pairs associated with this client
 		int						_event;
 		int						_encoding;
 		ssize_t					_content_length;
@@ -116,25 +107,6 @@ class Client {
 		std::queue<std::string>		_response;
 		int						_end;
 		bool						_close;
-
-		int						_receive(std::string & content);
-		int						_send(std::string content);
-
-		/* request */
-		void						_request(void);
-
-		int						_requestLine(void);
-		int						_requestMethod(std::string & source, int & dst);
-		int						_requestTarget(std::string & source, std::string & dst);
-		int						_requestVersion(std::string & source, std::string & dst);
-
-		int						_requestHeaders(void);
-		int						_requestHeader(std::string source, std::string & key, std::string & value);
-
-		int						_requestBody(void);
-		int						_requestBodyLength(void);
-		int						_requestBodyChunked(void);
-		int						_requestBodyFinished(void);
 };
 
 #endif
