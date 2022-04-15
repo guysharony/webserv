@@ -32,6 +32,7 @@ class TmpFile
 		std::string			getPath(void);
 		Descriptors::poll_type	getPoll(void);
 		short				getEvents(void);
+		size_t				getSize(void);
 
 		/* Setters */
 		void					setEvents(short events);
@@ -44,6 +45,7 @@ class TmpFile
 
 	private:
 		int					_fd;
+		size_t				_size;
 		std::string			_path;
 		std::string			_filename;
 

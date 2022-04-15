@@ -3,6 +3,7 @@
 TmpFile::TmpFile(Descriptors *descriptors, std::string const &filename)
 :
 	_fd(-1),
+	_size(0),
 	_path(),
 	_filename(filename)
 {
@@ -31,6 +32,9 @@ std::string			TmpFile::getFilename(void)
 
 std::string			TmpFile::getPath(void)
 { return (this->_path); }
+
+size_t				TmpFile::getSize(void)
+{ return (this->_size); }
 
 Descriptors::poll_type	TmpFile::getPoll(void)
 {
@@ -92,7 +96,10 @@ int			TmpFile::read(std::string & value)
 }
 
 int			TmpFile::write(std::string const & value)
-{ return ::write(this->_fd, value.c_str(), value.length()); }
+{
+	this->_size += value.length();
+	return ::write(this->_fd, value.c_str(), value.length());
+}
 
 std::string	TmpFile::_generate_filepath(void) {
 	std::string	name;

@@ -88,8 +88,10 @@ class Request {
 		int									readTemporary(std::string const & filename, std::string &packet);
 		int									appendTemporary(std::string const & filename, std::string packet);
 		int									displayTemporary(std::string const & filename);
+		ssize_t								sizeTemporary(std::string const & filename);
 		int									resetCursorTemporary(std::string const & filename);
 		int									closeTemporary(std::string const & filename);
+		void									parseRequest(void);
 
 
 		int									firstLineParsing(void);

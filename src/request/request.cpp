@@ -260,6 +260,36 @@ size_t		Request::headerParsing(std::string request_buffer)
 */
 
 void			Request::execute(void) {
+	Config::configuration_struct server;
+
+	this->parseRequest();
+
+	if (this->getEnd()) {
+		try {
+			server = this->selectServer();
+			this->checkBody(server);
+		} catch(const Config::ServerNotFoundException & e) {
+			Message::debug("Server wasn't found: handling error\n");
+			// Handle error here
+			// throw e; // delete this once error is handled properly
+		}
+
+		if (this->getStatus() < STATUS_BAD_REQUEST) {
+			try {
+				Config::location_type loc = selectLocation(server);
+				if (loc != server.locations.end()) {
+					std::cout << YELLOW << "location = " << selectLocation(server)->location << RESET << std::endl;
+				}
+			}
+			catch(const Config::LocationNotFoundException& e) {
+					this->setStatus(STATUS_NOT_FOUND);
+					std::cerr << RED << "location not found" << RESET << std::endl;
+			}
+		}
+	}
+}
+
+void			Request::parseRequest(void) {
 	std::size_t	chunk_extention;
 	int			res;
 
@@ -273,22 +303,23 @@ void			Request::execute(void) {
 			this->_chunk_size = -1;
 
 			if (!this->firstLineParsing()) {
-				this->_end = 1;
+				this->setEnd(1);
 				return;
 			}
 		} else if (this->getEvent() == EVT_REQUEST_HEADERS) {
 			if (this->_current.length() == 0) {
 				checkPort();
+				checkTimeout();
 				if (this->_host.empty()) {
-					this->_status = STATUS_BAD_REQUEST;
-					this->_end = 1;
+					this->setStatus(STATUS_BAD_REQUEST);
+					this->setEnd(1);
 					return;
 				}
 
 				Message::debug("SEPARATOR\n");
 				this->_event = EVT_REQUEST_BODY;
 				if (this->_encoding == NONE) {
-					this->_end = 1;
+					this->setEnd(1);
 					return;
 				}
 				return;
@@ -297,8 +328,8 @@ void			Request::execute(void) {
 			Message::debug("REQUEST HEADER [" + this->_current + "]\n");
 
 			if (!this->checkHeaders()) {
-				this->_status = STATUS_BAD_REQUEST;
-				this->_end = 1;
+				this->setStatus(STATUS_BAD_REQUEST);
+				this->setEnd(1);
 				return;
 			}
 
@@ -311,8 +342,8 @@ void			Request::execute(void) {
 							this->_current = this->_current.substr(0, chunk_extention);
 
 						if (!isPositiveBase16(this->_current)) {
-							this->_status = STATUS_BAD_REQUEST;
-							this->_end = 1;
+							this->setStatus(STATUS_BAD_REQUEST);
+							this->setEnd(1);
 							return;
 						}
 
@@ -326,7 +357,7 @@ void			Request::execute(void) {
 				} else {
 					if (!this->_chunk_size) {
 						Message::debug("FINISHED\n");
-						this->_end = 1;
+						this->setEnd(1);
 						return;
 					}
 
@@ -348,8 +379,8 @@ void			Request::execute(void) {
 				}
 			} else if (this->_encoding == LENGTH) {
 				if (this->_current.length() > static_cast<size_t>(this->_body_size)) {
-					this->_status = STATUS_BAD_REQUEST;
-					this->_end = 1;
+					this->setStatus(STATUS_BAD_REQUEST);
+					this->setEnd(1);
 					return;
 				}
 
@@ -365,7 +396,7 @@ void			Request::execute(void) {
 
 				if (this->_body_size == 0) {
 					Message::debug("FINISHED\n");
-					this->_end = 1;
+					this->setEnd(1);
 					return;
 				}
 			}
@@ -469,6 +500,9 @@ int			Request::displayTemporary(std::string const & filename)
 
 int			Request::resetCursorTemporary(std::string const & filename)
 { return this->_temporary.resetCursor(filename); };
+
+ssize_t		Request::sizeTemporary(std::string const & filename)
+{ return this->_temporary.getSize(filename); };
 
 int			Request::closeTemporary(std::string const & filename)
 { return this->_temporary.close(filename); }
@@ -674,7 +708,7 @@ Config::location_type	Request::selectLocation(Config::configuration_struct &serv
 }
 
 void					Request::checkBody(Config::configuration_struct &server) {
-	if (this->_body.size() > (size_t)server.client_max_body_size) {
+	if (this->sizeTemporary("request") > static_cast<ssize_t>(server.client_max_body_size)) {
 		this->setStatus(STATUS_REQUEST_ENTITY_TOO_LARGE);
 		std::cerr << RED << "body too large !!" << std::endl;
 	}
