@@ -113,7 +113,7 @@ bool			Webserv::handleServer(void) {
 
 bool			Webserv::handleClient(void) {
 	if ((*this->context.client)->getEvent() < EVT_SEND_RESPONSE) {
-		if (this->context.poll->revents & POLLIN) {
+		if ((this->context.poll->revents & POLLIN) && ((*this->context.client)->getEvent() != EVT_PREPARE_RESPONSE)) {
 			if (this->clientReceive() <= 0) {
 				this->_clientReject();
 				return true;
@@ -129,12 +129,10 @@ bool			Webserv::handleClient(void) {
 			std::string packet;
 
 			if ((*this->context.client)->readResponse(packet) > 0) {
-				std::cout << GREEN << "SEND [" << packet << "]" << RESET << std::endl;
 				this->clientSend(packet);
 				return false;
 			}
 
-			std::cout << GREEN << "CLOSE" << RESET << std::endl;
 			this->context.poll->events = POLLIN;
 			(*this->context.client)->closeResponse();
 		}

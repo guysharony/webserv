@@ -8,7 +8,7 @@ Client::Client(Config *config, Descriptors *descriptors, int socket_fd)
 	_server_addr(),
 	_server_port(-1),
 	_request(config, descriptors),
-	_response(&_request)
+	_response(&_request, descriptors)
 {
 	struct sockaddr_in sock_addr;
 	struct sockaddr_in peer_addr;
@@ -114,13 +114,12 @@ int				Client::readResponse(std::string & packet)
 { return this->_response.readResponse(packet); }
 
 int				Client::prepareResponse(void) {
-	this->_response.execute();
-	this->_response.createBody();
-	this->_response.createHeaders();
+	if (!this->_response.execute()) {
+		this->_request.setEnd(0);
+		return 1;
+	}
 
-	this->_request.setEnd(0);
-
-	return 1;
+	return 0;
 }
 
 void				Client::closeResponse(void)
@@ -143,8 +142,7 @@ int				Client::execute(void) {
 		return 0;
 	}
 
-	this->prepareResponse();
-	return 1;
+	return this->prepareResponse();
 }
 
 std::string		Client::getStatusColor(void) {

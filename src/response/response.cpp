@@ -1,11 +1,12 @@
 #include "response.hpp"
 
-Response::Response(Request *request) {
-	this->_request = request;
-	this->_event = NONE;
-	this->_request->createTemporary("body");
-	this->_request->createTemporary("response");
-}
+Response::Response(Request *request, Descriptors *descriptors)
+:
+	_request(request),
+	_body_fd(-1),
+	_event(EVT_INITIALIZE),
+	_descriptors(descriptors)
+{ }
 
 Response::~Response() {
 	this->_request->closeTemporary("body");
@@ -24,9 +25,34 @@ std::string			Response::getMethod(void)
 std::string			Response::getPath(void)
 { return this->_request->getPath(); }
 
+Config::location_type	Response::getLocation(void)
+{ return(this->_location); }
 
-void					Response::execute(void) {
+
+int					Response::execute(void) {
+	if (this->_event == EVT_INITIALIZE) {
+		this->initialize();
+		this->_event = EVT_CREATE_BODY;
+		return 1;
+	}
+
+	if (this->_event == EVT_CREATE_BODY) {
+		if (this->createBody() > 0)
+			this->_event = EVT_CREATE_HEADERS;
+
+		return 1;
+	}
+
+	this->createHeaders();
+
+	return 0;
+}
+
+void					Response::initialize(void) {
+	this->_body_fd = -1;
 	this->_status = this->_request->getStatus();
+	this->_request->createTemporary("body");
+	this->_request->createTemporary("response");
 
 	Config::location_type location;
 	if (this->_status < STATUS_BAD_REQUEST) {
@@ -97,56 +123,107 @@ std::string			Response::findContentType(void)
 	return("text/html"); //normalment text/plain mais je veux tester la page d'erreur 404 --> to check
 }
 
-void		Response::createBody(void) {
-	Config::location_type	loc;
+int		Response::createBody(void) {
+	Config::location_type	location;
+	std::string			packet;
 
 	if (this->_status == STATUS_NOT_FOUND)
-		this->_request->appendTemporary("body", createErrorPages(this->_server->error_page[STATUS_NOT_FOUND]));
+	{
+		if ((createErrorPages(this->_server->error_page[STATUS_NOT_FOUND], packet) > 0) || (this->_body_fd <= 0)) {
+			this->_request->appendTemporary("body", packet);
+			return (this->_body_fd <= 0);
+		}
+	}
 	else if (this->_status == STATUS_NOT_ALLOWED)
-		this->_request->appendTemporary("body", createErrorPages(this->_server->error_page[STATUS_NOT_ALLOWED]));
+	{
+		if ((createErrorPages(this->_server->error_page[STATUS_NOT_ALLOWED], packet) > 0) || (this->_body_fd <= 0)) {
+			this->_request->appendTemporary("body", packet);
+			return (this->_body_fd <= 0);
+		}
+	}
 	else if (this->_status == STATUS_INTERNAL_SERVER_ERROR)
-		this->_request->appendTemporary("body", createErrorPages(this->_server->error_page[STATUS_INTERNAL_SERVER_ERROR]));
+	{
+		if ((createErrorPages(this->_server->error_page[STATUS_INTERNAL_SERVER_ERROR], packet) > 0) || (this->_body_fd <= 0)) {
+			this->_request->appendTemporary("body", packet);
+			return (this->_body_fd <= 0);
+		}
+	}
 	else if (this->_status == STATUS_BAD_REQUEST)
-		this->_request->appendTemporary("body", createErrorPages(this->_server->error_page[STATUS_BAD_REQUEST]));
+	{
+		if ((createErrorPages(this->_server->error_page[STATUS_BAD_REQUEST], packet) > 0) || (this->_body_fd <= 0)) {
+			this->_request->appendTemporary("body", packet);
+			return (this->_body_fd <= 0);
+		}
+	}
 	else if (this->_status == STATUS_REQUEST_ENTITY_TOO_LARGE)
-		this->_request->appendTemporary("body", createErrorPages(this->_server->error_page[STATUS_REQUEST_ENTITY_TOO_LARGE]));
+	{
+		if ((createErrorPages(this->_server->error_page[STATUS_REQUEST_ENTITY_TOO_LARGE], packet) > 0) || (this->_body_fd <= 0)) {
+			this->_request->appendTemporary("body", packet);
+			return (this->_body_fd <= 0);
+		}
+	}
 	else if (this->_status == STATUS_FORBIDDEN)
-		this->_request->appendTemporary("body", createErrorPages(this->_server->error_page[STATUS_FORBIDDEN]));
-	else if (this->_status == STATUS_OK) {
+	{
+		if ((createErrorPages(this->_server->error_page[STATUS_FORBIDDEN], packet) > 0) || (this->_body_fd <= 0)) {
+			this->_request->appendTemporary("body", packet);
+			return (this->_body_fd <= 0);
+		}
+	}
+	else if (this->_status == STATUS_OK)
+	{
 		try {
-			loc = this->_request->selectLocation(this->_server);
+			location = this->_request->selectLocation(this->_server);
 		} catch(const Config::LocationNotFoundException& e) {
 			this->_status = STATUS_NOT_FOUND;
-			this->_request->appendTemporary("body", createErrorPages(this->_server->error_page[STATUS_NOT_FOUND]));
+			return 0;
 		}
 
-		if (loc->root.size() > 0) {
+		if (location->root.size() > 0)
+		{
 			std::string new_p = getPathAfterReplacingLocationByRoot();
+
 			if (isFiley(new_p) == 1)
-				this->_request->appendTemporary("body", createErrorPages(new_p));
-			else if (isFiley(new_p) == 2) {
-				std::vector<std::string>::iterator it ;
-				for (it = loc->index.begin() ; it != loc->index.end() ; it++){
-					std::string path = loc->root + "/" + (*it);
-					if (isFiley(path) == 1) {
-						this->_request->appendTemporary("body", createErrorPages(path));
+			{
+				if ((createErrorPages(new_p, packet) > 0) || (this->_body_fd <= 0)) {
+					this->_request->appendTemporary("body", packet);
+					return (this->_body_fd <= 0);
+				}
+			}
+			else if (isFiley(new_p) == 2)
+			{
+				std::vector<std::string>::iterator it;
+
+				for (it = location->index.begin() ; it != location->index.end() ; it++)
+				{
+					std::string path = location->root + "/" + (*it);
+					if (isFiley(path) == 1)
+					{
+						if ((createErrorPages(path, packet) > 0) || (this->_body_fd <= 0)) {
+							this->_request->appendTemporary("body", packet);
+							return (this->_body_fd <= 0);
+						}
 						break;
 					}
 				}
-				if (it == loc->index.end() && this->_autoIndex) {
+
+				if (it == location->index.end() && this->_autoIndex) {
 					this->_request->appendTemporary("body", getListOfDirectories(new_p.c_str()));
+					return 0;
 				}
 			}
-			else {
+			else
+			{
 				this->_status = STATUS_FORBIDDEN;
-				this->_request->appendTemporary("body", createErrorPages(this->_server->error_page[STATUS_FORBIDDEN]));
+				return 0;
 			}
 		}
 		else {
 			this->_status = STATUS_NOT_FOUND;
-			this->_request->appendTemporary("body", createErrorPages(this->_server->error_page[STATUS_NOT_FOUND]));
+			return 0;
 		}
 	}
+
+	return 1;
 }
 
 int			Response::getStatus(void)
@@ -218,7 +295,9 @@ int		Response::readResponse(std::string & packet) {
 		}
 
 		packet = CRLF;
-		this->_event = EVT_FINISHED;
+		this->_event = EVT_INITIALIZE;
+		this->_request->closeTemporary("body");
+		this->_request->closeTemporary("response");
 		return 1;
 	}
 
@@ -255,6 +334,7 @@ std::string	Response::getListOfDirectories(const char *path) {
 		if (isFiley(p+ "/" + *it) == 1)
 			html += getUrl(*it, false);
 	}
+
 	html +="</table>\n</body>\n</html>\n";
 
 	closedir(dir);
@@ -327,7 +407,7 @@ void			Response::createCgiResponse(CgiParser p) {
 }
 */
 
-void		Response::deleteMethod(void) {
+void			Response::deleteMethod(void) {
 	std::string p = this->getPathAfterReplacingLocationByRoot();
 	if (isFiley(p) == 1) {
 		if (remove(p.c_str()) == 0)
@@ -351,27 +431,75 @@ void			Response::checkPath(void) {
 	}
 }
 
-std::string	Response::createErrorPages(std::string path) {
-	std::string html = readHtmlFile(path);
+int		Response::createErrorPages(std::string path, std::string & packet) {
+	if (this->_body_fd == -1) {
+		if ((this->_body_fd = open(path.c_str(), O_RDONLY)) <= 0) {
+			if (this->_status == STATUS_NOT_FOUND)
+				packet = "<!DOCTYPE html><html><title>404</title><body>404 NOT FOUND</body></html>";
+			else if (this->_status == STATUS_INTERNAL_SERVER_ERROR)
+				packet = "<!DOCTYPE html><html><title>500</title><body>500 INTERNAL SERVER ERROR</body></html>";
+			else if (this->_status == STATUS_BAD_REQUEST)
+				packet = "<!DOCTYPE html><html><title>400</title><body>400 BAD REQUEST</body></html>";
+			else if (this->_status == STATUS_FORBIDDEN)
+				packet = "<!DOCTYPE html><html><title>403</title><body>403 FORBIDDEN</body></html>";
+			else if (this->_status == STATUS_REQUEST_ENTITY_TOO_LARGE)
+				packet = "<!DOCTYPE html><html><title>413</title><body>413 ENTITY_TOO_LARGE</body></html>";
+			else if (this->_status == STATUS_NOT_ALLOWED)
+				packet = "<!DOCTYPE html><html><title>405</title><body>405 NOT ALLOWED</body></html>";
 
-	if (html.compare("") == 0) {
-		if (this->_status == STATUS_NOT_FOUND)
-			return "<!DOCTYPE html><html><title>404</title><body>404 NOT FOUND</body></html>";
-		else if (this->_status == STATUS_INTERNAL_SERVER_ERROR)
-			return "<!DOCTYPE html><html><title>500</title><body>500 INTERNAL SERVER ERROR</body></html>";
-		else if (this->_status == STATUS_BAD_REQUEST)
-			return "<!DOCTYPE html><html><title>400</title><body>400 BAD REQUEST</body></html>";
-		else if (this->_status == STATUS_FORBIDDEN)
-			return "<!DOCTYPE html><html><title>403</title><body>403 FORBIDDEN</body></html>";
-		else if (this->_status == STATUS_REQUEST_ENTITY_TOO_LARGE)
-			return "<!DOCTYPE html><html><title>413</title><body>413 ENTITY_TOO_LARGE</body></html>";
-		else if (this->_status == STATUS_NOT_ALLOWED)
-			return "<!DOCTYPE html><html><title>405</title><body>405 NOT ALLOWED</body></html>";
+			return 0;
+		}
+
+		fcntl(this->_body_fd, F_SETFL, O_NONBLOCK);
+
+		this->_descriptors->setDescriptor(this->_body_fd, POLLIN);
+		this->_descriptors->setDescriptorType(this->_body_fd, "file");
+
+		packet = "";
+
+		return 1;
 	}
 
-	return html;
+	int res = this->read(packet);
+
+	if (!res) {
+		::close(this->_body_fd);
+		this->_descriptors->deleteDescriptor(this->_body_fd);
+	}
+
+	return res;
 }
 
-Config::location_type	Response::getLocation(void) {
-	return(this->_location);
+Descriptors::poll_type	Response::getPoll(void)
+{
+	Descriptors::poll_type	ite = this->_descriptors->descriptors.end();
+	for (Descriptors::poll_type	it = this->_descriptors->descriptors.begin(); it != ite; ++it) {
+		if (it->fd == this->_body_fd) {
+			return it;
+		}
+	}
+
+	return ite;
+}
+
+int					Response::read(std::string & value)
+{
+	Descriptors::poll_type	it;
+	ssize_t 				pos;
+	char					buffer[BUFFER_SIZE];
+
+	pos = 0;
+
+	memset(buffer, 0, BUFFER_SIZE);
+
+	if ((it = this->getPoll()) == this->_descriptors->descriptors.end())
+		return -1;
+
+	value.clear();
+
+	pos = ::read(this->_body_fd, buffer, BUFFER_SIZE - 1);
+
+	value = std::string(buffer);
+
+	return (pos > 0 && value.length() > 0);
 }

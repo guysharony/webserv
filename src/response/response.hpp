@@ -8,20 +8,21 @@
 # include <stddef.h>
 # include <sstream>
 # include <sys/time.h>
+# include <unistd.h>
 # include "../request/request.hpp"
 // # include "../cgi/CgiParser.hpp"
 
-# define EVT_CREATE_BODY			1
-# define EVT_CREATE_HEADERS		2
-# define EVT_SEND_RESPONSE_LINE	3
-# define EVT_SEND_RESPONSE_HEADERS	4
-# define EVT_SEND_RESPONSE_BODY	5
-# define EVT_FINISHED			6
+# define EVT_INITIALIZE			1
+# define EVT_CREATE_BODY			2
+# define EVT_CREATE_HEADERS		3
+# define EVT_SEND_RESPONSE_LINE	4
+# define EVT_SEND_RESPONSE_HEADERS	5
+# define EVT_SEND_RESPONSE_BODY	6
 
 class Response {
 
 	public:
-		Response(Request *request);
+		Response(Request *request, Descriptors *descriptors);
 		~Response();
 
 		/* Getters */
@@ -34,9 +35,9 @@ class Response {
 		Config::location_type			getLocation(void);
 
 		/* Methods */
-		void							execute(void);
+		int							execute(void);
 		void							createHeaders(void);
-		void							createBody(void);
+		int							createBody(void);
 		//void						createCgiResponse(CgiParser p);
 
 		int							readResponse(std::string & packet);
@@ -45,9 +46,11 @@ class Response {
 		Request						*_request;
 		Config::configuration_type		_server;
 		std::string					_path;
+		int							_body_fd;
 		int							_status;
 		int							_event;
 		int							_autoIndex;
+		Descriptors					*_descriptors;
 		Config::location_type 			_location;
 		std::map<std::string, std::string> _headers;
 
@@ -55,12 +58,15 @@ class Response {
 		Response						&operator=(const Response & src);
 
 		/* Getters */
+		Descriptors::poll_type			getPoll(void);
 		std::string					getUrl(std::string dirent, bool isFolder);
 		std::string					getListOfDirectories(const char *path);
 		std::string					getPathAfterReplacingLocationByRoot(void);
 
 		/* Methods */
-		std::string					createErrorPages(std::string path);
+		void							initialize(void);
+		int							read(std::string & value);
+		int							createErrorPages(std::string path, std::string & packet);
 
 		std::string					findDate(void);
 		std::string					findContentType(void);
