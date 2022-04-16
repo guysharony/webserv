@@ -43,7 +43,7 @@ class Client {
 		void					setEvent(int event);
 		void					setClose(bool value);
 
-		int					readTemporary(std::string & packet);
+		int					readResponse(std::string & packet);
 		void					appendRequest(std::string packet);
 		void					closeResponse(void);
 

@@ -110,14 +110,13 @@ void				Client::appendRequest(std::string packet)
 { this->_request.append(packet); }
 
 /* Response */
-int				Client::readTemporary(std::string & packet)
-{ return this->_request.readTemporary("response", packet); }
+int				Client::readResponse(std::string & packet)
+{ return this->_response.readResponse(packet); }
 
 int				Client::prepareResponse(void) {
 	this->_response.execute();
 	this->_response.createBody();
 	this->_response.createHeaders();
-	this->_response.createResponse();
 
 	this->_request.setEnd(0);
 
@@ -129,7 +128,6 @@ void				Client::closeResponse(void)
 	this->log();
 	this->setEvent(NONE);
 	this->_request.closeTemporary("request");
-	this->_request.closeTemporary("response");
 	this->_request.closeTemporary("body");
 }
 

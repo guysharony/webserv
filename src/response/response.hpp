@@ -11,6 +11,13 @@
 # include "../request/request.hpp"
 // # include "../cgi/CgiParser.hpp"
 
+# define EVT_CREATE_BODY			1
+# define EVT_CREATE_HEADERS		2
+# define EVT_SEND_RESPONSE_LINE	3
+# define EVT_SEND_RESPONSE_HEADERS	4
+# define EVT_SEND_RESPONSE_BODY	5
+# define EVT_FINISHED			6
+
 class Response {
 
 	public:
@@ -28,16 +35,18 @@ class Response {
 
 		/* Methods */
 		void							execute(void);
-		void							createResponse(void);
 		void							createHeaders(void);
 		void							createBody(void);
 		//void						createCgiResponse(CgiParser p);
+
+		int							readResponse(std::string & packet);
 
 	private:
 		Request						*_request;
 		Config::configuration_type		_server;
 		std::string					_path;
 		int							_status;
+		int							_event;
 		int							_autoIndex;
 		Config::location_type 			_location;
 		std::map<std::string, std::string> _headers;

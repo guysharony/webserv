@@ -2,6 +2,7 @@
 
 Response::Response(Request *request) {
 	this->_request = request;
+	this->_event = NONE;
 	this->_request->createTemporary("body");
 	this->_request->createTemporary("response");
 }
@@ -72,6 +73,8 @@ void					Response::createHeaders(void) {
 	this->_headers["content-length"] = intToStr(body_length + 2);
 	this->_headers["content-location"] = this->_path;
 	this->_headers["content-type"] = findContentType();
+
+	this->_event = EVT_SEND_RESPONSE_LINE;
 }
 
 std::string			Response::findContentType(void)
@@ -183,24 +186,43 @@ std::string	Response::getStatusMessage(void) {
 	return "";
 }
 
-void		Response::createResponse(void) {
-	this->_request->appendTemporary("response", "HTTP/1.1 " + intToStr(this->_status) + " " + getStatusMessage() + "\r\n");
-	for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); it++){
-		this->_request->appendTemporary("response", it->first);
-		this->_request->appendTemporary("response", ": ");
-		this->_request->appendTemporary("response", it->second);
-		this->_request->appendTemporary("response", CRLF);
-	}
-	this->_request->appendTemporary("response", D_CRLF);
-
-	std::string line;
-	this->_request->resetCursorTemporary("body");
-	while (this->_request->readTemporary("body", line) != 0) {
-		this->_request->appendTemporary("response", line);
+int		Response::readResponse(std::string & packet) {
+	if (this->_event == EVT_SEND_RESPONSE_LINE) {
+		this->_event = EVT_SEND_RESPONSE_HEADERS;
+		packet = "HTTP/1.1 " + intToStr(this->_status) + " " + getStatusMessage() + "\r\n";
+		return 1;
 	}
 
-	this->_request->appendTemporary("response", CRLF);
-	this->_request->resetCursorTemporary("response");
+	if (this->_event == EVT_SEND_RESPONSE_HEADERS) {
+		if (this->_headers.size() > 0) {
+			std::map<std::string, std::string>::iterator it = this->_headers.begin();
+
+			packet = it->first + ": " + it->second + "\r\n" + ((this->_headers.size() == 1) ? "\r\n" : "");
+
+			this->_headers.erase(it->first);
+		}
+
+		if (this->_headers.size() <= 0) {
+			this->_event = EVT_SEND_RESPONSE_BODY;
+			this->_request->resetCursorTemporary("body");
+		}
+
+		return 1;
+	}
+
+	if (this->_event == EVT_SEND_RESPONSE_BODY) {
+		std::string line;
+		if (this->_request->readTemporary("body", line) > 0) {
+			packet = line;
+			return 1;
+		}
+
+		packet = CRLF;
+		this->_event = EVT_FINISHED;
+		return 1;
+	}
+
+	return 0;
 }
 
 std::string	Response::getListOfDirectories(const char *path) {
