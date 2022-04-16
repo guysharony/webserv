@@ -46,6 +46,8 @@ class Response {
 		Request						*_request;
 		Config::configuration_type		_server;
 		std::string					_path;
+		std::vector<std::string>			_directory_list;
+		DIR							*dir;
 		int							_body_fd;
 		int							_status;
 		int							_event;
@@ -60,7 +62,7 @@ class Response {
 		/* Getters */
 		Descriptors::poll_type			getPoll(void);
 		std::string					getUrl(std::string dirent, bool isFolder);
-		std::string					getListOfDirectories(const char *path);
+		int							getListOfDirectories(const char *path, std::string & packet);
 		std::string					getPathAfterReplacingLocationByRoot(void);
 
 		/* Methods */

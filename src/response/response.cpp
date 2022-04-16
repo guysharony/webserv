@@ -3,6 +3,7 @@
 Response::Response(Request *request, Descriptors *descriptors)
 :
 	_request(request),
+	_directory_list(),
 	_body_fd(-1),
 	_event(EVT_INITIALIZE),
 	_descriptors(descriptors)
@@ -207,8 +208,11 @@ int		Response::createBody(void) {
 				}
 
 				if (it == location->index.end() && this->_autoIndex) {
-					this->_request->appendTemporary("body", getListOfDirectories(new_p.c_str()));
-					return 0;
+					if (getListOfDirectories(new_p.c_str(), packet) > 0) {
+						this->_request->appendTemporary("body", packet);
+						return 0;
+					}
+					return 1;
 				}
 			}
 			else
@@ -304,42 +308,50 @@ int		Response::readResponse(std::string & packet) {
 	return 0;
 }
 
-std::string	Response::getListOfDirectories(const char *path) {
-	DIR *dir = opendir(path);
+int		Response::getListOfDirectories(const char *path, std::string & packet) {
+	if (this->_request->sizeTemporary("body") <= 0) {
+		DIR			*dir = opendir(path);
+		std::string	init = "<!DOCTYPE html>\n<html>\n<head>\n\
+				<title>" + this->_request->getPath() + "</title>\n\
+		</head>\n<body>\n<h1>Index of "+ this->_request->getPath() +"</h1>\n<p>\n<hr><table>";
 
-	std::string html = "<!DOCTYPE html>\n<html>\n<head>\n\
-			<title>" + this->_request->getPath() + "</title>\n\
-	</head>\n<body>\n<h1>Index of "+ this->_request->getPath() +"</h1>\n<p>\n";
+		if (dir == NULL) {
+			std::cerr << RED << "Error: could not open " << this->_request->getPath() << RESET << std::endl;
+			return 0;
+		}
 
-	if (dir == NULL) {
-		std::cerr << RED << "Error: could not open " << this->_request->getPath() << RESET << std::endl;
-		return "";
+		for (struct dirent *dirent = readdir(dir); dirent; dirent = readdir(dir)) {
+			this->_directory_list.push_back(dirent->d_name);
+		}
+
+		std::sort(this->_directory_list.begin(), this->_directory_list.end());
+		this->_directory_list.erase(std::find(this->_directory_list.begin(), this->_directory_list.end(), "."));
+		closedir(dir);
+
+		packet = init;
+
+		return 1;
 	}
 
-	std::vector<std::string> v;
 	std::string p = getPathAfterReplacingLocationByRoot();
-	for (struct dirent *dirent = readdir(dir); dirent; dirent = readdir(dir)) {
-		v.push_back(dirent->d_name);
+
+	for (std::vector<std::string>::iterator it = this->_directory_list.begin(); it != this->_directory_list.end(); it++) {
+		if (isFiley(p + "/" + *it) == 2) {
+			packet = getUrl(*it, true) + (this->_directory_list.size() == 1 ? "</table>\n</body>\n</html>\n" : "");
+			this->_directory_list.erase(it);
+			return 1;
+		}
 	}
 
-	std::sort(v.begin(), v.end());
-	v.erase(std::find(v.begin(), v.end(), "."));
-	html += "<hr>";
-	html += "<table>";
-	for (std::vector<std::string>::iterator it = v.begin(); it != v.end(); it++){
-		if (isFiley(p+ "/" + *it) == 2)
-			html += getUrl(*it, true);
-	}
-	for (std::vector<std::string>::iterator it = v.begin(); it != v.end(); it++){
-		if (isFiley(p+ "/" + *it) == 1)
-			html += getUrl(*it, false);
+	for (std::vector<std::string>::iterator it = this->_directory_list.begin(); it != this->_directory_list.end(); it++) {
+		if (isFiley(p + "/" + *it) == 1) {
+			packet = getUrl(*it, true) + (this->_directory_list.size() == 1 ? "</table>\n</body>\n</html>\n" : "");
+			this->_directory_list.erase(it);
+			return 1;
+		}
 	}
 
-	html +="</table>\n</body>\n</html>\n";
-
-	closedir(dir);
-
-	return html;
+	return 0;
 }
 
 std::string	Response::getUrl(std::string dirent, bool isFolder) {
