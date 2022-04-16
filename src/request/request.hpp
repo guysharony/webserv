@@ -19,10 +19,7 @@
 class Request {
 
 	public:
-		Request(void);
-		Request(Config & conf);
-		Request(Request const & src);
-		Request &operator=(Request const &rhs);
+		Request(Config *config, Descriptors *descriptors);
 		~Request();
 
 		/* Getters */
@@ -35,7 +32,6 @@ class Request {
 		int									getTimeout(void);
 		int									getStatus(void);
 		const std::map<std::string, std::string>&	getHeader(void) const;
-		std::string							getBody(void);
 		int									getEvent(void);
 		int									getEnd(void);
 		int									getLine(void);
@@ -49,27 +45,37 @@ class Request {
 		void									setConnection(int connection);
 		void									setDescriptors(Descriptors *descriptors);
 
+		/* Temporary */
+		int									createTemporary(std::string const & filename);
+		int									readTemporary(std::string const & filename, std::string &packet);
+		int									appendTemporary(std::string const & filename, std::string packet);
+		int									eventTemporary(std::string const & filename, short event);
+		int									displayTemporary(std::string const & filename);
+		ssize_t								sizeTemporary(std::string const & filename);
+		int									resetCursorTemporary(std::string const & filename);
+		int									closeTemporary(std::string const & filename);
+		void									parseRequest(void);
+
 		/* Methods */
 		void									execute(void);
 
 		void									append(std::string value);
 		void									displayAllLocations(void);
-		Config::configuration_struct				&selectServer(void);
-		Config::location_type					selectLocation(Config::configuration_struct &server);
-		bool									isCgi(Config::configuration_struct server);
+		Config::configuration_type				selectServer(void);
+		Config::location_type					selectLocation(Config::configuration_type server);
+		bool									isCgi(Config::configuration_type server);
 
 	private:
 		std::string							_method;
 		std::string							_version;
 		std::map<std::string, std::string>			_header;
-		std::string							_body;
 		int									_status;
 		std::string							_path;
 		std::string							_port;
 		std::string							_host;
 		std::string							_temp;
 		std::string							_current;
-		Config								_config;
+		Config								*_config;
 		Temporary								_temporary;
 		int									_encoding;
 		ssize_t								_content_length;
@@ -82,17 +88,9 @@ class Request {
 		int									_timeout;
 		int									_end;
 
-
-		/* Temporary */
-		int									createTemporary(std::string const & filename);
-		int									readTemporary(std::string const & filename, std::string &packet);
-		int									appendTemporary(std::string const & filename, std::string packet);
-		int									displayTemporary(std::string const & filename);
-		ssize_t								sizeTemporary(std::string const & filename);
-		int									resetCursorTemporary(std::string const & filename);
-		int									closeTemporary(std::string const & filename);
-		void									parseRequest(void);
-
+		Request(void);
+		Request(Request const & src);
+		Request	&operator=(Request const &rhs);
 
 		int									firstLineParsing(void);
 		std::string							getNextLine(std::string str, size_t *i);
@@ -100,12 +98,11 @@ class Request {
 		int									checkMethod(std::string & source, std::string & dst);
 		int									checkPath(std::string & source, std::string & dst);
 		int									checkVersion(std::string & source, std::string & dst);
-		void									checkBody(Config::configuration_struct &server);
+		void									checkBody(Config::configuration_type server);
 		int									checkHeaders(void);
 		int									checkHeader(std::string source, std::string & key, std::string & value);
-		void									checkPort();
-		void									checkTimeout();
-		void									request_clear();
+		void									checkPort(void);
+		void									checkTimeout(void);
 		bool									checkMethodBylocation(std::vector<int> methosds_type);
 		int									convertMethodToValue(std::string method);
 };

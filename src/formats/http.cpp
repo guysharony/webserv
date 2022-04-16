@@ -60,3 +60,17 @@ int		isHttpMethod(std::string value, int & method)
 
 	return (0);
 }
+
+std::string 	getDate(std::string format)
+{
+	struct timeval 	tmp;
+	struct tm 		*timeinfo;
+	char				buffer[80];
+
+	gettimeofday(&tmp, NULL);
+	timeinfo = localtime(&tmp.tv_sec);
+
+	strftime(buffer, 80, format.c_str(), timeinfo);
+
+	return (std::string(buffer));
+}

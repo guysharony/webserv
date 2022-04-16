@@ -11,13 +11,11 @@
 # include <netinet/in.h> // sockaddr_in, inet_addr
 # include <arpa/inet.h>	// htons, inet_addr
 
-# include "../request/request.hpp"
+# include "../response/response.hpp"
 
 class Client {
 	public:
-		Client(Descriptors *descriptors, int socket_fd);
-		Client(Client const &src);
-		Client				&operator=(Client const &rhs);
+		Client(Config *config, Descriptors *descriptors, int socket_fd);
 		~Client();
 
 		bool					operator==(Client const &rhs);
@@ -42,71 +40,31 @@ class Client {
 		void					setSocketFd(int socket_fd);
 		void					setServerAddr(std::string const &addr);
 		void					setServerPort(int port);
-		void					setRequest(Config &config);
 		void					setEvent(int event);
 		void					setClose(bool value);
 
+		int					readTemporary(std::string & packet);
 		void					appendRequest(std::string packet);
-		int					createTemporary(std::string const & filename);
-		int					readTemporary(std::string const & filename, std::string &packet);
-		int					appendTemporary(std::string const & filename, std::string packet);
-		int					displayTemporary(std::string const & filename);
-		int					resetCursorTemporary(std::string const & filename);
-		int					closeTemporary(std::string const & filename);
-		void					pushResponse(std::string const & value);
-		int					popResponse(std::string & packet);
+		void					closeResponse(void);
+
 		int					prepareResponse(void);
 		int					execute(void);
 
-		/* request line */
-		struct 								request_line_struct
-		{
-			int								method;
-			std::string						target;
-			std::string						version;
-		};
-		
-		typedef	request_line_struct				request_line_type;
-
-
-		/* request headers */
-		struct 								request_headers_struct
-		{
-			std::string						host;
-			std::string						connection;
-			std::string						accept;
-			std::string						accept_encoding;
-			std::string						accept_language;
-			std::map<std::string, std::string>		custom;
-		};
-		
-		typedef	request_headers_struct			request_headers_type;
-
 	private:
-		Client(void);
-
 		std::string				_client_addr;	// The IP address of the client
 		int						_client_port;	// The port of the server which is connected to the client (the one created by accept, not the one on which the server is listening)
 		int						_socket_fd;	// The socket which is used to communicate between client and server
 		std::string				_server_addr;	// The IP address of the server
 		int						_server_port;	// The port of the server FROM which the client connected (the one on which the server is listening)
-		Request					_request; // All of the request/response pairs associated with this client
-		int						_event;
-		int						_encoding;
-		ssize_t					_content_length;
-		ssize_t					_body_size;
-		ssize_t					_chunk_size;
-		int						_status;
-		int						_connection;
-		bool						_chunked;
-		request_line_type			_request_line;
-		request_headers_type		_request_headers;
-		std::string				_temp;
-		std::string				_current;
-		Temporary					_temporary;
-		std::queue<std::string>		_response;
-		int						_end;
-		bool						_close;
+		Request					_request;		// All of the request/response pairs associated with this client
+		Response					_response;
+
+		Client(void);
+		Client(Client const &src);
+		Client					&operator=(Client const &rhs);
+
+		std::string				getStatusColor(void);
+		void						log(void);
 };
 
 #endif

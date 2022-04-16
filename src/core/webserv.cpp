@@ -103,7 +103,7 @@ bool			Webserv::handleServer(void) {
 	if (this->context.poll->revents & POLLIN) {
 		if ((fd = this->sockets.accept(this->context.poll->fd)) > 0) {
 			Message::debug("Adding client\n");
-			this->_clients.push_back(new Client(&this->descriptors, fd));
+			this->_clients.push_back(new Client(&this->config, &this->descriptors, fd));
 			return true;
 		}
 	}
@@ -128,14 +128,13 @@ bool			Webserv::handleClient(void) {
 		if (this->context.poll->revents & POLLOUT) {
 			std::string packet;
 
-			if ((*this->context.client)->popResponse(packet) > 0) {
+			if ((*this->context.client)->readTemporary(packet) > 0) {
 				this->clientSend(packet);
 				return false;
 			}
 
 			this->context.poll->events = POLLIN;
-			(*this->context.client)->setEvent(NONE);
-			(*this->context.client)->closeTemporary("response");
+			(*this->context.client)->closeResponse();
 		}
 	}
 

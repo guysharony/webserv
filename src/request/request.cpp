@@ -1,78 +1,34 @@
 #include "request.hpp"
 
-Request::Request(void) {
-	this->_method = "";
-	this->_host = "";
-	this->_temp = "";
-	this->_path = "";
-	this->_version = "";
-	this->_body = "";
-	this->_current = "";
-	this->_port = "80";
-	this->_timeout = 120;
-	this->_header.clear();
-	this->_end = 0;
-	this->_status = STATUS_OK;
-}
-
-Request::Request(Request const &src)
-{ *this = src; }
-
-Request::Request(Config& conf) {
-	this->_method = "";
-	this->_host = "";
-	this->_temp = "";
-	this->_path = "";
-	this->_version = "";
-	this->_body = "";
-	this->_current = "";
-	this->_port = "80";
-	this->_timeout = 120;
-	this->_header.clear();
-	this->_status = STATUS_OK;
-	this->_end = 0;
-	this->_config = conf;
-}
-
-Request	&Request::operator=(Request const &rhs) {
-	if (this != &rhs)
-	{
-		this->_body = rhs._body;
-		this->_port = rhs._port;
-		this->_host = rhs._host;
-		this->_temp = rhs._temp;
-		this->_header = rhs._header;
-		this->_method = rhs._method;
-		this->_path = rhs._path;
-		this->_status = rhs._status;
-		this->_current = rhs._current;
-		this->_version = rhs._version;
-		this->_timeout = rhs._timeout;
-		this->_end = rhs._end;
-		this->_config = rhs._config;
-	}
-
-	return (*this);
-}
-
-void		Request::request_clear(void)
+Request::Request(Config *config, Descriptors *descriptors)
+:
+	_method(""),
+	_version(""),
+	_status(STATUS_OK),
+	_path(""),
+	_port("80"),
+	_host(""),
+	_temp(""),
+	_current(""),
+	_config(config),
+	_temporary(descriptors),
+	_encoding(NONE),
+	_content_length(-1),
+	_body_size(-1),
+	_chunk_size(-1),
+	_close(0),
+	_connection(KEEP_ALIVE),
+	_chunked(false),
+	_event(NONE),
+	_timeout(120),
+	_end(0)
 {
-	this->_method = "";
-	this->_path = "";
-	this->_host = "";
-	this->_temp = "";
-	this->_version = "";
-	this->_body = "";
-	this->_port = "80";
-	this->_current = "";
-	this->_timeout = 120;
-	this->_status = STATUS_OK;
-	this->_end = 0;
 	this->_header.clear();
+	this->createTemporary("request");
 }
 
 Request::~Request()
-{ request_clear(); }
+{ this->_header.clear(); }
 
 
 /* Getters */
@@ -96,9 +52,6 @@ int			Request::getTimeout(void)
 
 const std::map<std::string, std::string>	&Request::getHeader(void) const
 { return (this->_header); }
-
-std::string	Request::getBody(void)
-{ return (this->_body); }
 
 int			Request::getStatus(void)
 { return (this->_status); }
@@ -161,9 +114,6 @@ void			Request::setEnd(int value)
 
 void			Request::setConnection(int connection)
 { this->_connection = connection; }
-
-void			Request::setDescriptors(Descriptors *descriptors)
-{ this->_temporary.setDescriptors(descriptors); }
 
 /* Methods */
 void			Request::append(std::string packet)
@@ -260,7 +210,7 @@ size_t		Request::headerParsing(std::string request_buffer)
 */
 
 void			Request::execute(void) {
-	Config::configuration_struct server;
+	Config::configuration_type server;
 
 	this->parseRequest();
 
@@ -276,12 +226,14 @@ void			Request::execute(void) {
 
 		if (this->getStatus() < STATUS_BAD_REQUEST) {
 			try {
-				Config::location_type loc = selectLocation(server);
-				if (loc != server.locations.end()) {
-					std::cout << YELLOW << "location = " << selectLocation(server)->location << RESET << std::endl;
-				}
-			}
-			catch(const Config::LocationNotFoundException& e) {
+				#ifdef DEBUG
+					Config::location_type loc = selectLocation(server);
+
+					if (loc != server->locations.end()) {
+						std::cout << YELLOW << "location = " << selectLocation(server)->location << RESET << std::endl;
+					}
+				#endif
+			} catch(const Config::LocationNotFoundException& e) {
 					this->setStatus(STATUS_NOT_FOUND);
 					std::cerr << RED << "location not found" << RESET << std::endl;
 			}
@@ -299,7 +251,7 @@ void			Request::parseRequest(void) {
 			this->_end = 0;
 			this->_encoding = NONE;
 			this->_content_length = -1;
-			this->_status = 0;
+			this->_status = STATUS_OK;
 			this->_chunk_size = -1;
 
 			if (!this->firstLineParsing()) {
@@ -307,7 +259,7 @@ void			Request::parseRequest(void) {
 				return;
 			}
 		} else if (this->getEvent() == EVT_REQUEST_HEADERS) {
-			if (this->_current.length() == 0) {
+			if (!this->_current.length()) {
 				checkPort();
 				checkTimeout();
 				if (this->_host.empty()) {
@@ -392,7 +344,7 @@ void			Request::parseRequest(void) {
 				}
 
 				Message::debug("LENGTH BODY [" + toString(this->_body_size) + "] - [" + this->_current + "]\n");
-				this->_temporary.setEvents("request", POLLOUT);
+				this->eventTemporary("request", POLLOUT);
 
 				if (this->_body_size == 0) {
 					Message::debug("FINISHED\n");
@@ -480,6 +432,9 @@ void			Request::checkVersion(void) {
 /* Temporary */
 int			Request::createTemporary(std::string const & filename)
 { return this->_temporary.create(filename); }
+
+int			Request::eventTemporary(std::string const & filename, short event)
+{ return this->_temporary.setEvents(filename, event); }
 
 int			Request::appendTemporary(std::string const & filename, std::string packet)
 {
@@ -647,55 +602,55 @@ int			Request::checkHeader(std::string source, std::string & key, std::string & 
 }
 
 void		Request::displayAllLocations(void) {
-	for (Config::configuration_type it = this->_config.configuration.begin(); it != this->_config.configuration.end(); it++) {
+	for (Config::configuration_type it = this->_config->configuration.begin(); it != this->_config->configuration.end(); it++) {
 		std::cout << it->server_name << std::endl;
 
-		for (Config::location_type it_locations = it->locations.begin(); it_locations != it->locations.end(); it_locations++){
+		for (Config::location_type it_locations = it->locations.begin(); it_locations != it->locations.end(); it_locations++) {
 			std::cout << it_locations->location << std::endl;
 		}
 	}
 }
 
-Config::configuration_struct &Request::selectServer(void) {
+Config::configuration_type Request::selectServer(void) {
 	Config::configuration_type it;
-	Config::configuration_type default_server = this->_config.configuration.end();
+	Config::configuration_type default_server = this->_config->configuration.end();
 
-	for (it = this->_config.configuration.begin(); it != this->_config.configuration.end(); it++) {
+	for (it = this->_config->configuration.begin(); it != this->_config->configuration.end(); it++) {
 		for (Config::listen_type::iterator it2 = it->listen.begin(); it2 != it->listen.end(); it2++) {
 			for (Config::ports_type::iterator it3 = it2->second.begin(); it3 != it2->second.end(); it3++) {
 				if (!(*it3).compare(this->_port))
 				{
-					if (default_server == this->_config.configuration.end())
+					if (default_server == this->_config->configuration.end())
 						default_server = it;
 
 					if (!it->server_name.compare(it2->first))
-						return (*it);
+						return it;
 				}
 			}
 		}
 	}
 
-	if (default_server == this->_config.configuration.end())
+	if (default_server == this->_config->configuration.end())
 		throw Config::ServerNotFoundException();
 
-	return (*default_server);
+	return default_server;
 }
 
 bool					Request::checkMethodBylocation(std::vector<int> methods_type)
 { return std::find(methods_type.begin(), methods_type.end(), convertMethodToValue(this->_method)) != methods_type.end(); }
 
-Config::location_type	Request::selectLocation(Config::configuration_struct &server) {
+Config::location_type	Request::selectLocation(Config::configuration_type server) {
 	Config::location_type	it_location;
-	Config::location_type	ret = server.locations.end();
+	Config::location_type	ret = server->locations.end();
 	bool  				firstTime = true;
 
 	std::string tmp = this->_path;
 	if (this->_path[this->_path.size() - 1] != '/')
 		tmp = this->_path + "/";
 
-	for (it_location = server.locations.begin(); it_location != server.locations.end(); it_location++) {
+	for (it_location = server->locations.begin(); it_location != server->locations.end(); it_location++) {
 		if ((it_location->location == "/" || tmp.find(it_location->location + "/") == 0) && (firstTime || it_location->location.size() > ret->location.size())
-			&& checkMethodBylocation(it_location->methods)){
+			&& checkMethodBylocation(it_location->methods)) {
 			ret = it_location;
 			firstTime = false;
 		}
@@ -707,10 +662,13 @@ Config::location_type	Request::selectLocation(Config::configuration_struct &serv
 	return (ret);
 }
 
-void					Request::checkBody(Config::configuration_struct &server) {
-	if (this->sizeTemporary("request") > static_cast<ssize_t>(server.client_max_body_size)) {
+void					Request::checkBody(Config::configuration_type server) {
+	ssize_t			max_size = static_cast<ssize_t>(server->client_max_body_size);
+	ssize_t			current_size = this->sizeTemporary("request");
+
+	if (max_size >= 0 && current_size > max_size) {
 		this->setStatus(STATUS_REQUEST_ENTITY_TOO_LARGE);
-		std::cerr << RED << "body too large !!" << std::endl;
+		std::cerr << RED << "body too large !! [" << current_size << "] [" << max_size << "]" << std::endl;
 	}
 }
 
@@ -728,11 +686,11 @@ int					Request::convertMethodToValue(std::string method) {
 	return 0;
 }
 
-bool					Request::isCgi(Config::configuration_struct server) {
+bool					Request::isCgi(Config::configuration_type server) {
 	size_t i;
 
 	if (this->_method.compare("POST") == 0){
-		if (server.cgi_path.size() > 0)
+		if (server->cgi_path.size() > 0)
 			return true;
 		else
 		{
@@ -746,13 +704,13 @@ bool					Request::isCgi(Config::configuration_struct server) {
 		return false;
 
 	std::string ext = this->_path.substr(i,this-> _path.size() - 1);
-	std::vector<std::string>::iterator it = server.cgi_extentions.begin();
-	while (it != server.cgi_extentions.end()) {
+	std::vector<std::string>::iterator it = server->cgi_extentions.begin();
+	while (it != server->cgi_extentions.end()) {
 		if((*it).compare(ext) == 0)
 			break;
 		
 		it++;
 	}
 
-	return (it != server.cgi_extentions.end() && isFiley(server.root + _path) == 1);
+	return (it != server->cgi_extentions.end() && isFiley(server->root + this->_path) == 1);
 }

@@ -7,7 +7,6 @@
 class Temporary
 {
 	public:
-		Temporary();
 		Temporary(Descriptors *descriptors);
 		~Temporary();
 
@@ -29,6 +28,7 @@ class Temporary
 		tmpfiles_type					_tmpfiles;
 		Descriptors					*_descriptors;
 
+		Temporary();
 		Temporary(Temporary const & src);
 		Temporary	&operator=(Temporary const &other);
 };

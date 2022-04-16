@@ -1,13 +1,8 @@
 #include "temporary.hpp"
 
-Temporary::Temporary(void)
-{ srand(time(NULL)); }
-
 Temporary::Temporary(Descriptors *descriptors)
 : _descriptors(descriptors)
-{
-	srand(time(NULL));
-}
+{ srand(time(NULL)); }
 
 Temporary::~Temporary()
 {
