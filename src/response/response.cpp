@@ -1,18 +1,14 @@
 #include "response.hpp"
 
-Response::Response(void)
-{ }
-
-Response::~Response(void)
-{
-	this->_request->closeTemporary("body");
-	this->_request->closeTemporary("response");
-}
-
 Response::Response(Request *request) {
 	this->_request = request;
 	this->_request->createTemporary("body");
 	this->_request->createTemporary("response");
+}
+
+Response::~Response() {
+	this->_request->closeTemporary("body");
+	this->_request->closeTemporary("response");
 }
 
 std::string			Response::getHost(void)
@@ -26,6 +22,7 @@ std::string			Response::getMethod(void)
 
 std::string			Response::getPath(void)
 { return this->_request->getPath(); }
+
 
 void					Response::execute(void) {
 	this->_status = this->_request->getStatus();
@@ -48,6 +45,12 @@ void					Response::execute(void) {
 			this->_status = STATUS_NOT_FOUND;
 		}
 	}
+
+	if (this->_status < STATUS_BAD_REQUEST)
+		checkPath();
+
+	if (this->_request->getMethod().compare("DELETE") == 0 && this->_status == STATUS_OK)
+		deleteMethod();
 }
 
 std::string			Response::findDate(void) {
@@ -59,7 +62,9 @@ std::string			Response::findDate(void) {
 	return (std::string(buffer));
 }
 
-void					Response::createHeaders(int body_length) {
+void					Response::createHeaders(void) {
+	size_t	body_length = this->_request->sizeTemporary("body");
+
 	if (this->_status < STATUS_INTERNAL_SERVER_ERROR)
 		this->_headers["server"] = this->_server->server_name;
 
@@ -90,7 +95,7 @@ std::string			Response::findContentType(void)
 }
 
 void		Response::createBody(void) {
-	Config::location_type loc;
+	Config::location_type	loc;
 
 	if (this->_status == STATUS_NOT_FOUND)
 		this->_request->appendTemporary("body", createErrorPages(this->_server->error_page[STATUS_NOT_FOUND]));
@@ -179,16 +184,6 @@ std::string	Response::getStatusMessage(void) {
 }
 
 void		Response::createResponse(void) {
-	if (this->_status < STATUS_BAD_REQUEST)
-		checkPath();
-
-	if (this->_request->getMethod().compare("DELETE") == 0 && this->_status == STATUS_OK)
-		deleteMethod();
-
-	createBody();
-
-	createHeaders(this->_request->sizeTemporary("body"));
-
 	this->_request->appendTemporary("response", "HTTP/1.1 " + intToStr(this->_status) + " " + getStatusMessage() + "\r\n");
 	for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); it++){
 		this->_request->appendTemporary("response", it->first);
@@ -322,7 +317,7 @@ void		Response::deleteMethod(void) {
 		this->_status = STATUS_NOT_FOUND;
 }
 
-void		Response::checkPath(void) {
+void			Response::checkPath(void) {
 	std::string	p = getPathAfterReplacingLocationByRoot();
 	char			actualPath[PATH_MAX + 1];
 
@@ -334,7 +329,7 @@ void		Response::checkPath(void) {
 	}
 }
 
-std::string	Response::createErrorPages(std::string path)	{
+std::string	Response::createErrorPages(std::string path) {
 	std::string html = readHtmlFile(path);
 
 	if (html.compare("") == 0) {

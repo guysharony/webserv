@@ -115,6 +115,8 @@ int				Client::readTemporary(std::string & packet)
 
 int				Client::prepareResponse(void) {
 	this->_response.execute();
+	this->_response.createBody();
+	this->_response.createHeaders();
 	this->_response.createResponse();
 
 	this->_request.setEnd(0);

@@ -14,8 +14,6 @@
 class Response {
 
 	public:
-		Response(void);
-		Response(Response const & src);
 		Response(Request *request);
 		~Response();
 
@@ -31,6 +29,8 @@ class Response {
 		/* Methods */
 		void							execute(void);
 		void							createResponse(void);
+		void							createHeaders(void);
+		void							createBody(void);
 		//void						createCgiResponse(CgiParser p);
 
 	private:
@@ -42,6 +42,7 @@ class Response {
 		Config::location_type 			_location;
 		std::map<std::string, std::string> _headers;
 
+		Response(void);
 		Response						&operator=(const Response & src);
 
 		/* Getters */
@@ -50,8 +51,6 @@ class Response {
 		std::string					getPathAfterReplacingLocationByRoot(void);
 
 		/* Methods */
-		void							createHeaders(int body_length);
-		void							createBody(void);
 		std::string					createErrorPages(std::string path);
 
 		std::string					findDate(void);
