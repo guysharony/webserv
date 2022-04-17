@@ -6,6 +6,7 @@ Response::Response(Request *request, Descriptors *descriptors)
 	_cgi(NULL),
 	_cgi_parser(NULL),
 	_directory_list(),
+	_body_start(false),
 	_body_fd(-1),
 	_event(EVT_INITIALIZE),
 	_descriptors(descriptors)
@@ -133,31 +134,12 @@ int		Response::createBody(void) {
 	std::string			packet;
 
 	if (this->_request->isCgi(this->_server)) {
-		std::cout << "TEST 1" << std::endl;
-
-		if (!this->_cgi) {
-			std::cout << "TEST 2" << std::endl;
-			this->_cgi = new CGI("/usr/bin/php-cgi");
-
-			this->_body_fd = this->_cgi->launch_cgi(this->getLocation()->root + this->_request->getPath(), this->_request);
-
-			std::cout << "CGI FD [" << this->_body_fd << "]" << std::endl;
-
-			this->_descriptors->setDescriptor(this->_body_fd, POLLIN);
-			this->_descriptors->setDescriptorType(this->_body_fd, "cgi");
-
+		if (this->readCGI(packet) > 0) {
+			this->_request->appendTemporary("body", packet);
 			return 0;
 		}
-
-		std::cout << "TEST 3 [" << this->_body_fd << "]" << std::endl;
-
-		if (this->read(packet) > 0) {
-			std::cout << "TEST 4" << std::endl;
-			std::cout << "CGI RESULT 1 [" << packet << "]" << std::endl;
-			return 0;
-		}
-
-		std::cout << "CGI RESULT 2 [" << packet << "]" << std::endl;
+		std::cout << "__ CGI END __" << std::endl;
+		this->_request->displayTemporary("body");
 	} else {
 		if (this->_status == STATUS_NOT_FOUND)
 		{
@@ -425,31 +407,27 @@ std::string	Response::getPathAfterReplacingLocationByRoot(void) {
 	return "";
 }
 
-/*
-void			Response::createCgiResponse(CgiParser p) {
-	this->_status = p.getStatusMessage();
-	create_headers(p.getBody().size());
-	//append cgi headers if does not exist in _headers or replace the old value by the new one
-	std::map<std::string, std::string> header = p.getHeaders();
-		for (std::map<std::string, std::string>::iterator itCgi = header.begin(); itCgi != header.end(); itCgi++){
-		this->_headers[itCgi->first] = itCgi->second;
+int			Response::readCGI(std::string & packet) {
+	if (!this->_cgi) {
+		this->_cgi = new CGI("/usr/bin/php-cgi");
+
+		this->_body_fd = this->_cgi->launch_cgi(this->getLocation()->root + this->_request->getPath(), this->_request);
+
+		this->_descriptors->setDescriptor(this->_body_fd, POLLIN);
+		this->_descriptors->setDescriptorType(this->_body_fd, "cgi");
+
+		return 1;
 	}
-	this->_response.append("HTTP/1.1 ");
-	this->_response.append(intToStr(p.getStatusMessage()));
-	this->_response.append(" ");
-	this->_response.append(getStat());
-	this->_response.append(CRLF);
-	for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); it++){
-		this->_response.append(it->first);
-		this->_response.append(" : ");
-		this->_response.append(it->second);
-		this->_response.append(CRLF);
+
+	int res = this->read(packet);
+
+	if (!res) {
+		::close(this->_body_fd);
+		this->_descriptors->deleteDescriptor(this->_body_fd);
 	}
-	this->_response.append(D_CRLF);
-	this->_response.append(p.getBody());
-	this->_response.append(CRLF);
+
+	return res;
 }
-*/
 
 void			Response::deleteMethod(void) {
 	std::string p = this->getPathAfterReplacingLocationByRoot();
@@ -537,17 +515,19 @@ int					Response::read(std::string & value)
 	memset(buffer, 0, BUFFER_SIZE);
 
 	if ((it = this->getPoll()) == this->_descriptors->descriptors.end()) {
-		std::cout << "READ [-1]" << std::endl;
 		return -1;
 	}
 
 	value.clear();
 
+	if (!(it->revents & POLLIN))
+		return !this->_body_start;
+
 	pos = ::read(this->_body_fd, buffer, BUFFER_SIZE - 1);
 
-	std::cout << "READ [" << this->_body_fd << "]" << std::endl;
-
 	value = std::string(buffer);
+
+	this->_body_start = true;
 
 	return (pos > 0 && value.length() > 0);
 }

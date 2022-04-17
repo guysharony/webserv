@@ -39,7 +39,7 @@ class Response {
 		int							execute(void);
 		void							createHeaders(void);
 		int							createBody(void);
-		//void						createCgiResponse(CgiParser p);
+		int							readCGI(std::string & packet);
 
 		int							readResponse(std::string & packet);
 
@@ -51,6 +51,7 @@ class Response {
 		std::string					_path;
 		std::vector<std::string>			_directory_list;
 		DIR							*dir;
+		bool							_body_start;
 		int							_body_fd;
 		int							_status;
 		int							_event;
