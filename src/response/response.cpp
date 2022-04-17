@@ -135,11 +135,14 @@ int		Response::createBody(void) {
 
 	if (this->_request->isCgi(this->_server)) {
 		if (this->readCGI(packet) > 0) {
-			this->_request->appendTemporary("body", packet);
+			this->_cgi_parser->append(packet);
+			this->_cgi_parser->parseCgiResponse();
 			return 0;
 		}
-		std::cout << "__ CGI END __" << std::endl;
-		this->_request->displayTemporary("body");
+
+		this->_status = this->_cgi_parser->getStatus();
+		this->_headers = this->_cgi_parser->getHeaders();
+
 	} else {
 		if (this->_status == STATUS_NOT_FOUND)
 		{
@@ -410,6 +413,7 @@ std::string	Response::getPathAfterReplacingLocationByRoot(void) {
 int			Response::readCGI(std::string & packet) {
 	if (!this->_cgi) {
 		this->_cgi = new CGI("/usr/bin/php-cgi");
+		this->_cgi_parser = new CgiParser(this->_request);
 
 		this->_body_fd = this->_cgi->launch_cgi(this->getLocation()->root + this->_request->getPath(), this->_request);
 

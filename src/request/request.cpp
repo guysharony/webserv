@@ -344,7 +344,7 @@ void			Request::parseRequest(void) {
 				}
 
 				Message::debug("LENGTH BODY [" + toString(this->_body_size) + "] - [" + this->_current + "]\n");
-				this->eventTemporary("request", POLLOUT);
+				this->appendTemporary("request", this->_current);
 
 				if (this->_body_size == 0) {
 					Message::debug("FINISHED\n");
