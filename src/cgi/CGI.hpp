@@ -1,20 +1,20 @@
 #ifndef C_G_I_HEADER_HPP
-#define C_G_I_HEADER_HPP
+# define C_G_I_HEADER_HPP
 
-#include <string>
-#include <unistd.h> // pipe, fork
-#include <fcntl.h> // O_NONBLOCK
-#include <sys/types.h> // fork
-#include <cstring> // strdup
-#include <cstdlib> // setenv
-#include <cerrno> // errno
-#include <map>
+# include <string>
+# include <unistd.h> // pipe, fork
+# include <fcntl.h> // O_NONBLOCK
+# include <sys/types.h> // fork
+# include <cstring> // strdup
+# include <cstdlib> // setenv
+# include <cerrno> // errno
+# include <map>
 
-#include "../../include/constants.hpp"
-#include "../request/request.hpp"
-#include "../core/message.hpp"
+# include "../../include/constants.hpp"
+# include "../request/request.hpp"
+# include "../core/message.hpp"
 
-#define CGI_DEFAULT_PATH "/usr/bin/php-cgi"
+# define CGI_DEFAULT_PATH "/usr/bin/php-cgi"
 
 class CGI {
 	public:

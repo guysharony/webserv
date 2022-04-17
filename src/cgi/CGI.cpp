@@ -1,23 +1,21 @@
 #include "CGI.hpp"
 
-CGI::CGI(void) : _cgi_path(CGI_DEFAULT_PATH)
-{
-}
+CGI::CGI(void)
+: _cgi_path(CGI_DEFAULT_PATH)
+{ }
 
-CGI::CGI(std::string const &cgi_path) : _cgi_path(cgi_path)
-{
-}
+CGI::CGI(std::string const &cgi_path)
+: _cgi_path(cgi_path)
+{ }
 
-CGI::CGI(CGI const & src) : _cgi_path(src._cgi_path)
-{
-}
+CGI::CGI(CGI const & src)
+: _cgi_path(src._cgi_path)
+{ }
 
 CGI::~CGI(void)
-{
-}
+{ }
 
-CGI &CGI::operator=(CGI const & rhs)
-{
+CGI &CGI::operator=(CGI const & rhs) {
 	if (this != &rhs)
 	{
 		this->_cgi_path = rhs._cgi_path;
@@ -25,8 +23,7 @@ CGI &CGI::operator=(CGI const & rhs)
 	return (*this);
 }
 
-int	CGI::launch_cgi(std::string const & filename, Request *request)
-{
+int	CGI::launch_cgi(std::string const & filename, Request *request) {
 	int fd[2];
 	pid_t pid;
 	//int	tmp_file_fd;
@@ -79,7 +76,7 @@ int	CGI::launch_cgi(std::string const & filename, Request *request)
 		setenv("SERVER_NAME", server->server_name.c_str(), true);
 		setenv("GATEWAY_INTERFACE", "CGI/1.1", true);						// *** This value should be confirmed
 		setenv("SERVER_PROTOCOL", "HTTP/1.1", true);
-		setenv("SERVER_PORT", "8081", true);
+		setenv("SERVER_PORT", request->getPort().c_str(), true);
 		setenv("PATH_INFO", filename.c_str(), true);
 		setenv("PATH_TRANSLATED", filename.c_str(), true);
 		setenv("REQUEST_METHOD", request->getMethod().c_str(), true);

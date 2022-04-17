@@ -420,7 +420,7 @@ std::string	Response::getPathAfterReplacingLocationByRoot(void) {
 
 int			Response::readCGI(std::string & packet) {
 	if (this->_cgi == NULL) {
-		this->_cgi = new CGI("/usr/bin/php-cgi");
+		this->_cgi = new CGI();
 		this->_cgi_parser = new CgiParser(this->_request);
 
 		this->_body_fd = this->_cgi->launch_cgi(this->getPathAfterReplacingLocationByRoot(), this->_request);
