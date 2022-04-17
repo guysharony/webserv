@@ -3,6 +3,8 @@
 Response::Response(Request *request, Descriptors *descriptors)
 :
 	_request(request),
+	_cgi(NULL),
+	_cgi_parser(NULL),
 	_directory_list(),
 	_body_fd(-1),
 	_event(EVT_INITIALIZE),
@@ -74,11 +76,13 @@ void					Response::initialize(void) {
 		}
 	}
 
-	if (this->_status < STATUS_BAD_REQUEST)
-		checkPath();
+	if (!this->_request->isCgi(this->_server)) {
+		if (this->_status < STATUS_BAD_REQUEST)
+			checkPath();
 
-	if (this->_request->getMethod().compare("DELETE") == 0 && this->_status == STATUS_OK)
-		deleteMethod();
+		if (this->_request->getMethod().compare("DELETE") == 0 && this->_status == STATUS_OK)
+			deleteMethod();
+	}
 }
 
 std::string			Response::findDate(void) {
@@ -128,102 +132,130 @@ int		Response::createBody(void) {
 	Config::location_type	location;
 	std::string			packet;
 
-	if (this->_status == STATUS_NOT_FOUND)
-	{
-		if ((createErrorPages(this->_server->error_page[STATUS_NOT_FOUND], packet) > 0) || (this->_body_fd <= 0)) {
-			this->_request->appendTemporary("body", packet);
-			return (this->_body_fd <= 0);
-		}
-	}
-	else if (this->_status == STATUS_NOT_ALLOWED)
-	{
-		if ((createErrorPages(this->_server->error_page[STATUS_NOT_ALLOWED], packet) > 0) || (this->_body_fd <= 0)) {
-			this->_request->appendTemporary("body", packet);
-			return (this->_body_fd <= 0);
-		}
-	}
-	else if (this->_status == STATUS_INTERNAL_SERVER_ERROR)
-	{
-		if ((createErrorPages(this->_server->error_page[STATUS_INTERNAL_SERVER_ERROR], packet) > 0) || (this->_body_fd <= 0)) {
-			this->_request->appendTemporary("body", packet);
-			return (this->_body_fd <= 0);
-		}
-	}
-	else if (this->_status == STATUS_BAD_REQUEST)
-	{
-		if ((createErrorPages(this->_server->error_page[STATUS_BAD_REQUEST], packet) > 0) || (this->_body_fd <= 0)) {
-			this->_request->appendTemporary("body", packet);
-			return (this->_body_fd <= 0);
-		}
-	}
-	else if (this->_status == STATUS_REQUEST_ENTITY_TOO_LARGE)
-	{
-		if ((createErrorPages(this->_server->error_page[STATUS_REQUEST_ENTITY_TOO_LARGE], packet) > 0) || (this->_body_fd <= 0)) {
-			this->_request->appendTemporary("body", packet);
-			return (this->_body_fd <= 0);
-		}
-	}
-	else if (this->_status == STATUS_FORBIDDEN)
-	{
-		if ((createErrorPages(this->_server->error_page[STATUS_FORBIDDEN], packet) > 0) || (this->_body_fd <= 0)) {
-			this->_request->appendTemporary("body", packet);
-			return (this->_body_fd <= 0);
-		}
-	}
-	else if (this->_status == STATUS_OK)
-	{
-		try {
-			location = this->_request->selectLocation(this->_server);
-		} catch(const Config::LocationNotFoundException& e) {
-			this->_status = STATUS_NOT_FOUND;
+	if (this->_request->isCgi(this->_server)) {
+		std::cout << "TEST 1" << std::endl;
+
+		if (!this->_cgi) {
+			std::cout << "TEST 2" << std::endl;
+			this->_cgi = new CGI("/usr/bin/php-cgi");
+
+			this->_body_fd = this->_cgi->launch_cgi(this->getLocation()->root + this->_request->getPath(), this->_request);
+
+			std::cout << "CGI FD [" << this->_body_fd << "]" << std::endl;
+
+			this->_descriptors->setDescriptor(this->_body_fd, POLLIN);
+			this->_descriptors->setDescriptorType(this->_body_fd, "cgi");
+
 			return 0;
 		}
 
-		if (location->root.size() > 0)
+		std::cout << "TEST 3 [" << this->_body_fd << "]" << std::endl;
+
+		if (this->read(packet) > 0) {
+			std::cout << "TEST 4" << std::endl;
+			std::cout << "CGI RESULT 1 [" << packet << "]" << std::endl;
+			return 0;
+		}
+
+		std::cout << "CGI RESULT 2 [" << packet << "]" << std::endl;
+	} else {
+		if (this->_status == STATUS_NOT_FOUND)
 		{
-			std::string new_p = getPathAfterReplacingLocationByRoot();
-
-			if (isFiley(new_p) == 1)
-			{
-				if ((createErrorPages(new_p, packet) > 0) || (this->_body_fd <= 0)) {
-					this->_request->appendTemporary("body", packet);
-					return (this->_body_fd <= 0);
-				}
+			if ((createErrorPages(this->_server->error_page[STATUS_NOT_FOUND], packet) > 0) || (this->_body_fd <= 0)) {
+				this->_request->appendTemporary("body", packet);
+				return (this->_body_fd <= 0);
 			}
-			else if (isFiley(new_p) == 2)
-			{
-				std::vector<std::string>::iterator it;
-
-				for (it = location->index.begin() ; it != location->index.end() ; it++)
-				{
-					std::string path = location->root + "/" + (*it);
-					if (isFiley(path) == 1)
-					{
-						if ((createErrorPages(path, packet) > 0) || (this->_body_fd <= 0)) {
-							this->_request->appendTemporary("body", packet);
-							return (this->_body_fd <= 0);
-						}
-						break;
-					}
-				}
-
-				if (it == location->index.end() && this->_autoIndex) {
-					if (getListOfDirectories(new_p.c_str(), packet) > 0) {
-						this->_request->appendTemporary("body", packet);
-						return 0;
-					}
-					return 1;
-				}
+		}
+		else if (this->_status == STATUS_NOT_ALLOWED)
+		{
+			if ((createErrorPages(this->_server->error_page[STATUS_NOT_ALLOWED], packet) > 0) || (this->_body_fd <= 0)) {
+				this->_request->appendTemporary("body", packet);
+				return (this->_body_fd <= 0);
 			}
-			else
-			{
-				this->_status = STATUS_FORBIDDEN;
+		}
+		else if (this->_status == STATUS_INTERNAL_SERVER_ERROR)
+		{
+			if ((createErrorPages(this->_server->error_page[STATUS_INTERNAL_SERVER_ERROR], packet) > 0) || (this->_body_fd <= 0)) {
+				this->_request->appendTemporary("body", packet);
+				return (this->_body_fd <= 0);
+			}
+		}
+		else if (this->_status == STATUS_BAD_REQUEST)
+		{
+			if ((createErrorPages(this->_server->error_page[STATUS_BAD_REQUEST], packet) > 0) || (this->_body_fd <= 0)) {
+				this->_request->appendTemporary("body", packet);
+				return (this->_body_fd <= 0);
+			}
+		}
+		else if (this->_status == STATUS_REQUEST_ENTITY_TOO_LARGE)
+		{
+			if ((createErrorPages(this->_server->error_page[STATUS_REQUEST_ENTITY_TOO_LARGE], packet) > 0) || (this->_body_fd <= 0)) {
+				this->_request->appendTemporary("body", packet);
+				return (this->_body_fd <= 0);
+			}
+		}
+		else if (this->_status == STATUS_FORBIDDEN)
+		{
+			if ((createErrorPages(this->_server->error_page[STATUS_FORBIDDEN], packet) > 0) || (this->_body_fd <= 0)) {
+				this->_request->appendTemporary("body", packet);
+				return (this->_body_fd <= 0);
+			}
+		}
+		else if (this->_status == STATUS_OK)
+		{
+			try {
+				location = this->_request->selectLocation(this->_server);
+			} catch(const Config::LocationNotFoundException& e) {
+				this->_status = STATUS_NOT_FOUND;
 				return 0;
 			}
-		}
-		else {
-			this->_status = STATUS_NOT_FOUND;
-			return 0;
+
+			if (location->root.size() > 0)
+			{
+				std::string new_p = getPathAfterReplacingLocationByRoot();
+
+				if (isFiley(new_p) == 1)
+				{
+					if ((createErrorPages(new_p, packet) > 0) || (this->_body_fd <= 0)) {
+						this->_request->appendTemporary("body", packet);
+						return (this->_body_fd <= 0);
+					}
+				}
+				else if (isFiley(new_p) == 2)
+				{
+					std::vector<std::string>::iterator it;
+
+					for (it = location->index.begin() ; it != location->index.end() ; it++)
+					{
+						std::string path = location->root + "/" + (*it);
+						if (isFiley(path) == 1)
+						{
+							if ((createErrorPages(path, packet) > 0) || (this->_body_fd <= 0)) {
+								this->_request->appendTemporary("body", packet);
+								return (this->_body_fd <= 0);
+							}
+							break;
+						}
+					}
+
+					if (it == location->index.end() && this->_autoIndex) {
+						if (getListOfDirectories(new_p.c_str(), packet) > 0) {
+							this->_request->appendTemporary("body", packet);
+							return 0;
+						}
+						return 1;
+					}
+				}
+				else
+				{
+					this->_status = STATUS_FORBIDDEN;
+					return 0;
+				}
+			}
+			else {
+				this->_status = STATUS_NOT_FOUND;
+				return 0;
+			}
 		}
 	}
 
@@ -504,12 +536,16 @@ int					Response::read(std::string & value)
 
 	memset(buffer, 0, BUFFER_SIZE);
 
-	if ((it = this->getPoll()) == this->_descriptors->descriptors.end())
+	if ((it = this->getPoll()) == this->_descriptors->descriptors.end()) {
+		std::cout << "READ [-1]" << std::endl;
 		return -1;
+	}
 
 	value.clear();
 
 	pos = ::read(this->_body_fd, buffer, BUFFER_SIZE - 1);
+
+	std::cout << "READ [" << this->_body_fd << "]" << std::endl;
 
 	value = std::string(buffer);
 

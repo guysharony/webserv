@@ -10,7 +10,8 @@
 # include <sys/time.h>
 # include <unistd.h>
 # include "../request/request.hpp"
-// # include "../cgi/CgiParser.hpp"
+# include "../cgi/CgiParser.hpp"
+# include "../cgi/CGI.hpp"
 
 # define EVT_INITIALIZE			1
 # define EVT_CREATE_BODY			2
@@ -44,6 +45,8 @@ class Response {
 
 	private:
 		Request						*_request;
+		CGI							*_cgi;
+		CgiParser						*_cgi_parser;
 		Config::configuration_type		_server;
 		std::string					_path;
 		std::vector<std::string>			_directory_list;

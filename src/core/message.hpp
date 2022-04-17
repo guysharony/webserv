@@ -25,6 +25,13 @@ class Message
 			#endif
 		}
 
+		template <class T>
+		static void	debugln(T const & message)
+		{
+			debug(message);
+			debug("\n");
+		}
+
 		static void	bindError(std::string host, std::string port, int error);
 
 	private:
