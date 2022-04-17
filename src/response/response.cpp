@@ -423,7 +423,7 @@ int			Response::readCGI(std::string & packet) {
 		this->_cgi = new CGI("/usr/bin/php-cgi");
 		this->_cgi_parser = new CgiParser(this->_request);
 
-		this->_body_fd = this->_cgi->launch_cgi(this->getLocation()->root + this->_request->getPath(), this->_request);
+		this->_body_fd = this->_cgi->launch_cgi(this->getPathAfterReplacingLocationByRoot(), this->_request);
 
 		this->_descriptors->setDescriptor(this->_body_fd, POLLIN);
 		this->_descriptors->setDescriptorType(this->_body_fd, "cgi");
