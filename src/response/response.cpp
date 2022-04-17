@@ -14,7 +14,6 @@ Response::Response(Request *request, Descriptors *descriptors)
 
 Response::~Response() {
 	this->_request->closeTemporary("body");
-	this->_request->closeTemporary("response");
 }
 
 std::string			Response::getHost(void)
@@ -54,9 +53,9 @@ int					Response::execute(void) {
 
 void					Response::initialize(void) {
 	this->_body_fd = -1;
+	this->_body_start = false;
 	this->_status = this->_request->getStatus();
 	this->_request->createTemporary("body");
-	this->_request->createTemporary("response");
 
 	Config::location_type location;
 	if (this->_status < STATUS_BAD_REQUEST) {
@@ -142,6 +141,16 @@ int		Response::createBody(void) {
 
 		this->_status = this->_cgi_parser->getStatus();
 		this->_headers = this->_cgi_parser->getHeaders();
+
+		if (this->_cgi) {
+			delete (this->_cgi);
+			this->_cgi = NULL;
+		}
+	
+		if (this->_cgi_parser) {
+			delete (this->_cgi_parser);
+			this->_cgi_parser = NULL;
+		}
 
 	} else {
 		if (this->_status == STATUS_NOT_FOUND)
@@ -318,7 +327,6 @@ int		Response::readResponse(std::string & packet) {
 		packet = CRLF;
 		this->_event = EVT_INITIALIZE;
 		this->_request->closeTemporary("body");
-		this->_request->closeTemporary("response");
 		return 1;
 	}
 
@@ -411,7 +419,7 @@ std::string	Response::getPathAfterReplacingLocationByRoot(void) {
 }
 
 int			Response::readCGI(std::string & packet) {
-	if (!this->_cgi) {
+	if (this->_cgi == NULL) {
 		this->_cgi = new CGI("/usr/bin/php-cgi");
 		this->_cgi_parser = new CgiParser(this->_request);
 
@@ -426,6 +434,8 @@ int			Response::readCGI(std::string & packet) {
 	int res = this->read(packet);
 
 	if (!res) {
+		this->_body_fd = -1;
+		this->_body_start = false;
 		::close(this->_body_fd);
 		this->_descriptors->deleteDescriptor(this->_body_fd);
 	}
