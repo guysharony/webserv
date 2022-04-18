@@ -162,4 +162,4 @@ std::string		Client::getStatusColor(void) {
 }
 
 void				Client::log(void)
-{ std::cout << "\033[0;" << this->getStatusColor() << "m" << this->_response.getHost() << ":" << this->_response.getPort() << " -- [" << getDate("%d/%b/%G %T") << "] -- " << this->_response.getMethod() << " [" << this->_response.getPath() << "] " << this->_response.getStatus() << "\033[0m" << std::endl; }
+{ std::cout << "\033[0;" << this->getStatusColor() << "m" << this->_response.getHost() << ":" << this->_response.getPort() << " -- [" << getDate("%d/%b/%G %T") << "] -- " << this->_response.getMethod() << " [" << this->_response.getURI() << "] " << this->_response.getStatus() << "\033[0m" << std::endl; }

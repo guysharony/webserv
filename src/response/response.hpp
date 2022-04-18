@@ -33,6 +33,8 @@ class Response {
 		std::string					getStatusMessage(void);
 		std::string					getMethod(void);
 		std::string					getPath(void);
+		std::string					getParameters(void);
+		std::string					getURI(void);
 		Config::location_type			getLocation(void);
 
 		/* Methods */

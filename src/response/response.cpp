@@ -38,6 +38,12 @@ std::string			Response::getMethod(void)
 std::string			Response::getPath(void)
 { return this->_request->getPath(); }
 
+std::string			Response::getParameters(void)
+{ return this->_request->getParameters(); }
+
+std::string			Response::getURI(void)
+{ return this->_request->getURI(); }
+
 Config::location_type	Response::getLocation(void)
 { return(this->_location); }
 

@@ -41,6 +41,12 @@ std::string	Request::getVersion(void)
 std::string	Request::getPath(void)
 { return (this->_path); }
 
+std::string	Request::getParameters(void)
+{ return ((this->_parameters.length() > 0 && this->_parameters[0] == '?') ? this->_parameters.substr(1) : this->_parameters); }
+
+std::string	Request::getURI(void)
+{ return (this->_path + this->_parameters); }
+
 std::string	Request::getPort(void)
 { return (this->_port); }
 
@@ -361,6 +367,7 @@ std::ostream	&operator<<(std::ostream &os, Request &req) {
 
 	os << "Method : [" << req.getMethod() << "]" << std::endl;
 	os << "path : [" << req.getPath() << "]" << std::endl;
+	os << "parameters : [" << req.getParameters() << "]" << std::endl;
 	os << "port : [" << req.getPort() << "]" << std::endl;
 	os << "host : [" << req.getHost() << "]" << std::endl;
 	os << "version : [" << req.getVersion() << "]" << std::endl;
@@ -467,6 +474,7 @@ int			Request::firstLineParsing(void)
 {
 	std::string	method;
 	std::string	path;
+	std::string	parameters;
 	std::string	version;
 
 	if (occurence(this->_current, " ") != 2) {
@@ -479,7 +487,7 @@ int			Request::firstLineParsing(void)
 		return (0);
 	}
 
-	if (!this->checkPath(this->_current, path)) {
+	if (!this->checkPath(this->_current, path, parameters)) {
 		this->setStatus(STATUS_BAD_REQUEST);
 		return (0);
 	}
@@ -491,6 +499,7 @@ int			Request::firstLineParsing(void)
 
 	this->_method = method;
 	this->_path = path;
+	this->_parameters = parameters;
 	this->_version = version;
 
 	this->_event = EVT_REQUEST_HEADERS;
@@ -515,15 +524,16 @@ int			Request::checkMethod(std::string & source, std::string & dst)
 	return 1;
 }
 
-int			Request::checkPath(std::string & source, std::string & dst)
+int			Request::checkPath(std::string & source, std::string & path, std::string & parameters)
 {
-	std::string	sep = " ";
-	size_t 		pos = source.find(sep);
+	size_t 		pos = source.find(" ");
+	size_t 		par = source.find("?");
 	std::string	line = source.substr(0, pos);
 
-	source = source.substr(pos + sep.length());
+	source = source.substr(pos + 1);
 
-	dst = line;
+	path = line.substr(0, par);
+	parameters = ((par != std::string::npos) ? line.substr(par) : "");
 
 	return (1);
 }

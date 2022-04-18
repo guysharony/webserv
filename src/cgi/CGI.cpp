@@ -94,6 +94,7 @@ int	CGI::launch_cgi(std::string const & filename) {
 		setenv("SERVER_PROTOCOL", "HTTP/1.1", true);
 		setenv("SERVER_PORT", this->_request->getPort().c_str(), true);
 		setenv("PATH_INFO", filename.c_str(), true);
+		setenv("QUERY_STRING", this->_request->getParameters().c_str(), true);
 		setenv("PATH_TRANSLATED", filename.c_str(), true);
 		setenv("REQUEST_METHOD", this->_request->getMethod().c_str(), true);
 		setenv("REDIRECT_STATUS", "200", true);

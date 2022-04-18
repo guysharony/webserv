@@ -26,6 +26,8 @@ class Request {
 		std::string							getMethod(void);
 		std::string							getVersion(void);
 		std::string							getPath(void);
+		std::string							getParameters(void);
+		std::string							getURI(void);
 		std::string							getHost(void);
 		std::string							getPort(void);
 		int									getClose(void);
@@ -71,6 +73,7 @@ class Request {
 		std::map<std::string, std::string>			_header;
 		int									_status;
 		std::string							_path;
+		std::string							_parameters;
 		std::string							_port;
 		std::string							_host;
 		std::string							_temp;
@@ -96,7 +99,7 @@ class Request {
 		std::string							getNextLine(std::string str, size_t *i);
 		size_t								headerParsing(std::string request_buffer);
 		int									checkMethod(std::string & source, std::string & dst);
-		int									checkPath(std::string & source, std::string & dst);
+		int									checkPath(std::string & source, std::string & path, std::string & parameters);
 		int									checkVersion(std::string & source, std::string & dst);
 		void									checkBody(Config::configuration_type server);
 		int									checkHeaders(void);
