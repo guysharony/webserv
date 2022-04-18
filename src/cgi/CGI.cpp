@@ -64,7 +64,7 @@ int	CGI::launch_cgi(std::string const & filename) {
 		Message::debug(key);
 		Message::debug(" = ");
 		Message::debugln(it->second.c_str());
-		setenv(key.c_str(), it->second.c_str(), true);
+		setenv(toUppercase(key).c_str(), it->second.c_str(), true);
 	}
 
 	pid = fork();
