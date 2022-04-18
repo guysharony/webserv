@@ -13,6 +13,16 @@ Response::Response(Request *request, Descriptors *descriptors)
 { }
 
 Response::~Response() {
+	if (this->_cgi) {
+		delete (this->_cgi);
+		this->_cgi = NULL;
+	}
+
+	if (this->_cgi_parser) {
+		delete (this->_cgi_parser);
+		this->_cgi_parser = NULL;
+	}
+
 	this->_request->closeTemporary("body");
 }
 
@@ -151,7 +161,6 @@ int		Response::createBody(void) {
 			delete (this->_cgi_parser);
 			this->_cgi_parser = NULL;
 		}
-
 	} else {
 		if (this->_status == STATUS_NOT_FOUND)
 		{
@@ -420,10 +429,10 @@ std::string	Response::getPathAfterReplacingLocationByRoot(void) {
 
 int			Response::readCGI(std::string & packet) {
 	if (this->_cgi == NULL) {
-		this->_cgi = new CGI();
+		this->_cgi = new CGI(this->_request);
 		this->_cgi_parser = new CgiParser(this->_request);
 
-		this->_body_fd = this->_cgi->launch_cgi(this->getPathAfterReplacingLocationByRoot(), this->_request);
+		this->_body_fd = this->_cgi->launch_cgi(this->getPathAfterReplacingLocationByRoot());
 
 		this->_descriptors->setDescriptor(this->_body_fd, POLLIN);
 		this->_descriptors->setDescriptorType(this->_body_fd, "cgi");
@@ -434,10 +443,10 @@ int			Response::readCGI(std::string & packet) {
 	int res = this->read(packet);
 
 	if (!res) {
-		this->_body_fd = -1;
-		this->_body_start = false;
 		::close(this->_body_fd);
 		this->_descriptors->deleteDescriptor(this->_body_fd);
+		this->_body_fd = -1;
+		this->_body_start = false;
 	}
 
 	return res;

@@ -17,16 +17,16 @@ void	Message::error(std::string const & message)
 	throw Message::ErrorException(message);
 }
 
-void	Message::bindError(std::string host, std::string port, int error)
+void	Message::bindError(std::string host, int port, int error)
 {
 	std::string message;
 
 	if (error == 13)
 		message.append("(Connection to this socket is forbidden)");
-	else if (error == 48)
+	else if (error == 48 || error == 98)
 		message.append("(Address is already in use)");
 	else
 		message.append("(" + toString(error) + ")");
 	
-	throw Message::ErrorException("bind() to " + host + ":" + port + " failed " + message);
+	throw Message::ErrorException("bind() to " + host + ":" + toString(port) + " failed " + message);
 }

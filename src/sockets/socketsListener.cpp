@@ -69,4 +69,3 @@ in_addr_t			SocketsListener::getInetAddr() const
 
 int				SocketsListener::getPort() const
 { return (this->port); }
-

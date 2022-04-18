@@ -32,7 +32,7 @@ class Message
 			debug("\n");
 		}
 
-		static void	bindError(std::string host, std::string port, int error);
+		static void	bindError(std::string host, int port, int error);
 
 	private:
 	

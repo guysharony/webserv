@@ -14,22 +14,26 @@
 # include "../request/request.hpp"
 # include "../core/message.hpp"
 
-# define CGI_DEFAULT_PATH "/usr/bin/php-cgi"
+// # define CGI_DEFAULT_PATH "/usr/bin/php-cgi"
 
 class CGI {
 	public:
 		// typedef Request request_type;
 
-		CGI(void);
+		CGI(Request *request);
 		CGI(std::string const &cgi_path);
 		CGI(CGI const & src);
 		~CGI();
 		CGI &operator=(CGI const & rhs);
 
-		int			launch_cgi(std::string const & filename, Request * request);
+		int						launch_cgi(std::string const & filename);
 
 	private:
-		std::string	_cgi_path;
+		Request					*_request;
+		char						*_executable;
+		char						*_argument;
+
+		CGI(void);
 };
 
 #endif

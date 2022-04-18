@@ -41,7 +41,8 @@ class Webserv {
 		bool							listen(void);
 
 		/* Status */
-		void							cleanConnections(void);
+		void							closeClients(void);
+		void							closeServers(void);
 
 		/* Events */
 		bool							handleServer(void);

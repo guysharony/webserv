@@ -687,26 +687,24 @@ int					Request::convertMethodToValue(std::string method) {
 }
 
 bool					Request::isCgi(Config::configuration_type server) {
-	size_t i;
+	size_t	i;
 
-	if (this->_method.compare("POST") == 0){
+	if (!this->_method.compare("POST")) {
 		if (server->cgi_path.size() > 0)
 			return true;
-		else
-		{
-			this->setStatus(STATUS_INTERNAL_SERVER_ERROR);
-			return false;
-		}
+
+		this->setStatus(STATUS_INTERNAL_SERVER_ERROR);
+		return false;
 	}
 
 	i = this->_path.find_last_of(".");
 	if (i == std::string ::npos)
 		return false;
 
-	std::string ext = this->_path.substr(i,this-> _path.size() - 1);
+	std::string ext = this->_path.substr(i, this->_path.size() - 1);
 	std::vector<std::string>::iterator it = server->cgi_extentions.begin();
 	while (it != server->cgi_extentions.end()) {
-		if((*it).compare(ext) == 0)
+		if ((*it).compare(ext) == 0)
 			break;
 		
 		it++;

@@ -5,7 +5,9 @@ Sockets::Sockets(Descriptors *descriptors)
 { }
 
 Sockets::~Sockets()
-{ }
+{
+	
+}
 
 void		Sockets::prepare(int port) {
 	this->sockets.push_back(SocketsListener(port));
@@ -61,12 +63,12 @@ int		Sockets::initialize(socket_listener_type server_iterator) {
 
 	if (bind(socketfd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
 	{
-		Message::error("bind() failed.");
+		Message::bindError(server_iterator->getAddr(), server_iterator->getPort(), errno);
 		close(socketfd);
 		return -1;
 	}
 
-	if (::listen(socketfd, 100000) < 0)
+	if (::listen(socketfd, 1000) < 0)
 	{
 		Message::error("listen() failed");
 		close(socketfd);

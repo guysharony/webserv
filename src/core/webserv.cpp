@@ -19,12 +19,8 @@ Webserv::Webserv(void)
 
 Webserv::~Webserv()
 {
-	client_type ite = this->_clients.end();
-	for (client_type it = this->_clients.begin(); it != ite; ++it) {
-		delete (*it);
-	}
-
-	this->_clients.clear();
+	this->closeClients();
+	this->closeServers();
 }
 
 
@@ -57,6 +53,24 @@ int			Webserv::load(std::string const filename)
 	return 0;
 }
 
+void		Webserv::closeClients(void) {
+	client_type	ite = this->_clients.end();
+	for (client_type it = this->_clients.begin(); it != ite; ++it)
+		delete (*it);
+
+	this->_clients.clear();
+}
+
+void		Webserv::closeServers(void) {
+	Descriptors::poll_type ite = this->descriptors.descriptors.end();
+	for (Descriptors::poll_type it = this->descriptors.descriptors.begin(); it != ite; ++it) {
+		if (this->descriptors.getDescriptorType(it->fd) == "server") {
+			close(it->fd);
+		}
+
+		this->descriptors.deleteDescriptor(it->fd);
+	}
+}
 
 bool		Webserv::run(void) {
 	signal(SIGINT, &signalHandler);

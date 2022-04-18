@@ -13,6 +13,7 @@
 # include <sys/poll.h>	// poll
 # include <sys/ioctl.h>
 # include <set>		// set
+# include <errno.h>
 # include <map>		// map
 # include <queue>		// queue
 
