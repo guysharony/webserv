@@ -1,29 +1,23 @@
 <html>
- <head>
-  <title>Show env</title>
- </head>
- <body>
- <?php echo '<p>Environment Variables</p>'; ?> 
- <?php
- foreach (getenv() as $key => $env) {
-	echo $key;
-	echo " = ";
-	echo $env;
-	echo "<br>\n";
- };
-?>
+	<head>
+		<title>Show variables</title>
+	</head>
+	<body>
+	<?php
+		echo '<p>Environment Variables</p>';
 
-<?php echo "<br><br>\n\n<p>Server Variables</p>"; ?> 
- <?php
- foreach ($_SERVER as $key => $value) {
-	echo $key;
-	echo " = ";
-	echo $value;
-	echo "<br>\n";
- };
-	// if (!empty($_SERVER['PATH_INFO'])) echo "Location: " . $_SERVER['PATH_INFO'];
-?>
+		foreach (getenv() as $key => $env) {
+			echo "$key = $env<br>\n";
+		};
 
-<?php echo '<p>Done</p>'; ?> 
+
+		echo '<br><br><p>Server Variables</p>';
+
+		foreach ($_SERVER as $key => $value) {
+			echo "$key = $value<br>\n";
+		};
+
+		echo '<p>Done</p>';
+	?>
  </body>
 </html>
