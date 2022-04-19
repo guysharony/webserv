@@ -51,6 +51,18 @@ ssize_t	Temporary::getSize(std::string const &filename)
 	return -1;
 }
 
+int		Temporary::getFD(std::string const &filename)
+{
+	tmpfile_type	ite = this->_tmpfiles.end();
+	for (tmpfile_type it = this->_tmpfiles.begin(); it != ite; ++it) {
+		if ((*it)->getFilename() == filename) {
+			return (*it)->getFD();
+		}
+	}
+
+	return -1;
+}
+
 bool		Temporary::setEvents(std::string const &filename, short event)
 {
 	tmpfile_type	ite = this->_tmpfiles.end();

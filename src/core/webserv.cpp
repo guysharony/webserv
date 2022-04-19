@@ -74,6 +74,7 @@ void		Webserv::closeServers(void) {
 
 bool		Webserv::run(void) {
 	signal(SIGINT, &signalHandler);
+	signal(SIGPIPE, &signalHandler);
 	while (this->_run) {
 		if (g_sigint == 1)
 			break; // Perhaps we need to shutdown/send messages to active clients first
@@ -226,7 +227,7 @@ int				Webserv::clientSend(std::string value) {
 	int rc = send(this->context.poll->fd, value.c_str(), value.length(), 0);
 	if (rc < 0)
 	{
-		Message::error("send() failed.");
+		Message::error("send() failed." + toString(errno));
 		(*this->context.client)->setClose(true);
 		return 0;
 	}

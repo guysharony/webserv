@@ -1,8 +1,12 @@
 #include "webserv.hpp"
 
+void		fnExit1(void) {
+	std::cout << "Exited..." << std::endl;
+}
 
 int		main(int argc, char **argv)
 {
+	atexit(fnExit1);
 	if (argc > 2)
 	{
 		std::cout << "usage: " << argv[0] << " [config_file]" << std::endl;
@@ -20,5 +24,6 @@ int		main(int argc, char **argv)
 		std::cout << e.what() << std::endl;
 	}
 
+	std::cout << "EXIT PROGRAM" << std::endl;
 	return (0);
 }

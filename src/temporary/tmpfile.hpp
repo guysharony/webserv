@@ -31,6 +31,7 @@ class TmpFile
 		std::string			getFilename(void);
 		std::string			getPath(void);
 		Descriptors::poll_type	getPoll(void);
+		int					getFD(void);
 		short				getEvents(void);
 		size_t				getSize(void);
 

@@ -33,6 +33,9 @@ std::string			TmpFile::getFilename(void)
 std::string			TmpFile::getPath(void)
 { return (this->_path); }
 
+int					TmpFile::getFD(void)
+{ return (this->_fd); }
+
 size_t				TmpFile::getSize(void)
 { return (this->_size); }
 

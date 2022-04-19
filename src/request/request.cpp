@@ -443,6 +443,9 @@ int			Request::createTemporary(std::string const & filename)
 int			Request::eventTemporary(std::string const & filename, short event)
 { return this->_temporary.setEvents(filename, event); }
 
+int			Request::fdTemporary(std::string const & filename)
+{ return this->_temporary.getFD(filename); }
+
 int			Request::appendTemporary(std::string const & filename, std::string packet)
 {
 	if (!(this->_temporary.getEvents(filename) & POLLOUT)) {

@@ -385,7 +385,7 @@ int		Response::getListOfDirectories(const char *path, std::string & packet) {
 
 	for (std::vector<std::string>::iterator it = this->_directory_list.begin(); it != this->_directory_list.end(); it++) {
 		if (isFiley(p + "/" + *it) == 1) {
-			packet = getUrl(*it, true) + (this->_directory_list.size() == 1 ? "</table>\n</body>\n</html>\n" : "");
+			packet = getUrl(*it, false) + (this->_directory_list.size() == 1 ? "</table>\n</body>\n</html>\n" : "");
 			this->_directory_list.erase(it);
 			return 1;
 		}

@@ -49,6 +49,7 @@ class Request {
 
 		/* Temporary */
 		int									createTemporary(std::string const & filename);
+		int									fdTemporary(std::string const & filename);
 		int									readTemporary(std::string const & filename, std::string &packet);
 		int									appendTemporary(std::string const & filename, std::string packet);
 		int									eventTemporary(std::string const & filename, short event);

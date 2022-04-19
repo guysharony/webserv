@@ -40,8 +40,8 @@ CGI &CGI::operator=(CGI const & rhs) {
 }
 
 int	CGI::launch_cgi(std::string const & filename) {
-	int fd[2];
-	pid_t pid;
+	int		fd[2];
+	pid_t	pid;
 	//int	tmp_file_fd;
 
 	Config::configuration_type        	server = this->_request->selectServer();
@@ -86,6 +86,8 @@ int	CGI::launch_cgi(std::string const & filename) {
 		if (dup2(tmp_file_fd, STDIN_FILENO) < 0)
 			Message::error("dup2() failed on tmp_file");
 		close(tmp_file_fd);
+
+		this->_request->fdTemporary("request");
 		*/
 
 		// Prepare environment for execve
