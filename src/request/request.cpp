@@ -88,8 +88,11 @@ int			Request::getLine(void) {
 	if (this->getEvent() < EVT_REQUEST_BODY) {
 		end = this->_temp.find(CRLF);
 		if (end != std::string::npos) {
+			std::cout << "[" << end << "]" << std::endl;
 			this->_current = this->_temp.substr(0, end);
 			this->_temp = this->_temp.substr(end + 2);
+			std::cout << "[" << this->_current.str() << "]" << std::endl;
+			std::cout << "[" << this->_temp.str() << "]" << std::endl;
 			return (2);
 		}
 
@@ -128,7 +131,10 @@ void			Request::setConnection(int connection)
 
 /* Methods */
 void			Request::append(std::vector<char> packet)
-{ this->_temp.append(packet); }
+{
+	this->_temp.append(packet);
+	std::cout << this->_temp.str() << std::endl;
+}
 
 /*
 void			Request::parsePathAndVersion(std::string line) {
@@ -312,13 +318,13 @@ void			Request::parseRequest(void) {
 						if (chunk_extention != std::string::npos)
 							this->_current = this->_current.substr(0, chunk_extention);
 
-						if (!isPositiveBase16(this->_current)) {
+						if (!isPositiveBase16(this->_current.str())) {
 							this->setStatus(STATUS_BAD_REQUEST);
 							this->setEnd(1);
 							return;
 						}
 
-						this->_chunk_size = hexToInt(this->_current);
+						this->_chunk_size = hexToInt(this->_current.str());
 						this->_body_size = this->_chunk_size;
 						this->_current.clear();
 						this->_chunked = true;
@@ -363,7 +369,7 @@ void			Request::parseRequest(void) {
 					this->_current.append("\r\n");
 				}
 
-				Message::debug("LENGTH BODY [" + toString(this->_body_size) + "] - [" + this->_current + "]\n");
+				Message::debug("LENGTH BODY [" + toString(this->_body_size) + "] - [" + this->_current.str() + "]\n");
 				this->appendTemporary("request", this->_current.str());
 
 				if (this->_body_size <= 0) {
@@ -494,25 +500,36 @@ int			Request::firstLineParsing(void)
 	std::string	parameters;
 	std::string	version;
 
-	if (occurence(this->_current, " ") != 2) {
+	std::string	tmp;
+
+	tmp = this->_current.str();
+
+	std::cout << "test [" << tmp << "]" << std::endl;
+
+	if (occurence(tmp, " ") != 2) {
 		this->setStatus(STATUS_BAD_REQUEST);
 		return (0);
 	}
 
-	if (!this->checkMethod(this->_current, method)) {
+	if (!this->checkMethod(tmp, method)) {
 		this->setStatus(STATUS_NOT_ALLOWED);
 		return (0);
 	}
 
-	if (!this->checkPath(this->_current, path, parameters)) {
+	if (!this->checkPath(tmp, path, parameters)) {
 		this->setStatus(STATUS_BAD_REQUEST);
 		return (0);
 	}
 
-	if (!this->checkVersion(this->_current, version)) {
+	if (!this->checkVersion(tmp, version)) {
 		this->setStatus(STATUS_HTTP_VERSION_NOT_SUPPORTED);
 		return (0);
 	}
+
+	std::cout << method << std::endl;
+	std::cout << path << std::endl;
+	std::cout << parameters << std::endl;
+	std::cout << version << std::endl;
 
 	this->_method = method;
 	this->_path = path;
@@ -571,7 +588,7 @@ int			Request::checkHeaders(void)
 	std::string key;
 	std::string value;
 
-	if (this->checkHeader(this->_current, key, value)) {
+	if (this->checkHeader(this->_current.str(), key, value)) {
 		if (!key.compare("connection")) {
 			this->_connection = KEEP_ALIVE;
 

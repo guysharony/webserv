@@ -15,8 +15,20 @@ STRBinary::STRBinary(STRBinary const & other)
 STRBinary::~STRBinary()
 { }
 
+STRBinary		&STRBinary::operator=(STRBinary const &rhs)
+{
+	if (this != &rhs) {
+		this->_data = rhs._data;
+	}
 
-size_t	STRBinary::find(std::string str)
+	return (*this);
+}
+
+char			STRBinary::operator[](size_t n)
+{ return *(this->_data.begin() + n); }
+
+
+std::size_t	STRBinary::find(std::string str)
 {
 	size_t	i;
 	size_t	j;
@@ -27,8 +39,10 @@ size_t	STRBinary::find(std::string str)
 				break;
 		}
 
-		if (j == str.size())
+		if (j == str.size()) {
+			std::cout << "[" << str << "](" << i << ")" << std::endl;
 			return (i);
+		}
 	}
 
 	return (std::string::npos);
@@ -80,7 +94,7 @@ STRBinary	STRBinary::substr(size_t from, size_t to)
 	size_t	i;
 
 	for (i = from; i < to; ++i)
-		tmp.append(this->_data[from]);
+		tmp.append(this->_data[i]);
 
 	return tmp;
 }

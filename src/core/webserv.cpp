@@ -208,9 +208,6 @@ int				Webserv::clientReceive(void) {
 
 		packet.resize(res);
 
-		for (size_t i = 0; i < packet.size(); ++i)
-			std::cout << packet[i] << std::endl;
-
 		#ifdef DEBUG
 			std::cout << RESET << "=== [" << this->context.poll->fd << "] - (" << res << ")" << std::endl;
 			// print_buffer(packet, 1000, GREEN);

@@ -14,6 +14,9 @@ class STRBinary {
 		STRBinary(STRBinary const & other);
 		~STRBinary();
 
+		STRBinary		&operator=(STRBinary const &rhs);
+		char			operator[](size_t n);
+
 		size_t		find(std::string str);
 
 		void			append(const char c);
