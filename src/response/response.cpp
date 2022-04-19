@@ -88,7 +88,7 @@ void					Response::initialize(void) {
 			this->_location = location;
 			this->_autoIndex = this->_location->auto_index;
 		} catch(const Config::LocationNotFoundException& e) {
-			this->_status = STATUS_NOT_FOUND;
+			this->_status = STATUS_FORBIDDEN;
 		}
 	}
 
@@ -257,7 +257,7 @@ int		Response::createBody(void) {
 				}
 				else
 				{
-					this->_status = STATUS_FORBIDDEN;
+					this->_status = STATUS_NOT_FOUND;
 					return 0;
 				}
 			}
