@@ -71,6 +71,9 @@ int			Request::getClose(void)
 int			Request::getEnd(void)
 { return (this->_end); }
 
+Config		*Request::getConfig(void)
+{ return this->_config; }
+
 int			Request::getConnection(void)
 { return (this->_connection); }
 
@@ -266,9 +269,13 @@ void			Request::parseRequest(void) {
 			}
 		} else if (this->getEvent() == EVT_REQUEST_HEADERS) {
 			if (!this->_current.length()) {
+				std::cout << "TEST 1" << std::endl;
 				checkPort();
+				std::cout << "TEST 2" << std::endl;
 				checkTimeout();
+				std::cout << "TEST 3" << std::endl;
 				if (this->_host.empty()) {
+					std::cout << "TEST 4" << std::endl;
 					this->setStatus(STATUS_BAD_REQUEST);
 					this->setEnd(1);
 					return;
@@ -481,7 +488,7 @@ int			Request::firstLineParsing(void)
 	std::string	version;
 
 	if (occurence(this->_current, " ") != 2) {
-		this->setStatus(STATUS_INTERNAL_SERVER_ERROR);
+		this->setStatus(STATUS_BAD_REQUEST);
 		return (0);
 	}
 
@@ -633,11 +640,13 @@ Config::configuration_type Request::selectServer(void) {
 			for (Config::ports_type::iterator it3 = it2->second.begin(); it3 != it2->second.end(); it3++) {
 				if (!(*it3).compare(this->_port))
 				{
-					if (default_server == this->_config->configuration.end())
+					if (default_server == this->_config->configuration.end()) {
 						default_server = it;
+					}
 
-					if (!it->server_name.compare(it2->first))
+					if (!it->server_name.compare(it2->first)) {
 						return it;
+					}
 				}
 			}
 		}
