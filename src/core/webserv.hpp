@@ -4,6 +4,7 @@
 # include <csignal> // signal, SIGINT, SIG_DFL
 # include <cstring> // memset
 # include <unistd.h>
+# include <cstdio>
 # include "../temporary/temporary.hpp"
 # include "../client/client.hpp"
 # include "../sockets/sockets.hpp"

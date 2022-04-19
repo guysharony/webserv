@@ -19,6 +19,7 @@
 # include "../formats/files.hpp"
 # include "../formats/units.hpp"
 # include "../formats/strings.hpp"
+# include "../formats/strbinary.hpp"
 
 
 class TmpFile

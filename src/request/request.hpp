@@ -63,7 +63,7 @@ class Request {
 		/* Methods */
 		void									execute(void);
 
-		void									append(std::string value);
+		void									append(std::vector<char> value);
 		void									displayAllLocations(void);
 		Config::configuration_type				selectServer(void);
 		Config::location_type					selectLocation(Config::configuration_type server);
@@ -78,8 +78,8 @@ class Request {
 		std::string							_parameters;
 		std::string							_port;
 		std::string							_host;
-		std::string							_temp;
-		std::string							_current;
+		STRBinary								_temp;
+		STRBinary								_current;
 		Config								*_config;
 		Temporary								_temporary;
 		int									_encoding;

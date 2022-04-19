@@ -106,7 +106,7 @@ void				Client::setEvent(int value)
 void				Client::setClose(bool value)
 { this->_request.setClose(value); }
 
-void				Client::appendRequest(std::string packet)
+void				Client::appendRequest(std::vector<char> packet)
 { this->_request.append(packet); }
 
 /* Response */

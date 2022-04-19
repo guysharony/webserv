@@ -44,7 +44,7 @@ class Client {
 		void					setClose(bool value);
 
 		int					readResponse(std::string & packet);
-		void					appendRequest(std::string packet);
+		void					appendRequest(std::vector<char> packet);
 		void					closeResponse(void);
 
 		int					prepareResponse(void);

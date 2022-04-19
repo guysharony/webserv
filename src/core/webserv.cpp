@@ -194,12 +194,11 @@ void					Webserv::_clientReject(void) {
 }
 
 int				Webserv::clientReceive(void) {
-	char			buffer[BUFFER_SIZE];
-	int			res;
+	// char			buffer[BUFFER_SIZE];
+	std::vector<char>	packet(BUFFER_SIZE);
+	int				res;
 
-	memset(buffer, 0, BUFFER_SIZE);
-
-	res = recv(this->context.poll->fd, buffer, BUFFER_SIZE - 1, 0);
+	res = recv(this->context.poll->fd, &packet[0], BUFFER_SIZE - 1, 0);
 
 	if (res == 0)
 		(*this->context.client)->setClose(true);
@@ -207,11 +206,14 @@ int				Webserv::clientReceive(void) {
 		if ((*this->context.client)->getEvent() == NONE)
 			(*this->context.client)->setEvent(EVT_REQUEST_LINE);
 
-		std::string packet = std::string(buffer);
+		packet.resize(res);
+
+		for (size_t i = 0; i < packet.size(); ++i)
+			std::cout << packet[i] << std::endl;
 
 		#ifdef DEBUG
 			std::cout << RESET << "=== [" << this->context.poll->fd << "] - (" << res << ")" << std::endl;
-			print_buffer(packet, 1000, GREEN);
+			// print_buffer(packet, 1000, GREEN);
 		#endif
 
 		(*this->context.client)->appendRequest(packet);

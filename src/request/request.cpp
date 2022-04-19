@@ -28,7 +28,10 @@ Request::Request(Config *config, Descriptors *descriptors)
 }
 
 Request::~Request()
-{ this->_header.clear(); }
+{
+	std::cout << "DESTROYING REQUEST" << std::endl;
+	this->_header.clear();
+}
 
 
 /* Getters */
@@ -82,20 +85,19 @@ int			Request::getLine(void) {
 
 	std::size_t	end;
 
-	end = this->_temp.find(CRLF);
-	if (end != std::string::npos) {
-		this->_current = this->_temp.substr(0, end);
-		this->_temp = this->_temp.substr(end + 2);
-		return (2);
-	}
+	if (this->getEvent() < EVT_REQUEST_BODY) {
+		end = this->_temp.find(CRLF);
+		if (end != std::string::npos) {
+			this->_current = this->_temp.substr(0, end);
+			this->_temp = this->_temp.substr(end + 2);
+			return (2);
+		}
 
-	if (this->getEvent() < EVT_REQUEST_BODY)
-		return (0);
-
-	if (!this->_temp.length() || (this->_temp[this->_temp.length() - 1] == '\r')) {
-		if (this->_temp.length()) {
-			this->_current = this->_temp.substr(0, this->_temp.length() - 1);
-			this->_temp = this->_temp.substr(this->_temp.length() - 1);
+		if (!this->_temp.length() || (this->_temp[this->_temp.length() - 1] == '\r')) {
+			if (this->_temp.length()) {
+				this->_current = this->_temp.substr(0, this->_temp.length() - 1);
+				this->_temp = this->_temp.substr(this->_temp.length() - 1);
+			}
 		}
 
 		return (0);
@@ -125,7 +127,7 @@ void			Request::setConnection(int connection)
 { this->_connection = connection; }
 
 /* Methods */
-void			Request::append(std::string packet)
+void			Request::append(std::vector<char> packet)
 { this->_temp.append(packet); }
 
 /*
@@ -256,12 +258,20 @@ void			Request::parseRequest(void) {
 
 	if ((res = this->getLine()) > 0) {
 		if (this->getEvent() == EVT_REQUEST_LINE) {
-			Message::debug("REQUEST LINE [" + this->_current + "]\n");
-			this->_end = 0;
+			Message::debug("REQUEST LINE [" + this->_current.str() + "]\n");
+			this->_method.clear();
+			this->_version.clear();
+			this->_status = STATUS_OK;
+			this->_path.clear();
+			this->_port = "80";
+			this->_host.clear();
 			this->_encoding = NONE;
 			this->_content_length = -1;
-			this->_status = STATUS_OK;
+			this->_body_size = -1;
 			this->_chunk_size = -1;
+			this->_end = 0;
+			this->closeTemporary("request");
+			this->createTemporary("request");
 
 			if (!this->firstLineParsing()) {
 				this->setEnd(1);
@@ -269,13 +279,9 @@ void			Request::parseRequest(void) {
 			}
 		} else if (this->getEvent() == EVT_REQUEST_HEADERS) {
 			if (!this->_current.length()) {
-				std::cout << "TEST 1" << std::endl;
 				checkPort();
-				std::cout << "TEST 2" << std::endl;
 				checkTimeout();
-				std::cout << "TEST 3" << std::endl;
 				if (this->_host.empty()) {
-					std::cout << "TEST 4" << std::endl;
 					this->setStatus(STATUS_BAD_REQUEST);
 					this->setEnd(1);
 					return;
@@ -290,7 +296,7 @@ void			Request::parseRequest(void) {
 				return;
 			}
 
-			Message::debug("REQUEST HEADER [" + this->_current + "]\n");
+			Message::debug("REQUEST HEADER [" + this->_current.str() + "]\n");
 
 			if (!this->checkHeaders()) {
 				this->setStatus(STATUS_BAD_REQUEST);
@@ -333,10 +339,10 @@ void			Request::parseRequest(void) {
 						this->_current.append("\r\n");
 					}
 
-					Message::debug("CHUNK BODY [" + this->_current + "]\n");
+					Message::debug("CHUNK BODY [" + this->_current.str() + "]\n");
 
 					this->_content_length += this->_current.length();
-					this->appendTemporary("request", this->_current);
+					this->appendTemporary("request", this->_current.str());
 
 					if (this->_body_size == 0) {
 						this->_chunked = false;
@@ -344,6 +350,7 @@ void			Request::parseRequest(void) {
 				}
 			} else if (this->_encoding == LENGTH) {
 				if (this->_current.length() > static_cast<size_t>(this->_body_size)) {
+					std::cout << "OHOHO" << std::endl;
 					this->setStatus(STATUS_BAD_REQUEST);
 					this->setEnd(1);
 					return;
@@ -357,9 +364,9 @@ void			Request::parseRequest(void) {
 				}
 
 				Message::debug("LENGTH BODY [" + toString(this->_body_size) + "] - [" + this->_current + "]\n");
-				this->appendTemporary("request", this->_current);
+				this->appendTemporary("request", this->_current.str());
 
-				if (this->_body_size == 0) {
+				if (this->_body_size <= 0) {
 					Message::debug("FINISHED\n");
 					this->setEnd(1);
 					return;
