@@ -30,6 +30,7 @@ class Request {
 		std::string							getURI(void);
 		std::string							getHost(void);
 		std::string							getPort(void);
+		Config								*getConfig(void);
 		int									getClose(void);
 		int									getTimeout(void);
 		int									getStatus(void);

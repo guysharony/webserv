@@ -6,6 +6,7 @@ Response::Response(Request *request, Descriptors *descriptors)
 	_cgi(NULL),
 	_cgi_parser(NULL),
 	_directory_list(),
+	_server_found(false),
 	_body_start(false),
 	_body_fd(-1),
 	_event(EVT_INITIALIZE),
@@ -70,6 +71,7 @@ int					Response::execute(void) {
 void					Response::initialize(void) {
 	this->_body_fd = -1;
 	this->_body_start = false;
+	this->_server = this->_request->getConfig()->configuration.end();
 	this->_status = this->_request->getStatus();
 	this->_request->createTemporary("body");
 
@@ -77,7 +79,8 @@ void					Response::initialize(void) {
 	if (this->_status < STATUS_BAD_REQUEST) {
 		try {
 			this->_server = this->_request->selectServer();
-		} catch(const Config::ServerNotFoundException & e){
+		} catch(const Config::ServerNotFoundException & e) {
+			std::cout << "BAD REQUEST" << std::endl;
 			Message::debug("Server wasn't found: handling error\n");
 			this->_status = STATUS_BAD_REQUEST;
 		}
@@ -99,6 +102,8 @@ void					Response::initialize(void) {
 		if (this->_request->getMethod().compare("DELETE") == 0 && this->_status == STATUS_OK)
 			deleteMethod();
 	}
+
+	this->_server_found = (this->_server != this->_request->getConfig()->configuration.end());
 }
 
 std::string			Response::findDate(void) {
@@ -113,7 +118,7 @@ std::string			Response::findDate(void) {
 void					Response::createHeaders(void) {
 	size_t	body_length = this->_request->sizeTemporary("body");
 
-	if (this->_status < STATUS_INTERNAL_SERVER_ERROR)
+	if (this->_status < STATUS_INTERNAL_SERVER_ERROR && this->_server_found)
 		this->_headers["server"] = this->_server->server_name;
 
 	this->_headers["date"] = findDate();
@@ -170,42 +175,49 @@ int		Response::createBody(void) {
 	} else {
 		if (this->_status == STATUS_NOT_FOUND)
 		{
-			if ((createErrorPages(this->_server->error_page[STATUS_NOT_FOUND], packet) > 0) || (this->_body_fd <= 0)) {
+			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_NOT_FOUND] : "", packet) > 0) || (this->_body_fd <= 0)) {
+				this->_request->appendTemporary("body", packet);
+				return (this->_body_fd <= 0);
+			}
+		}
+		else if (this->_status == STATUS_HTTP_VERSION_NOT_SUPPORTED)
+		{
+			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_HTTP_VERSION_NOT_SUPPORTED] : "", packet) > 0) || (this->_body_fd <= 0)) {
 				this->_request->appendTemporary("body", packet);
 				return (this->_body_fd <= 0);
 			}
 		}
 		else if (this->_status == STATUS_NOT_ALLOWED)
 		{
-			if ((createErrorPages(this->_server->error_page[STATUS_NOT_ALLOWED], packet) > 0) || (this->_body_fd <= 0)) {
+			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_NOT_ALLOWED] : "", packet) > 0) || (this->_body_fd <= 0)) {
 				this->_request->appendTemporary("body", packet);
 				return (this->_body_fd <= 0);
 			}
 		}
 		else if (this->_status == STATUS_INTERNAL_SERVER_ERROR)
 		{
-			if ((createErrorPages(this->_server->error_page[STATUS_INTERNAL_SERVER_ERROR], packet) > 0) || (this->_body_fd <= 0)) {
+			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_INTERNAL_SERVER_ERROR] : "", packet) > 0) || (this->_body_fd <= 0)) {
 				this->_request->appendTemporary("body", packet);
 				return (this->_body_fd <= 0);
 			}
 		}
 		else if (this->_status == STATUS_BAD_REQUEST)
 		{
-			if ((createErrorPages(this->_server->error_page[STATUS_BAD_REQUEST], packet) > 0) || (this->_body_fd <= 0)) {
+			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_BAD_REQUEST] : "", packet) > 0) || (this->_body_fd <= 0)) {
 				this->_request->appendTemporary("body", packet);
 				return (this->_body_fd <= 0);
 			}
 		}
 		else if (this->_status == STATUS_REQUEST_ENTITY_TOO_LARGE)
 		{
-			if ((createErrorPages(this->_server->error_page[STATUS_REQUEST_ENTITY_TOO_LARGE], packet) > 0) || (this->_body_fd <= 0)) {
+			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_REQUEST_ENTITY_TOO_LARGE] : "", packet) > 0) || (this->_body_fd <= 0)) {
 				this->_request->appendTemporary("body", packet);
 				return (this->_body_fd <= 0);
 			}
 		}
 		else if (this->_status == STATUS_FORBIDDEN)
 		{
-			if ((createErrorPages(this->_server->error_page[STATUS_FORBIDDEN], packet) > 0) || (this->_body_fd <= 0)) {
+			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_FORBIDDEN] : "", packet) > 0) || (this->_body_fd <= 0)) {
 				this->_request->appendTemporary("body", packet);
 				return (this->_body_fd <= 0);
 			}
@@ -497,6 +509,8 @@ int		Response::createErrorPages(std::string path, std::string & packet) {
 				packet = "<!DOCTYPE html><html><title>413</title><body>413 ENTITY_TOO_LARGE</body></html>";
 			else if (this->_status == STATUS_NOT_ALLOWED)
 				packet = "<!DOCTYPE html><html><title>405</title><body>405 NOT ALLOWED</body></html>";
+			else if (this->_status == STATUS_HTTP_VERSION_NOT_SUPPORTED)
+				packet = "<!DOCTYPE html><html><title>405</title><body>505 STATUS_HTTP_VERSION_NOT_SUPPORTED</body></html>";
 
 			return 0;
 		}

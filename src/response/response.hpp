@@ -52,6 +52,7 @@ class Response {
 		Config::configuration_type		_server;
 		std::string					_path;
 		std::vector<std::string>			_directory_list;
+		bool							_server_found;
 		DIR							*dir;
 		bool							_body_start;
 		int							_body_fd;
