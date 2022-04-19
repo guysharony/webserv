@@ -42,7 +42,7 @@ CGI &CGI::operator=(CGI const & rhs) {
 int	CGI::launch_cgi(std::string const & filename) {
 	int		fd[2];
 	pid_t	pid;
-	//int	tmp_file_fd;
+	int		tmp_fd;
 
 	Config::configuration_type        	server = this->_request->selectServer();
 	Config::location_type             	location = this->_request->selectLocation(server);
@@ -82,13 +82,24 @@ int	CGI::launch_cgi(std::string const & filename) {
 
 		// Open tmp file using TmpFileClass
 		// Dup tmp_file_fd to stdin
-		/*
-		if (dup2(tmp_file_fd, STDIN_FILENO) < 0)
-			Message::error("dup2() failed on tmp_file");
-		close(tmp_file_fd);
+		std::string content_length = toString(this->_request->sizeTemporary("request"), false);
+		
+		if (this->_request->getMethod() == "POST") {
+			tmp_fd = this->_request->fdTemporary("request");
+			if (tmp_fd < 0)
+				Message::error("invalid temporary file descriptor");
+			else {
+				// Dup tmp_fd into pipe's stdin
+				// lseek(tmp_fd, 0, SEEK_SET);
 
-		this->_request->fdTemporary("request");
-		*/
+				if (dup2(tmp_fd, STDIN_FILENO) < 0)
+					Message::error("dup2() failed on stdin");
+				close(tmp_fd);
+				setenv("CONTENT_LENGTH", content_length.c_str(), true);
+				setenv("CONTENT_TYPE", "application/x-www-form-urlencoded", true);
+			}
+		}
+		
 
 		// Prepare environment for execve
 		setenv("SERVER_SOFTWARE", SERVER_NAME, true);						// *** This value should be confirmed
@@ -112,7 +123,8 @@ int	CGI::launch_cgi(std::string const & filename) {
 		if (!this->_argument)
 			Message::error("strdup() failed");
 
-		char * const argv[3] = {this->_executable, this->_argument, NULL};
+		// char * const argv[3] = {this->_executable, this->_argument, NULL};
+		char * const argv[3] = {this->_executable, NULL, NULL};
 
 		int ret = execve(this->_executable, argv, environ); //pathname, argv, envp
 		Message::debug("ret: ");
