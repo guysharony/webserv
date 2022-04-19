@@ -180,6 +180,13 @@ int		Response::createBody(void) {
 				return (this->_body_fd <= 0);
 			}
 		}
+		else if (this->_status == STATUS_HTTP_VERSION_NOT_SUPPORTED)
+		{
+			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_HTTP_VERSION_NOT_SUPPORTED] : "", packet) > 0) || (this->_body_fd <= 0)) {
+				this->_request->appendTemporary("body", packet);
+				return (this->_body_fd <= 0);
+			}
+		}
 		else if (this->_status == STATUS_NOT_ALLOWED)
 		{
 			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_NOT_ALLOWED] : "", packet) > 0) || (this->_body_fd <= 0)) {
@@ -502,6 +509,8 @@ int		Response::createErrorPages(std::string path, std::string & packet) {
 				packet = "<!DOCTYPE html><html><title>413</title><body>413 ENTITY_TOO_LARGE</body></html>";
 			else if (this->_status == STATUS_NOT_ALLOWED)
 				packet = "<!DOCTYPE html><html><title>405</title><body>405 NOT ALLOWED</body></html>";
+			else if (this->_status == STATUS_HTTP_VERSION_NOT_SUPPORTED)
+				packet = "<!DOCTYPE html><html><title>405</title><body>505 STATUS_HTTP_VERSION_NOT_SUPPORTED</body></html>";
 
 			return 0;
 		}
