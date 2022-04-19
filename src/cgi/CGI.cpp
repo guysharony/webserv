@@ -67,6 +67,8 @@ int	CGI::launch_cgi(std::string const & filename) {
 		for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it)
 		{
 			std::string key(it->first);
+			if (key == "content-type")
+				setenv("CONTENT_TYPE", it->second.c_str(), true);
 			key = "HTTP_" + key;
 			Message::debug(key);
 			Message::debug(" = ");
@@ -100,7 +102,7 @@ int	CGI::launch_cgi(std::string const & filename) {
 					Message::error("dup2() failed on stdin");
 				close(tmp_fd);
 				setenv("CONTENT_LENGTH", content_length.c_str(), true);
-				setenv("CONTENT_TYPE", "application/x-www-form-urlencoded", true);
+				// setenv("CONTENT_TYPE", "application/x-www-form-urlencoded", true);
 			}
 		}
 		

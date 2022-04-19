@@ -4,6 +4,8 @@
 	</head>
 	<body>
 	<?php
+		$stderr = fopen('php://stderr', 'w');
+		fwrite($stderr, PHP_EOL . "Running env.php" . PHP_EOL);
 		echo '<p>Environment Variables</p>';
 
 		foreach (getenv() as $key => $env) {
