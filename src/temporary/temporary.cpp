@@ -100,6 +100,18 @@ int		Temporary::append(std::string const &filename, std::string const & source)
 	return -1;
 }
 
+int		Temporary::append(std::string const &filename, STRBinary source)
+{
+	tmpfile_type	ite = this->_tmpfiles.end();
+	for (tmpfile_type it = this->_tmpfiles.begin(); it != ite; ++it) {
+		if ((*it)->getFilename() == filename) {
+			return (*it)->write(source);
+		}
+	}
+
+	return -1;
+}
+
 int		Temporary::display(std::string const &filename)
 {
 	tmpfile_type	ite = this->_tmpfiles.end();

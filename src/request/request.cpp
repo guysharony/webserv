@@ -28,10 +28,7 @@ Request::Request(Config *config, Descriptors *descriptors)
 }
 
 Request::~Request()
-{
-	std::cout << "DESTROYING REQUEST" << std::endl;
-	this->_header.clear();
-}
+{ this->_header.clear(); }
 
 
 /* Getters */
@@ -88,11 +85,8 @@ int			Request::getLine(void) {
 	if (this->getEvent() < EVT_REQUEST_BODY) {
 		end = this->_temp.find(CRLF);
 		if (end != std::string::npos) {
-			std::cout << "[" << end << "]" << std::endl;
 			this->_current = this->_temp.substr(0, end);
 			this->_temp = this->_temp.substr(end + 2);
-			std::cout << "[" << this->_current.str() << "]" << std::endl;
-			std::cout << "[" << this->_temp.str() << "]" << std::endl;
 			return (2);
 		}
 
@@ -131,10 +125,7 @@ void			Request::setConnection(int connection)
 
 /* Methods */
 void			Request::append(std::vector<char> packet)
-{
-	this->_temp.append(packet);
-	std::cout << this->_temp.str() << std::endl;
-}
+{ this->_temp.append(packet); }
 
 /*
 void			Request::parsePathAndVersion(std::string line) {
@@ -348,7 +339,7 @@ void			Request::parseRequest(void) {
 					Message::debug("CHUNK BODY [" + this->_current.str() + "]\n");
 
 					this->_content_length += this->_current.length();
-					this->appendTemporary("request", this->_current.str());
+					this->appendTemporary("request", this->_current);
 
 					if (this->_body_size == 0) {
 						this->_chunked = false;
@@ -356,7 +347,6 @@ void			Request::parseRequest(void) {
 				}
 			} else if (this->_encoding == LENGTH) {
 				if (this->_current.length() > static_cast<size_t>(this->_body_size)) {
-					std::cout << "OHOHO" << std::endl;
 					this->setStatus(STATUS_BAD_REQUEST);
 					this->setEnd(1);
 					return;
@@ -370,7 +360,7 @@ void			Request::parseRequest(void) {
 				}
 
 				Message::debug("LENGTH BODY [" + toString(this->_body_size) + "] - [" + this->_current.str() + "]\n");
-				this->appendTemporary("request", this->_current.str());
+				this->appendTemporary("request", this->_current);
 
 				if (this->_body_size <= 0) {
 					Message::debug("FINISHED\n");
@@ -477,6 +467,17 @@ int			Request::appendTemporary(std::string const & filename, std::string packet)
 	return 1;
 }
 
+int			Request::appendTemporary(std::string const & filename, STRBinary const & packet)
+{
+	if (!(this->_temporary.getEvents(filename) & POLLOUT)) {
+		this->_temporary.setEvents(filename, POLLOUT);
+		return 0;
+	}
+
+	this->_temporary.append(filename, packet);
+	return 1;
+}
+
 int			Request::readTemporary(std::string const & filename, std::string & packet)
 { return this->_temporary.read(filename, packet); }
 
@@ -504,8 +505,6 @@ int			Request::firstLineParsing(void)
 
 	tmp = this->_current.str();
 
-	std::cout << "test [" << tmp << "]" << std::endl;
-
 	if (occurence(tmp, " ") != 2) {
 		this->setStatus(STATUS_BAD_REQUEST);
 		return (0);
@@ -525,11 +524,6 @@ int			Request::firstLineParsing(void)
 		this->setStatus(STATUS_HTTP_VERSION_NOT_SUPPORTED);
 		return (0);
 	}
-
-	std::cout << method << std::endl;
-	std::cout << path << std::endl;
-	std::cout << parameters << std::endl;
-	std::cout << version << std::endl;
 
 	this->_method = method;
 	this->_path = path;

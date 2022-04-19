@@ -1,13 +1,21 @@
 #include "strbinary.hpp"
 
 STRBinary::STRBinary(void)
-{ }
+{
+	this->_data.resize(0);
+}
 
 STRBinary::STRBinary(std::string str)
-{ this->append(str); }
+{
+	this->_data.resize(0);
+	this->append(str);
+}
 
 STRBinary::STRBinary(const char * str)
-{ this->append(str); }
+{
+	this->_data.resize(0);
+	this->append(str);
+}
 
 STRBinary::STRBinary(STRBinary const & other)
 { *this = other; }
@@ -29,24 +37,7 @@ char			STRBinary::operator[](size_t n)
 
 
 std::size_t	STRBinary::find(std::string str)
-{
-	size_t	i;
-	size_t	j;
-
-	for (i = 0; i < this->_data.size(); ++i) {
-		for (j = 0; j < str.size(); ++j) {
-			if (this->_data[i + j] != str[j])
-				break;
-		}
-
-		if (j == str.size()) {
-			std::cout << "[" << str << "](" << i << ")" << std::endl;
-			return (i);
-		}
-	}
-
-	return (std::string::npos);
-}
+{ return this->str().find(str); }
 
 
 void		STRBinary::append(std::string str)
@@ -58,14 +49,11 @@ void		STRBinary::append(std::string str)
 
 void		STRBinary::append(const char c)
 {
-	this->_data.resize(this->_data.size() + 1);
 	this->_data.push_back(c);
 }
 
 void		STRBinary::append(std::vector<char> & other)
 {
-	this->_data.resize(this->_data.size() + other.size());
-
 	for (size_t i = 0; i < other.size(); ++i)
 		this->_data.push_back(other[i]);
 }
@@ -75,8 +63,6 @@ void		STRBinary::append(const char * str, size_t size)
 	size_t	i;
 
 	i = 0;
-	
-	this->_data.resize(this->_data.size() + size);
 
 	for (i = 0; i < size; ++i) {
 		this->_data.push_back(str[i]);
@@ -103,14 +89,34 @@ STRBinary		STRBinary::substr(size_t from)
 { return this->substr(from, this->_data.size()); }
 
 std::string	STRBinary::str(void)
+{ return std::string(this->_data.begin(), this->_data.end()); }
+
+char			*STRBinary::dup(void)
 {
-	std::string	tmp;
+	char		*tmp;
+	size_t	i;
 
-	for (size_t i = 0; i < this->_data.size(); ++i)
-		tmp += this->_data[i];
+	i = 0;
+	tmp = NULL;
+	if (!(tmp = (char*)malloc(sizeof(*tmp) * (this->length() + 1))))
+		return NULL;
 
+	while (i < this->length()) {
+		tmp[i] = this->_data[i];
+		i++;
+	}
+
+	tmp[i] = 0;
 	return tmp;
 }
 
 size_t		STRBinary::length(void)
-{ return (this->_data.size()); }
+{
+	size_t	tmp = 0;
+
+	std::vector<char>::iterator	ite = this->_data.end();
+	for (std::vector<char>::iterator it = this->_data.begin(); it != ite; ++it)
+		tmp++;
+
+	return tmp;
+}

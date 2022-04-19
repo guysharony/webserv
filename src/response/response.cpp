@@ -80,7 +80,6 @@ void					Response::initialize(void) {
 		try {
 			this->_server = this->_request->selectServer();
 		} catch(const Config::ServerNotFoundException & e) {
-			std::cout << "BAD REQUEST" << std::endl;
 			Message::debug("Server wasn't found: handling error\n");
 			this->_status = STATUS_BAD_REQUEST;
 		}

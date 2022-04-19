@@ -4,6 +4,7 @@
 # include <iostream>
 # include <string>
 # include <vector>
+# include <cstdlib>
 
 class STRBinary {
 
@@ -30,6 +31,8 @@ class STRBinary {
 		STRBinary		substr(size_t from);
 
 		std::string	str(void);
+		char			*dup(void);
+
 		size_t		length(void);
 
 	private:

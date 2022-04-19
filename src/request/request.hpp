@@ -53,6 +53,7 @@ class Request {
 		int									fdTemporary(std::string const & filename);
 		int									readTemporary(std::string const & filename, std::string &packet);
 		int									appendTemporary(std::string const & filename, std::string packet);
+		int									appendTemporary(std::string const & filename, STRBinary const & packet);
 		int									eventTemporary(std::string const & filename, short event);
 		int									displayTemporary(std::string const & filename);
 		ssize_t								sizeTemporary(std::string const & filename);

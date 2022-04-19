@@ -194,7 +194,6 @@ void					Webserv::_clientReject(void) {
 }
 
 int				Webserv::clientReceive(void) {
-	// char			buffer[BUFFER_SIZE];
 	std::vector<char>	packet(BUFFER_SIZE);
 	int				res;
 
@@ -207,11 +206,6 @@ int				Webserv::clientReceive(void) {
 			(*this->context.client)->setEvent(EVT_REQUEST_LINE);
 
 		packet.resize(res);
-
-		#ifdef DEBUG
-			std::cout << RESET << "=== [" << this->context.poll->fd << "] - (" << res << ")" << std::endl;
-			// print_buffer(packet, 1000, GREEN);
-		#endif
 
 		(*this->context.client)->appendRequest(packet);
 	}
