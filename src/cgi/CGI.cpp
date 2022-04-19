@@ -55,24 +55,25 @@ int	CGI::launch_cgi(std::string const & filename) {
 	if (pipe2(fd, O_NONBLOCK))
 		Message::error("pipe2() failed");
 
-	std::map<std::string, std::string>	headers = this->_request->getHeader();
-	Message::debugln("Headers");
-	for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it)
-	{
-		std::string key(it->first);
-		key = "HTTP_" + key;
-		Message::debug(key);
-		Message::debug(" = ");
-		Message::debugln(it->second.c_str());
-		setenv(toUppercase(key).c_str(), it->second.c_str(), true);
-	}
-
 	pid = fork();
 	if (pid < 0)
 		Message::error("fork() failed");
 	else if (pid == 0)
 	{
 		// Child
+		clearenv();
+		std::map<std::string, std::string>	headers = this->_request->getHeader();
+		Message::debugln("Headers");
+		for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it)
+		{
+			std::string key(it->first);
+			key = "HTTP_" + key;
+			Message::debug(key);
+			Message::debug(" = ");
+			Message::debugln(it->second.c_str());
+			setenv(toUppercase(key).c_str(), it->second.c_str(), true);
+		}
+
 		// Dup stdout into pipe
 		close(fd[0]);
 		if (dup2(fd[1], STDOUT_FILENO) < 0)
