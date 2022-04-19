@@ -74,23 +74,27 @@ int	CGI::launch_cgi(std::string const & filename) {
 			setenv(toUppercase(key).c_str(), it->second.c_str(), true);
 		}
 
-		// Dup stdout into pipe
-		close(fd[0]);
-		if (dup2(fd[1], STDOUT_FILENO) < 0)
-			Message::error("dup2() failed on pipe");
-		close(fd[1]);
-
 		// Open tmp file using TmpFileClass
 		// Dup tmp_file_fd to stdin
 		std::string content_length = toString(this->_request->sizeTemporary("request"), false);
 		
+		std::cout << "cgi checking post" << std::endl;
 		if (this->_request->getMethod() == "POST") {
+			std::cout << "cgi with POST" << std::endl;
 			tmp_fd = this->_request->fdTemporary("request");
+			int c = 0;
+			while (tmp_fd < 0 && c < 10)
+			{
+				std::cout << "rechecking temp fd == " << tmp_fd << std::endl;
+				tmp_fd = this->_request->fdTemporary("request");
+				sleep(1);
+				++c;
+			}
 			if (tmp_fd < 0)
-				Message::error("invalid temporary file descriptor");
+				Message::error("invalid temp file");
 			else {
 				// Dup tmp_fd into pipe's stdin
-				// lseek(tmp_fd, 0, SEEK_SET);
+				lseek(tmp_fd, 0, SEEK_SET);
 
 				if (dup2(tmp_fd, STDIN_FILENO) < 0)
 					Message::error("dup2() failed on stdin");
@@ -126,6 +130,11 @@ int	CGI::launch_cgi(std::string const & filename) {
 		// char * const argv[3] = {this->_executable, this->_argument, NULL};
 		char * const argv[3] = {this->_executable, NULL, NULL};
 
+		// Dup stdout into pipe
+		close(fd[0]);
+		if (dup2(fd[1], STDOUT_FILENO) < 0)
+			Message::error("dup2() failed on pipe");
+		close(fd[1]);
 		int ret = execve(this->_executable, argv, environ); //pathname, argv, envp
 		Message::debug("ret: ");
 		Message::debugln(ret);
