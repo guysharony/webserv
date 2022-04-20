@@ -99,7 +99,7 @@ STRBinary		STRBinary::substr(size_t from)
 std::string	STRBinary::str(void)
 { return std::string(this->_data.begin(), this->_data.end()); }
 
-char			*STRBinary::dup(void)
+char			*STRBinary::c_str(void)
 { return this->_data.data(); }
 
 size_t		STRBinary::length(void)

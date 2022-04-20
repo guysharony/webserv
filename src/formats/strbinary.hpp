@@ -34,7 +34,7 @@ class STRBinary {
 		STRBinary		substr(size_t from);
 
 		std::string	str(void);
-		char			*dup(void);
+		char			*c_str(void);
 
 		size_t		length(void);
 

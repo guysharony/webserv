@@ -106,13 +106,8 @@ int			TmpFile::write(std::string const & value)
 
 int			TmpFile::write(STRBinary value)
 {
-	char		*tmp;
-
-	if (!(tmp = value.dup()))
-		return -1;
-
 	this->_size += value.length();
-	return ::write(this->_fd, tmp, value.length());
+	return ::write(this->_fd, value.c_str(), value.length());
 }
 
 std::string	TmpFile::_generate_filepath(void) {
