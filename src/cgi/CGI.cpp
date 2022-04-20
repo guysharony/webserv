@@ -128,8 +128,7 @@ int	CGI::launch_cgi(std::string const & filename) {
 		if (!this->_argument)
 			Message::error("strdup() failed");
 
-		// char * const argv[3] = {this->_executable, this->_argument, NULL};
-		char * const argv[3] = {this->_executable, NULL, NULL};
+		char * const argv[3] = {this->_executable, this->_argument, NULL};
 
 		// Dup stdout into pipe
 		close(fd[0]);
