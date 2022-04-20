@@ -89,6 +89,13 @@ void			ConfigServer::_parseListen(configuration_struct &config) {
 	host = params.size() == 2 ? params[0] : "127.0.0.1";
 	port = params.size() == 2 ? params[1] : params[0];
 
+	for (listen_type::iterator it2 = config.listen.begin(); it2 != config.listen.end(); it2++) {
+		for (ports_type::iterator it3 = it2->second.begin(); it3 != it2->second.end(); it3++) {
+			if (it2->first == host && (*it3) == port)
+				Message::error("'listen " + host + ":" + port + "' is already defined.");
+		}
+	}
+
 	listen_type::iterator it = config.listen.find(host);
 	if (it != config.listen.end()) {
 		(it->second).insert(port);
