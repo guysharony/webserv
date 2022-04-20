@@ -150,14 +150,17 @@ std::string			Response::findContentType(void)
 
 int		Response::createBody(void) {
 	Config::location_type	location;
-	std::string			packet;
+	STRBinary				packet;
 
 	if (this->_request->isCgi(this->_server)) {
 		if (this->readCGI(packet) > 0) {
+			std::cout << "CGI [" << packet.str() << "]" << std::endl;
 			this->_cgi_parser->append(packet);
 			this->_cgi_parser->parseCgiResponse();
 			return 0;
 		}
+
+		std::cout << "CGI END" << std::endl;
 
 		this->_status = this->_cgi_parser->getStatus();
 		this->_headers = this->_cgi_parser->getHeaders();
@@ -359,7 +362,7 @@ int		Response::readResponse(std::string & packet) {
 	return 0;
 }
 
-int		Response::getListOfDirectories(const char *path, std::string & packet) {
+int		Response::getListOfDirectories(const char *path, STRBinary & packet) {
 	if (this->_request->sizeTemporary("body") <= 0) {
 		DIR			*dir = opendir(path);
 		std::string	init = "<!DOCTYPE html>\n<html>\n<head>\n\
@@ -379,7 +382,7 @@ int		Response::getListOfDirectories(const char *path, std::string & packet) {
 		this->_directory_list.erase(std::find(this->_directory_list.begin(), this->_directory_list.end(), "."));
 		closedir(dir);
 
-		packet = init;
+		packet = STRBinary(init);
 
 		return 1;
 	}
@@ -444,7 +447,7 @@ std::string	Response::getPathAfterReplacingLocationByRoot(void) {
 	return "";
 }
 
-int			Response::readCGI(std::string & packet) {
+int			Response::readCGI(STRBinary & packet) {
 	if (this->_cgi == NULL) {
 		this->_cgi = new CGI(this->_request);
 		this->_cgi_parser = new CgiParser(this->_request);
@@ -493,7 +496,7 @@ void			Response::checkPath(void) {
 	}
 }
 
-int		Response::createErrorPages(std::string path, std::string & packet) {
+int		Response::createErrorPages(std::string path, STRBinary & packet) {
 	if (this->_body_fd == -1) {
 		if ((this->_body_fd = open(path.c_str(), O_RDONLY)) <= 0) {
 			if (this->_status == STATUS_NOT_FOUND)
@@ -546,15 +549,13 @@ Descriptors::poll_type	Response::getPoll(void)
 	return ite;
 }
 
-int					Response::read(std::string & value)
+int					Response::read(STRBinary & value)
 {
 	Descriptors::poll_type	it;
-	ssize_t 				pos;
-	char					buffer[BUFFER_SIZE];
+	std::vector<char>		packet(5000);
+	ssize_t				pos;
 
 	pos = 0;
-
-	memset(buffer, 0, BUFFER_SIZE);
 
 	if ((it = this->getPoll()) == this->_descriptors->descriptors.end()) {
 		return -1;
@@ -562,14 +563,22 @@ int					Response::read(std::string & value)
 
 	value.clear();
 
-	if (!(it->revents & POLLIN))
+	if (!(it->revents & POLLIN)) {
+		std::cout << "END" << std::endl;
 		return !this->_body_start;
+	}
 
-	pos = ::read(this->_body_fd, buffer, BUFFER_SIZE - 1);
+	pos = ::read(this->_body_fd, packet.data(), packet.size());
 
-	value = std::string(buffer);
+	if (static_cast<int>(packet.size()) > pos) {
+		packet.resize(pos);
+	}
+
+	value = packet;
 
 	this->_body_start = true;
+
+	std::cout << "read [" << pos << "] [" << value.length() << "]" << std::endl;
 
 	return (pos > 0 && value.length() > 0);
 }

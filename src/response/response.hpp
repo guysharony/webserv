@@ -41,7 +41,7 @@ class Response {
 		int							execute(void);
 		void							createHeaders(void);
 		int							createBody(void);
-		int							readCGI(std::string & packet);
+		int							readCGI(STRBinary & packet);
 
 		int							readResponse(std::string & packet);
 
@@ -69,13 +69,13 @@ class Response {
 		/* Getters */
 		Descriptors::poll_type			getPoll(void);
 		std::string					getUrl(std::string dirent, bool isFolder);
-		int							getListOfDirectories(const char *path, std::string & packet);
+		int							getListOfDirectories(const char *path, STRBinary & packet);
 		std::string					getPathAfterReplacingLocationByRoot(void);
 
 		/* Methods */
 		void							initialize(void);
-		int							read(std::string & value);
-		int							createErrorPages(std::string path, std::string & packet);
+		int							read(STRBinary & value);
+		int							createErrorPages(std::string path, STRBinary & packet);
 
 		std::string					findDate(void);
 		std::string					findContentType(void);

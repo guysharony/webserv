@@ -194,18 +194,26 @@ void					Webserv::_clientReject(void) {
 }
 
 int				Webserv::clientReceive(void) {
-	std::vector<char>	packet(BUFFER_SIZE);
+	std::vector<char>	packet(5000);
 	int				res;
 
-	res = recv(this->context.poll->fd, &packet[0], BUFFER_SIZE - 1, 0);
+	res = recv(this->context.poll->fd, packet.data(), packet.size(), 0);
 
 	if (res == 0)
 		(*this->context.client)->setClose(true);
 	else if (res > 0) {
+		if (static_cast<int>(packet.size()) > res) {
+			packet.resize(res);
+		}
+		
 		if ((*this->context.client)->getEvent() == NONE)
 			(*this->context.client)->setEvent(EVT_REQUEST_LINE);
 
-		packet.resize(res);
+		std::cout << "RECV [";
+		for (int i = 0; i < res; ++i) {
+			std::cout << packet[i];
+		}
+		std::cout << "]" << std::endl;
 
 		(*this->context.client)->appendRequest(packet);
 	}

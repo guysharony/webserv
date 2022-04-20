@@ -1,21 +1,13 @@
 #include "strbinary.hpp"
 
 STRBinary::STRBinary(void)
-{
-	this->_data.resize(0);
-}
+{ }
 
 STRBinary::STRBinary(std::string str)
-{
-	this->_data.resize(0);
-	this->append(str);
-}
+{ this->append(str); }
 
 STRBinary::STRBinary(const char * str)
-{
-	this->_data.resize(0);
-	this->append(str);
-}
+{ this->append(std::string(str)); }
 
 STRBinary::STRBinary(STRBinary const & other)
 { *this = other; }
@@ -32,12 +24,22 @@ STRBinary		&STRBinary::operator=(STRBinary const &rhs)
 	return (*this);
 }
 
+STRBinary		&STRBinary::operator=(std::vector<char> const &rhs)
+{
+	this->_data = rhs;
+
+	return (*this);
+}
+
 char			STRBinary::operator[](size_t n)
 { return *(this->_data.begin() + n); }
 
 
 std::size_t	STRBinary::find(std::string str)
 { return this->str().find(str); }
+
+std::size_t	STRBinary::data(void)
+{ return this->_data.data(); }
 
 
 void		STRBinary::append(std::string str)
@@ -50,6 +52,12 @@ void		STRBinary::append(std::string str)
 void		STRBinary::append(const char c)
 {
 	this->_data.push_back(c);
+}
+
+void		STRBinary::append(STRBinary other)
+{
+	for (size_t i = 0; i < other.length(); ++i)
+		this->_data.push_back(other[i]);
 }
 
 void		STRBinary::append(std::vector<char> & other)

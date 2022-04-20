@@ -112,7 +112,7 @@ void			CgiParser::setEvent(int value)
 
 
 /* Methods */
-void			CgiParser::append(std::string packet)
+void			CgiParser::append(STRBinary packet)
 { this->_temp.append(packet); }
 
 int			CgiParser::checkHeaders(void)
@@ -131,7 +131,7 @@ int			CgiParser::checkHeaders(void)
 	return 1;
 }
 
-int			CgiParser::checkHeader(std::string source, std::string & key, std::string & value)
+int			CgiParser::checkHeader(STRBinary source, std::string & key, std::string & value)
 {
 	size_t	pos = source.find(":");
 
@@ -140,8 +140,8 @@ int			CgiParser::checkHeader(std::string source, std::string & key, std::string 
 
 	if (pos != std::string::npos)
 	{
-		tmp_key = source.substr(0, pos);
-		tmp_value = source.substr(pos + 1);
+		tmp_key = source.substr(0, pos).str();
+		tmp_value = source.substr(pos + 1).str();
 
 		if (!isTchar(tmp_key))
 			return (0);
@@ -168,7 +168,7 @@ void			CgiParser::parseCgiResponse(void) {
 				continue;
 			}
 
-			Message::debug("REQUEST HEADER [" + this->_current + "]\n");
+			Message::debug("REQUEST HEADER [" + this->_current.str() + "]\n");
 
 			if (!this->checkHeaders()) {
 				this->setStatus(STATUS_BAD_REQUEST);
@@ -181,7 +181,7 @@ void			CgiParser::parseCgiResponse(void) {
 				continue;
 			}
 
-			Message::debug("LENGTH BODY [" + this->_current + "]\n");
+			Message::debug("LENGTH BODY [" + this->_current.str() + "]\n");
 			this->_request->appendTemporary("body", this->_current);
 		}
 	}

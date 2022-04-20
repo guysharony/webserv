@@ -105,7 +105,6 @@ int	CGI::launch_cgi(std::string const & filename) {
 				// setenv("CONTENT_TYPE", "application/x-www-form-urlencoded", true);
 			}
 		}
-		
 
 		// Prepare environment for execve
 		setenv("SERVER_SOFTWARE", SERVER_NAME, true);						// *** This value should be confirmed

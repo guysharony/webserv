@@ -26,7 +26,7 @@ class CgiParser {
 		void									setEvent(int value);
 
 		/* Methods */
-		void									append(std::string packet);
+		void									append(STRBinary packet);
 		void									parseCgiResponse(void);
 		// void								parseCgiBuffer(std::string buffer);
 
@@ -34,8 +34,8 @@ class CgiParser {
 		Request								*_request;
 		int									_status;
 		std::map<std::string, std::string>			_headers;
-		std::string							_temp;
-		std::string							_current;
+		STRBinary								_temp;
+		STRBinary								_current;
 		int									_encoding;
 		ssize_t								_content_length;
 		ssize_t								_body_size;
@@ -52,7 +52,7 @@ class CgiParser {
 
 		//size_t								parseHeaders(std::string buffer);
 		int									checkHeaders(void);
-		int									checkHeader(std::string source, std::string & key, std::string & value);
+		int									checkHeader(STRBinary source, std::string & key, std::string & value);
 		// void								parseStatus(void);
 };
 

@@ -25,10 +25,16 @@ Request::Request(Config *config, Descriptors *descriptors)
 {
 	this->_header.clear();
 	this->createTemporary("request");
+	this->_test = open("/sgoinfre/goinfre/Perso/gsharony/projects/webserv/testers/guysharony", O_CREAT | O_TRUNC | O_RDWR, S_IRWXU);
+	if (this->_test < 0)
+		Message::error("Failed in creating file.");
 }
 
 Request::~Request()
-{ this->_header.clear(); }
+{
+	this->_header.clear();
+	close(this->_test);
+}
 
 
 /* Getters */
@@ -331,11 +337,6 @@ void			Request::parseRequest(void) {
 
 					this->_body_size -= this->_current.length();
 
-					if (this->_body_size > 0 && res == 2) {
-						this->_body_size -= 2;
-						this->_current.append("\r\n");
-					}
-
 					Message::debug("CHUNK BODY [" + this->_current.str() + "]\n");
 
 					this->_content_length += this->_current.length();
@@ -354,12 +355,8 @@ void			Request::parseRequest(void) {
 
 				this->_body_size -= this->_current.length();
 
-				if (this->_body_size > 0 && res == 2) {
-					this->_body_size -= 2;
-					this->_current.append("\r\n");
-				}
-
 				Message::debug("LENGTH BODY [" + toString(this->_body_size) + "] - [" + this->_current.str() + "]\n");
+				write(this->_test, this->_current.dup(), this->_current.length());
 				this->appendTemporary("request", this->_current);
 
 				if (this->_body_size <= 0) {

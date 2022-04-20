@@ -16,12 +16,14 @@ class STRBinary {
 		~STRBinary();
 
 		STRBinary		&operator=(STRBinary const &rhs);
+		STRBinary		&operator=(std::vector<char> const &rhs);
 		char			operator[](size_t n);
 
 		size_t		find(std::string str);
 
 		void			append(const char c);
 		void			append(std::string str);
+		void			append(STRBinary other);
 		void			append(std::vector<char> & other);
 		void			append(const char * str, size_t size);
 
