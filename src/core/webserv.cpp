@@ -2,7 +2,7 @@
 
 static int g_sigint = 0;
 
-void signalHandler(int sig)
+void signalHandlerInt(int sig)
 {
 	if (sig == SIGINT)
 		g_sigint = 1;
@@ -73,8 +73,8 @@ void		Webserv::closeServers(void) {
 }
 
 bool		Webserv::run(void) {
-	signal(SIGINT, &signalHandler);
-	signal(SIGPIPE, &signalHandler);
+	signal(SIGINT, &signalHandlerInt);
+	signal(SIGPIPE, SIG_IGN);
 	while (this->_run) {
 		if (g_sigint == 1)
 			break; // Perhaps we need to shutdown/send messages to active clients first
@@ -89,8 +89,10 @@ bool		Webserv::run(void) {
 				if (this->handleServer())
 					break;
 			} else if (this->context.type == "client") {
-				if (this->handleClient())
+				if (this->handleClient()) {
+
 					break;
+				}
 			}
 		}
 
@@ -99,6 +101,8 @@ bool		Webserv::run(void) {
 			this->descriptors.compressDescriptors();
 		}
 	}
+
+	std::cout << "END" << std::endl;
 
 	return true;
 }
@@ -144,7 +148,10 @@ bool			Webserv::handleClient(void) {
 			std::string packet;
 
 			if ((*this->context.client)->readResponse(packet) > 0) {
-				this->clientSend(packet);
+				if (this->clientSend(packet) <= 0) {
+					this->_clientReject();
+					return true;
+				}
 				return false;
 			}
 
@@ -222,7 +229,6 @@ int				Webserv::clientSend(std::string value) {
 	int rc = send(this->context.poll->fd, value.c_str(), value.length(), 0);
 	if (rc < 0)
 	{
-		Message::error("send() failed." + toString(errno));
 		(*this->context.client)->setClose(true);
 		return 0;
 	}
