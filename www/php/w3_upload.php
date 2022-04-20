@@ -1,7 +1,7 @@
 <?php
 $stderr = fopen('php://stderr', 'w');
 fwrite($stderr, PHP_EOL . "RUNNING upload.php" . PHP_EOL);
-$target_dir = "/sgoinfre/goinfre/Perso/gsharony/projects/webserv/upload/";
+$target_dir = "./uploads/";
 $target_file = $target_dir . basename($_FILES["fileToUpload"]["name"]);
 $uploadOk = 1;
 /*
