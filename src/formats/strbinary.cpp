@@ -38,7 +38,7 @@ char			STRBinary::operator[](size_t n)
 std::size_t	STRBinary::find(std::string str)
 { return this->str().find(str); }
 
-std::size_t	STRBinary::data(void)
+char			*STRBinary::data(void)
 { return this->_data.data(); }
 
 
@@ -100,23 +100,7 @@ std::string	STRBinary::str(void)
 { return std::string(this->_data.begin(), this->_data.end()); }
 
 char			*STRBinary::dup(void)
-{
-	char		*tmp;
-	size_t	i;
-
-	i = 0;
-	tmp = NULL;
-	if (!(tmp = (char*)malloc(sizeof(*tmp) * (this->length() + 1))))
-		return NULL;
-
-	while (i < this->length()) {
-		tmp[i] = this->_data[i];
-		i++;
-	}
-
-	tmp[i] = 0;
-	return tmp;
-}
+{ return this->_data.data(); }
 
 size_t		STRBinary::length(void)
 {

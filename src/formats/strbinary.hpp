@@ -20,6 +20,7 @@ class STRBinary {
 		char			operator[](size_t n);
 
 		size_t		find(std::string str);
+		char			*data(void);
 
 		void			append(const char c);
 		void			append(std::string str);

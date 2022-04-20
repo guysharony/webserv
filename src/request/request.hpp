@@ -84,7 +84,6 @@ class Request {
 		Config								*_config;
 		Temporary								_temporary;
 		int									_encoding;
-		int									_test;
 		ssize_t								_content_length;
 		ssize_t								_body_size;
 		ssize_t								_chunk_size;

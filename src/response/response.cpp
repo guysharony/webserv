@@ -154,13 +154,10 @@ int		Response::createBody(void) {
 
 	if (this->_request->isCgi(this->_server)) {
 		if (this->readCGI(packet) > 0) {
-			std::cout << "CGI [" << packet.str() << "]" << std::endl;
 			this->_cgi_parser->append(packet);
 			this->_cgi_parser->parseCgiResponse();
 			return 0;
 		}
-
-		std::cout << "CGI END" << std::endl;
 
 		this->_status = this->_cgi_parser->getStatus();
 		this->_headers = this->_cgi_parser->getHeaders();
@@ -564,7 +561,6 @@ int					Response::read(STRBinary & value)
 	value.clear();
 
 	if (!(it->revents & POLLIN)) {
-		std::cout << "END" << std::endl;
 		return !this->_body_start;
 	}
 
@@ -577,8 +573,6 @@ int					Response::read(STRBinary & value)
 	value = packet;
 
 	this->_body_start = true;
-
-	std::cout << "read [" << pos << "] [" << value.length() << "]" << std::endl;
 
 	return (pos > 0 && value.length() > 0);
 }

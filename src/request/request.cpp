@@ -25,16 +25,10 @@ Request::Request(Config *config, Descriptors *descriptors)
 {
 	this->_header.clear();
 	this->createTemporary("request");
-	this->_test = open("/sgoinfre/goinfre/Perso/gsharony/projects/webserv/testers/guysharony", O_CREAT | O_TRUNC | O_RDWR, S_IRWXU);
-	if (this->_test < 0)
-		Message::error("Failed in creating file.");
 }
 
 Request::~Request()
-{
-	this->_header.clear();
-	close(this->_test);
-}
+{ this->_header.clear(); }
 
 
 /* Getters */
@@ -259,55 +253,58 @@ void			Request::parseRequest(void) {
 	std::size_t	chunk_extention;
 	int			res;
 
-	if ((res = this->getLine()) > 0) {
-		if (this->getEvent() == EVT_REQUEST_LINE) {
-			Message::debug("REQUEST LINE [" + this->_current.str() + "]\n");
-			this->_method.clear();
-			this->_version.clear();
-			this->_status = STATUS_OK;
-			this->_path.clear();
-			this->_port = "80";
-			this->_host.clear();
-			this->_encoding = NONE;
-			this->_content_length = -1;
-			this->_body_size = -1;
-			this->_chunk_size = -1;
-			this->_end = 0;
-			this->closeTemporary("request");
-			this->createTemporary("request");
+	if (this->getEvent() < EVT_REQUEST_BODY) {
+		while ((res = this->getLine()) > 0) {
+			if (this->getEvent() == EVT_REQUEST_LINE) {
+				Message::debug("REQUEST LINE [" + this->_current.str() + "]\n");
+				this->_method.clear();
+				this->_version.clear();
+				this->_status = STATUS_OK;
+				this->_path.clear();
+				this->_port = "80";
+				this->_host.clear();
+				this->_encoding = NONE;
+				this->_content_length = -1;
+				this->_body_size = -1;
+				this->_chunk_size = -1;
+				this->_end = 0;
+				this->closeTemporary("request");
+				this->createTemporary("request");
 
-			if (!this->firstLineParsing()) {
-				this->setEnd(1);
-				return;
-			}
-		} else if (this->getEvent() == EVT_REQUEST_HEADERS) {
-			if (!this->_current.length()) {
-				checkPort();
-				checkTimeout();
-				if (this->_host.empty()) {
+				if (!this->firstLineParsing()) {
+					this->setEnd(1);
+					return;
+				}
+			} else if (this->getEvent() == EVT_REQUEST_HEADERS) {
+				if (!this->_current.length()) {
+					checkPort();
+					checkTimeout();
+					if (this->_host.empty()) {
+						this->setStatus(STATUS_BAD_REQUEST);
+						this->setEnd(1);
+						return;
+					}
+
+					Message::debug("SEPARATOR\n");
+					this->_event = EVT_REQUEST_BODY;
+					if (this->_encoding == NONE) {
+						this->setEnd(1);
+						return;
+					}
+					return;
+				}
+
+				Message::debug("REQUEST HEADER [" + this->_current.str() + "]\n");
+
+				if (!this->checkHeaders()) {
 					this->setStatus(STATUS_BAD_REQUEST);
 					this->setEnd(1);
 					return;
 				}
-
-				Message::debug("SEPARATOR\n");
-				this->_event = EVT_REQUEST_BODY;
-				if (this->_encoding == NONE) {
-					this->setEnd(1);
-					return;
-				}
-				return;
 			}
-
-			Message::debug("REQUEST HEADER [" + this->_current.str() + "]\n");
-
-			if (!this->checkHeaders()) {
-				this->setStatus(STATUS_BAD_REQUEST);
-				this->setEnd(1);
-				return;
-			}
-
-		} else if (this->getEvent() == EVT_REQUEST_BODY) {
+		}
+	} else if (this->getEvent() == EVT_REQUEST_BODY) {
+		if ((res = this->getLine()) > 0) {
 			if (this->_encoding == CHUNKED) {
 				if (!this->_chunked) {
 					if (this->_current.length()) {
@@ -356,7 +353,6 @@ void			Request::parseRequest(void) {
 				this->_body_size -= this->_current.length();
 
 				Message::debug("LENGTH BODY [" + toString(this->_body_size) + "] - [" + this->_current.str() + "]\n");
-				write(this->_test, this->_current.dup(), this->_current.length());
 				this->appendTemporary("request", this->_current);
 
 				if (this->_body_size <= 0) {

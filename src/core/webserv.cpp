@@ -172,7 +172,7 @@ Webserv::client_type	Webserv::_clientFind(void) {
 	client_type ite = this->_clients.end();
 	for (client_type it = this->_clients.begin(); it != ite; ++it) {
 		if ((*it)->getSocketFd() == this->context.poll->fd) {
-			Message::debug("Client already exists\n");
+			// Message::debug("Client already exists\n");
 			return it;
 		}
 	}
@@ -208,12 +208,6 @@ int				Webserv::clientReceive(void) {
 		
 		if ((*this->context.client)->getEvent() == NONE)
 			(*this->context.client)->setEvent(EVT_REQUEST_LINE);
-
-		std::cout << "RECV [";
-		for (int i = 0; i < res; ++i) {
-			std::cout << packet[i];
-		}
-		std::cout << "]" << std::endl;
 
 		(*this->context.client)->appendRequest(packet);
 	}
