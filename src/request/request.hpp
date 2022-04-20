@@ -64,7 +64,7 @@ class Request {
 		/* Methods */
 		void									execute(void);
 
-		void									append(std::vector<char> value);
+		void									append(std::vector<char> & value);
 		void									displayAllLocations(void);
 		Config::configuration_type				selectServer(void);
 		Config::location_type					selectLocation(Config::configuration_type server);

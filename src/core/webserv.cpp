@@ -216,8 +216,24 @@ int				Webserv::clientReceive(void) {
 		if ((*this->context.client)->getEvent() == NONE)
 			(*this->context.client)->setEvent(EVT_REQUEST_LINE);
 
+		std::cout << "RECV [";
+		for (size_t i = 0; i < (packet.size() > 50 ? 50 : packet.size()); ++i)
+			std::cout << GREEN << packet[i] << RESET;
+		if (packet.size() > 50) {
+			std::cout << " ... ";
+			for (size_t i = 0; i < ((packet.size() - 50) > 10 ? 10 : (packet.size() - 50)); ++i)
+				std::cout << GREEN << packet[packet.size() - i] << RESET;
+		}
+
+		std::cout << "]";
+
 		(*this->context.client)->appendRequest(packet);
+
+		std::cout << " (" << toString(packet.size()) << ")" << std::endl;
+		
 	}
+
+	packet.clear();
 
 	return res;
 }

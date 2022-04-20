@@ -28,7 +28,11 @@ Request::Request(Config *config, Descriptors *descriptors)
 }
 
 Request::~Request()
-{ this->_header.clear(); }
+{
+	this->_temp.clear();
+	this->_current.clear();
+	this->_header.clear();
+}
 
 
 /* Getters */
@@ -124,8 +128,13 @@ void			Request::setConnection(int connection)
 { this->_connection = connection; }
 
 /* Methods */
-void			Request::append(std::vector<char> packet)
-{ this->_temp.append(packet); }
+void			Request::append(std::vector<char> & packet)
+{
+	std::cout << "APPEND 1" << std::endl;
+	this->_temp.append(packet);
+	packet.clear();
+	std::cout << "APPEND 2" << std::endl;
+}
 
 /*
 void			Request::parsePathAndVersion(std::string line) {

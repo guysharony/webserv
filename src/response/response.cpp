@@ -100,6 +100,9 @@ void					Response::initialize(void) {
 
 		if (this->_request->getMethod().compare("DELETE") == 0 && this->_status == STATUS_OK)
 			deleteMethod();
+
+		if (this->_request->getMethod().compare("POST") == 0 && this->_status == STATUS_OK)
+			postMethod();
 	}
 
 	this->_server_found = (this->_server != this->_request->getConfig()->configuration.end());
@@ -479,6 +482,12 @@ void			Response::deleteMethod(void) {
 	}
 	else
 		this->_status = STATUS_NOT_FOUND;
+}
+
+void			Response::postMethod(void) {
+	std::string p = this->getPathAfterReplacingLocationByRoot();
+
+	std::cout << "POST METHOD [" << p << "]" << std::endl;
 }
 
 void			Response::checkPath(void) {

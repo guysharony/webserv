@@ -81,6 +81,7 @@ class Response {
 		std::string					findContentType(void);
 
 		void 						deleteMethod(void);
+		void							postMethod(void);
 
 		void							checkPath(void);
 };

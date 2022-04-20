@@ -13,7 +13,7 @@ STRBinary::STRBinary(STRBinary const & other)
 { *this = other; }
 
 STRBinary::~STRBinary()
-{ }
+{ this->clear(); }
 
 STRBinary		&STRBinary::operator=(STRBinary const &rhs)
 {
