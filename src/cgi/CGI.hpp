@@ -14,8 +14,6 @@
 # include "../request/request.hpp"
 # include "../core/message.hpp"
 
-// # define CGI_DEFAULT_PATH "/usr/bin/php-cgi"
-
 class CGI {
 	public:
 		// typedef Request request_type;
@@ -26,14 +24,14 @@ class CGI {
 		~CGI();
 		CGI &operator=(CGI const & rhs);
 
-		int						launch_cgi(std::string const & filename);
+		int				launch_cgi(std::string const & filename);
 
 	private:
-		Request					*_request;
+		Request			*_request;
 
 		CGI(void);
-		int	_init_env(std::string const &filename);
-		int _redirect_io(int fd[2]);
+		int				_init_env(std::string const &filename);
+		int				_redirect_io(int fd[2]);
 };
 
 #endif

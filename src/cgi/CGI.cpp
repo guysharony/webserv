@@ -96,6 +96,8 @@ int CGI::_redirect_io(int fd[2])
 int	CGI::launch_cgi(std::string const & filename) {
 	int		fd[2];
 	pid_t	pid;
+	char	*executable;
+	char	*argument;
 
 	Config::configuration_type        	server = this->_request->selectServer();
 
@@ -107,16 +109,11 @@ int	CGI::launch_cgi(std::string const & filename) {
 		Message::error("fork() failed");
 	else if (pid == 0)
 	{
-		// Child
 		this->_init_env(filename);
 		this->_redirect_io(fd);
 
-		char *executable = strdup(server->cgi_path.c_str());
-		if (!executable)
-			Message::error("strdup() failed");
-		char *argument = strdup(filename.c_str());
-		if (!argument)
-			Message::error("strdup() failed");
+		executable = &(server->cgi_path[0]);
+		argument = const_cast<char *>(&filename[0]);
 		char * const argv[3] = {executable, argument, NULL};
 
 		execve(executable, argv, environ);
