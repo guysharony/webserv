@@ -450,6 +450,8 @@ int			Response::readCGI(STRBinary & packet) {
 		this->_cgi_parser = new CgiParser(this->_request);
 
 		this->_body_fd = this->_cgi->launch_cgi(this->getPathAfterReplacingLocationByRoot());
+		if (this->_body_fd == -1)
+			Message::error("Internal Error: CGI execution failed"); // *** We must properly handle this error and return a response to the client
 
 		this->_descriptors->setDescriptor(this->_body_fd, POLLIN);
 		this->_descriptors->setDescriptorType(this->_body_fd, "cgi");

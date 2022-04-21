@@ -78,17 +78,17 @@ int CGI::_redirect_io(int fd[2])
 	{
 		tmp_fd = this->_request->fdTemporary("request");
 		if (tmp_fd < 0)
-			Message::error("invalid temp file");
+			return (-1);
 		
 		lseek(tmp_fd, 0, SEEK_SET);
 		if (dup2(tmp_fd, STDIN_FILENO) < 0)
-			Message::error("dup2() failed on stdin");
+			return (-1);
 		close(tmp_fd);
 	}
 
 	close(fd[0]);
 	if (dup2(fd[1], STDOUT_FILENO) < 0)
-		Message::error("dup2() failed on pipe");
+		return (-1);
 	close(fd[1]);
 	return (0);
 }
@@ -102,22 +102,23 @@ int	CGI::launch_cgi(std::string const & filename) {
 	Config::configuration_type        	server = this->_request->selectServer();
 
 	if (pipe2(fd, O_NONBLOCK))
-		Message::error("pipe2() failed");
+		return (-1);
 
 	pid = fork();
 	if (pid < 0)
-		Message::error("fork() failed");
+		return (-1);
 	else if (pid == 0)
 	{
 		this->_init_env(filename);
-		this->_redirect_io(fd);
+		if (this->_redirect_io(fd))
+			Message::error("Internal Error: could not redirect to CGI"); // *** Consider printing Status to stdout ?
 
 		executable = &(server->cgi_path[0]);
 		argument = const_cast<char *>(&filename[0]);
 		char * const argv[3] = {executable, argument, NULL};
 
 		execve(executable, argv, environ);
-		Message::error("execve() failed");
+		Message::error("Internal Error: could not execute CGI"); // *** Consider printing Status to stdout ?
 	}
 
 	close(fd[1]);
