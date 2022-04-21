@@ -129,12 +129,7 @@ void			Request::setConnection(int connection)
 
 /* Methods */
 void			Request::append(std::vector<char> & packet)
-{
-	std::cout << "APPEND 1" << std::endl;
-	this->_temp.append(packet);
-	packet.clear();
-	std::cout << "APPEND 2" << std::endl;
-}
+{ this->_temp.append(packet); }
 
 /*
 void			Request::parsePathAndVersion(std::string line) {

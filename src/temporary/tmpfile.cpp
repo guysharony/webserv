@@ -115,8 +115,10 @@ int			TmpFile::read(STRBinary & value)
 
 	value.clear();
 
-	if (!(it->revents & POLLIN))
+	if (!(it->revents & POLLIN)) {
+		std::cout << "Cannot read [" << this->_filename << "]" << std::endl;
 		return -1;
+	}
 
 	pos = ::read(this->_fd, packet.data(), packet.size());
 

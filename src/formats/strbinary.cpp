@@ -31,6 +31,16 @@ STRBinary		&STRBinary::operator=(std::vector<char> const &rhs)
 	return (*this);
 }
 
+STRBinary		&STRBinary::operator=(std::string & rhs)
+{
+	this->clear();
+
+	for (size_t i = 0; i < rhs.length(); ++i)
+		this->_data.push_back(rhs[i]);
+
+	return (*this);
+}
+
 char			STRBinary::operator[](size_t n)
 { return *(this->_data.begin() + n); }
 

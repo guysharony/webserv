@@ -141,7 +141,7 @@ bool			Webserv::handleClient(void) {
 		}
 	} else if ((*this->context.client)->getEvent() == EVT_SEND_RESPONSE) {
 		if (this->context.poll->revents & POLLOUT) {
-			std::string packet;
+			STRBinary packet;
 
 			if ((*this->context.client)->readResponse(packet) > 0) {
 				if (this->clientSend(packet) <= 0) {
@@ -208,24 +208,11 @@ int				Webserv::clientReceive(void) {
 		if (static_cast<int>(packet.size()) > res) {
 			packet.resize(res);
 		}
-		
+
 		if ((*this->context.client)->getEvent() == NONE)
 			(*this->context.client)->setEvent(EVT_REQUEST_LINE);
 
-		std::cout << "RECV [";
-		for (size_t i = 0; i < (packet.size() > 50 ? 50 : packet.size()); ++i)
-			std::cout << GREEN << packet[i] << RESET;
-		if (packet.size() > 50) {
-			std::cout << " ... ";
-			for (size_t i = 0; i < ((packet.size() - 50) > 10 ? 10 : (packet.size() - 50)); ++i)
-				std::cout << GREEN << packet[packet.size() - i] << RESET;
-		}
-
-		std::cout << "]";
-
 		(*this->context.client)->appendRequest(packet);
-
-		std::cout << " (" << toString(packet.size()) << ")" << std::endl;
 		
 	}
 
@@ -234,7 +221,7 @@ int				Webserv::clientReceive(void) {
 	return res;
 }
 
-int				Webserv::clientSend(std::string value) {
+int				Webserv::clientSend(STRBinary value) {
 	if (this->context.type != "client")
 		return -1;
 

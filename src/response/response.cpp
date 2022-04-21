@@ -7,7 +7,7 @@ Response::Response(Request *request, Descriptors *descriptors)
 	_cgi_parser(NULL),
 	_directory_list(),
 	_server_found(false),
-	_body_start(false),
+	_body_read(false),
 	_body_fd(-1),
 	_event(EVT_INITIALIZE),
 	_descriptors(descriptors)
@@ -70,7 +70,7 @@ int					Response::execute(void) {
 
 void					Response::initialize(void) {
 	this->_body_fd = -1;
-	this->_body_start = false;
+	this->_body_read = false;
 	this->_server = this->_request->getConfig()->configuration.end();
 	this->_status = this->_request->getStatus();
 	this->_request->createTemporary("body");
@@ -196,11 +196,17 @@ int		Response::createBody(void) {
 		{
 			std::string new_p = getPathAfterReplacingLocationByRoot();
 
-			if (!this->getMethod().compare("POST")) {
+			if (!this->getMethod().compare("POST") && this->_body_write) {
 				if (this->_request->readTemporary("request", packet) > 0) {
-					std::cout << "REQUEST [" << packet << "]" << std::endl;
+					this->write(packet);
 					return 0;
 				}
+
+				lseek(this->_body_fd, 0, SEEK_SET);
+				this->_descriptors->setDescriptorEvent(this->_body_fd, POLLIN);
+				this->_body_write = false;
+				this->_body_read = true;
+				return 0;
 			}
 
 			if (isFiley(new_p) == 1)
@@ -287,7 +293,7 @@ std::string	Response::getStatusMessage(void) {
 	return "";
 }
 
-int		Response::readResponse(std::string & packet) {
+int		Response::readResponse(STRBinary & packet) {
 	if (this->_event == EVT_SEND_RESPONSE_LINE) {
 		this->_event = EVT_SEND_RESPONSE_HEADERS;
 		packet = "HTTP/1.1 " + intToStr(this->_status) + " " + getStatusMessage() + "\r\n";
@@ -312,11 +318,9 @@ int		Response::readResponse(std::string & packet) {
 	}
 
 	if (this->_event == EVT_SEND_RESPONSE_BODY) {
-		std::string line;
-		if (this->_request->readTemporary("body", line) > 0) {
-			packet = line;
+		packet.clear();
+		if (this->_request->readTemporary("body", packet) > 0)
 			return 1;
-		}
 
 		packet = CRLF;
 		this->_event = EVT_INITIALIZE;
@@ -431,7 +435,7 @@ int			Response::readCGI(STRBinary & packet) {
 		::close(this->_body_fd);
 		this->_descriptors->deleteDescriptor(this->_body_fd);
 		this->_body_fd = -1;
-		this->_body_start = false;
+		this->_body_read = false;
 	}
 
 	return res;
@@ -452,9 +456,23 @@ void			Response::deleteMethod(void) {
 void			Response::postMethod(void) {
 	std::string p = this->getPathAfterReplacingLocationByRoot();
 
+	this->_request->resetCursorTemporary("request");
+	this->_request->eventTemporary("request", POLLIN);
+
 	if (exists(p)) {
 		if (isFile(p)) {
 			this->_status = STATUS_OK;
+			if ((this->_body_fd = open(p.c_str(), O_RDWR)) < 0) {
+				this->_status = STATUS_NOT_ALLOWED;
+				return;
+			}
+
+			this->_body_write = true;
+
+			fcntl(this->_body_fd, F_SETFL, O_NONBLOCK);
+
+			this->_descriptors->setDescriptor(this->_body_fd, POLLOUT);
+			this->_descriptors->setDescriptorType(this->_body_fd, "file");
 			std::cout << "[" << p << "] is a file." << std::endl;
 		} else if (isDirectory(p)) {
 			std::cout << "[" << p << "] is a directory." << std::endl;
@@ -544,7 +562,7 @@ int					Response::read(STRBinary & value)
 	value.clear();
 
 	if (!(it->revents & POLLIN)) {
-		return !this->_body_start;
+		return !this->_body_read;
 	}
 
 	pos = ::read(this->_body_fd, packet.data(), packet.size());
@@ -555,7 +573,27 @@ int					Response::read(STRBinary & value)
 
 	value = packet;
 
-	this->_body_start = true;
+	this->_body_read = true;
 
 	return (pos > 0 && value.length() > 0);
+}
+
+int					Response::write(STRBinary & value)
+{
+	Descriptors::poll_type	it;
+	ssize_t				pos;
+
+	if ((it = this->getPoll()) == this->_descriptors->descriptors.end()) {
+		return -1;
+	}
+
+	if (!(it->revents & POLLOUT)) {
+		return !this->_body_write;
+	}
+
+	pos = ::write(this->_body_fd, value.data(), value.length());
+
+	this->_body_write = true;
+
+	return 1;
 }

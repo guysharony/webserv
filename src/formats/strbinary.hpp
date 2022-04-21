@@ -17,6 +17,7 @@ class STRBinary {
 
 		STRBinary		&operator=(STRBinary const &rhs);
 		STRBinary		&operator=(std::vector<char> const &rhs);
+		STRBinary		&operator=(std::string & rhs);
 		char			operator[](size_t n);
 
 		size_t		find(std::string str);

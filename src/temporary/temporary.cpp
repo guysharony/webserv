@@ -80,9 +80,8 @@ int		Temporary::read(std::string const &filename, std::string & dest)
 {
 	tmpfile_type	ite = this->_tmpfiles.end();
 	for (tmpfile_type it = this->_tmpfiles.begin(); it != ite; ++it) {
-		if ((*it)->getFilename() == filename) {
+		if ((*it)->getFilename() == filename)
 			return (*it)->read(dest);
-		}
 	}
 
 	return -1;
@@ -92,9 +91,8 @@ int		Temporary::read(std::string const &filename, STRBinary & dest)
 {
 	tmpfile_type	ite = this->_tmpfiles.end();
 	for (tmpfile_type it = this->_tmpfiles.begin(); it != ite; ++it) {
-		if ((*it)->getFilename() == filename) {
+		if ((*it)->getFilename() == filename)
 			return (*it)->read(dest);
-		}
 	}
 
 	return -1;

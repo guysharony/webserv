@@ -110,11 +110,12 @@ void				Client::appendRequest(std::vector<char> & packet)
 { this->_request.append(packet); }
 
 /* Response */
-int				Client::readResponse(std::string & packet)
+int				Client::readResponse(STRBinary & packet)
 { return this->_response.readResponse(packet); }
 
 int				Client::prepareResponse(void) {
 	if (!this->_response.execute()) {
+		this->_request.eventTemporary("body", POLLIN);
 		this->_request.setEnd(0);
 		return 1;
 	}
