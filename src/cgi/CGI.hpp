@@ -34,6 +34,7 @@ class CGI {
 		char						*_argument;
 
 		CGI(void);
+		int	_init_env(Config::configuration_type const &server, Config::location_type const &location, std::string const &filename);
 };
 
 #endif

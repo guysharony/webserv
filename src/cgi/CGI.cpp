@@ -39,6 +39,41 @@ CGI &CGI::operator=(CGI const & rhs) {
 	return (*this);
 }
 
+int CGI::_init_env(Config::configuration_type const &server, Config::location_type const &location, std::string const &filename)
+{
+	std::map<std::string, std::string>	headers = this->_request->getHeader();
+
+	// Prepare environment for execve
+	clearenv();
+	setenv("SERVER_SOFTWARE", SERVER_NAME, true);						// *** This value should be confirmed
+	setenv("SERVER_NAME", server->server_name.c_str(), true);
+	setenv("GATEWAY_INTERFACE", "CGI/1.1", true);						// *** This value should be confirmed
+	setenv("SERVER_PROTOCOL", "HTTP/1.1", true);
+	setenv("SERVER_PORT", this->_request->getPort().c_str(), true);
+	setenv("PATH_INFO", filename.c_str(), true);
+	setenv("QUERY_STRING", this->_request->getParameters().c_str(), true);
+	setenv("PATH_TRANSLATED", filename.c_str(), true);
+	setenv("REQUEST_METHOD", this->_request->getMethod().c_str(), true);
+	setenv("REDIRECT_STATUS", "200", true);
+	setenv("DOCUMENT_ROOT", location->root.c_str(), true);
+	setenv("SCRIPT_FILENAME", filename.c_str(), true);
+
+	Message::debugln("Headers");
+	for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it)
+	{
+		std::string key(it->first);
+		if (key == "content-type")
+			setenv("CONTENT_TYPE", it->second.c_str(), true);
+		key = "HTTP_" + key;
+		Message::debug(key);
+		Message::debug(" = ");
+		Message::debugln(it->second.c_str());
+		setenv(toUppercase(key).c_str(), it->second.c_str(), true);
+	}
+
+	return (0);
+}
+
 int	CGI::launch_cgi(std::string const & filename) {
 	int		fd[2];
 	pid_t	pid;
@@ -61,21 +96,8 @@ int	CGI::launch_cgi(std::string const & filename) {
 	else if (pid == 0)
 	{
 		// Child
-		clearenv();
-		std::map<std::string, std::string>	headers = this->_request->getHeader();
-		Message::debugln("Headers");
-		for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it)
-		{
-			std::string key(it->first);
-			if (key == "content-type")
-				setenv("CONTENT_TYPE", it->second.c_str(), true);
-			key = "HTTP_" + key;
-			Message::debug(key);
-			Message::debug(" = ");
-			Message::debugln(it->second.c_str());
-			setenv(toUppercase(key).c_str(), it->second.c_str(), true);
-		}
-
+		this->_init_env(server, location, filename);
+		
 		// Open tmp file using TmpFileClass
 		// Dup tmp_file_fd to stdin
 		std::string content_length = toString(this->_request->sizeTemporary("request"), false);
@@ -84,14 +106,6 @@ int	CGI::launch_cgi(std::string const & filename) {
 		if (this->_request->getMethod() == "POST") {
 			std::cout << "cgi with POST" << std::endl;
 			tmp_fd = this->_request->fdTemporary("request");
-			int c = 0;
-			while (tmp_fd < 0 && c < 10)
-			{
-				std::cout << "rechecking temp fd == " << tmp_fd << std::endl;
-				tmp_fd = this->_request->fdTemporary("request");
-				sleep(1);
-				++c;
-			}
 			if (tmp_fd < 0)
 				Message::error("invalid temp file");
 			else {
@@ -105,20 +119,6 @@ int	CGI::launch_cgi(std::string const & filename) {
 				// setenv("CONTENT_TYPE", "application/x-www-form-urlencoded", true);
 			}
 		}
-
-		// Prepare environment for execve
-		setenv("SERVER_SOFTWARE", SERVER_NAME, true);						// *** This value should be confirmed
-		setenv("SERVER_NAME", server->server_name.c_str(), true);
-		setenv("GATEWAY_INTERFACE", "CGI/1.1", true);						// *** This value should be confirmed
-		setenv("SERVER_PROTOCOL", "HTTP/1.1", true);
-		setenv("SERVER_PORT", this->_request->getPort().c_str(), true);
-		setenv("PATH_INFO", filename.c_str(), true);
-		setenv("QUERY_STRING", this->_request->getParameters().c_str(), true);
-		setenv("PATH_TRANSLATED", filename.c_str(), true);
-		setenv("REQUEST_METHOD", this->_request->getMethod().c_str(), true);
-		setenv("REDIRECT_STATUS", "200", true);
-		setenv("DOCUMENT_ROOT", location->root.c_str(), true);
-		setenv("SCRIPT_FILENAME", filename.c_str(), true);
 
 		this->_executable = strdup(server->cgi_path.c_str());
 		if (!this->_executable)
