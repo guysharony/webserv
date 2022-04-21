@@ -127,96 +127,6 @@ void			Request::setConnection(int connection)
 void			Request::append(std::vector<char> packet)
 { this->_temp.append(packet); }
 
-/*
-void			Request::parsePathAndVersion(std::string line) {
-	size_t	i;
-
-	i = line.find_first_of(' ');
-	_path = line.substr(0, i);
-	_version = trim2(line.substr(i + 1, line.size() - i - 1));
-	checkVersion();
-}
-
-void			Request::firstLineParsing(std::string request_buffer)
-{
-	std::string	line;
-	size_t		i;
-
-	i = request_buffer.find(CRLF);
-	if (i == std::string::npos) {
-		std::cerr << RED << "no newline found!!" << std::endl;
-		_ret = STATUS_BAD_REQUEST;
-		return;
-	}
-
-	line = request_buffer.substr(0, i);
-	i = line.find_first_of(' ');
-	if (i == std::string::npos)
-	{
-		std::cerr << RED << "no space found!!" << std::endl;
-		_ret = STATUS_BAD_REQUEST;
-		return;
-	}
-
-	_method = trim2(line.substr(0, i));
-	checkMethod();
-	line = trim2(line.substr(i, line.size()));
-	parsePathAndVersion(line);
-}
-*/
-
-/*
-std::string	Request::getNextLine(std::string str, size_t *i)
-{
-	std::string	ret;
-	size_t		j;
-
-	if (*i == std::string::npos)
-		return "";
-
-	j = str.find(CRLF, *i);
-	if (j != std::string::npos) {
-		ret = str.substr(*i, j - *i);
-		*i = j;
-	} else {
-		ret = str.substr(*i, str.size() - *i - 1);
-		*i = str.size() - 1;
-	}
-	return ret;
-}
-*/
-
-/*
-size_t		Request::headerParsing(std::string request_buffer)
-{
-	size_t		i;
-	std::string	line;
-	std::string	key;
-	std::string	value;
-	size_t		header_length;
-
-	header_length = request_buffer.find(D_CRLF);
-	if (header_length == std::string::npos) {
-		this->_ret = STATUS_BAD_REQUEST;
-		std::cerr << RED << "no header is found!!" << std::endl;
-		return -1;
-	}
-
-	i = request_buffer.find(CRLF) + 1;
-	while (_ret != STATUS_BAD_REQUEST && (line = getNextLine(request_buffer, &i)) != "" && i <= header_length) {
-		key = line.substr(0, line.find_first_of(':'));
-		value = line.substr(line.find_first_of(':') + 1, line.size() - (line.find_first_of(':') + 1));
-		key = trim2(key);
-		value = trim2(value);
-		this->_header[key] = value;
-		i++;
-	}
-	checkPort();
-	checkTimeout();
-	return header_length;
-}
-*/
-
 void			Request::execute(void) {
 	Config::configuration_type server;
 
@@ -380,17 +290,6 @@ std::ostream	&operator<<(std::ostream &os, Request &req) {
 	return os;
 }
 
-/*
-void			Request::checkMethod(void) {
-	if (this->_method.compare("GET") != 0 && this->_method.compare("POST") != 0 && this->_method.compare("DELETE") != 0) {
-		this->_ret = STATUS_NOT_ALLOWED;
-		std::cerr << RED << "unknown method !!" << std::endl;
-	}
-
-	return;
-}
-*/
-
 void			Request::checkPort(void) {
 	size_t		i;
 	std::string	tmp;
@@ -415,29 +314,6 @@ void			Request::checkTimeout(void) {
 		this->_timeout = ft_atoi(tmp.c_str());
 }
 
-/*
-void			Request::checkVersion(void) {
-	size_t		i;
-	std::string	str;
-
-	i = this->_version.find_first_of('/');
-	str = this->_version.substr(0, i);
-	if (str.compare("HTTP") != 0)
-	{
-		this->_ret = STATUS_BAD_REQUEST;
-		std::cerr << RED << "this is not a HTTP version" << std::endl;
-		return;
-	}
-
-	str = this->_version.substr(i + 1, this->_version.size() - i);
-	this->_version = str;
-	if (str.compare("1.1") != 0) {
-		this->_ret = STATUS_BAD_REQUEST;
-		std::cerr << RED << "wrong HTTP version" << std::endl;
-		return;
-	}
-}
-*/
 
 /* Temporary */
 int			Request::createTemporary(std::string const & filename)

@@ -121,10 +121,13 @@ void					Response::createHeaders(void) {
 		this->_headers["server"] = this->_server->server_name;
 
 	this->_headers["date"] = findDate();
-	this->_headers["content-length"] = intToStr(body_length + 2);
+	if (body_length > 0)
+		this->_headers["content-length"] = intToStr(body_length + 2);
 	this->_headers["content-location"] = this->_path;
 	this->_headers["content-type"] = findContentType();
-
+	if (this->_status == STATUS_MOVED_PERMANENTLY){
+		this->_headers["Location"] = this->_location->redirect;
+	}
 	this->_event = EVT_SEND_RESPONSE_LINE;
 }
 
@@ -227,6 +230,12 @@ int		Response::createBody(void) {
 				location = this->_request->selectLocation(this->_server);
 			} catch(const Config::LocationNotFoundException& e) {
 				this->_status = STATUS_NOT_FOUND;
+				return 0;
+			}
+
+			if (location->redirect.size() > 0)
+			{
+				this->_status = STATUS_MOVED_PERMANENTLY;
 				return 0;
 			}
 

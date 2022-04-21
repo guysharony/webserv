@@ -4,7 +4,7 @@ Host : 127.0.0.1:8085
 
 
 
-POST /test HTTP/1.1
+GET /redirect HTTP/1.1
 Host: 127.0.0.1:8081
 Connection: keep-alive
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
