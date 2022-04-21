@@ -43,4 +43,6 @@ class STRBinary {
 
 };
 
+std::basic_ostream<char>	&operator<<(std::basic_ostream<char> &value1, STRBinary &value2);
+
 #endif

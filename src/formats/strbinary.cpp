@@ -112,3 +112,10 @@ size_t		STRBinary::length(void)
 
 	return tmp;
 }
+
+std::basic_ostream<char>	&operator<<(std::basic_ostream<char> &value1, STRBinary &value2)
+{
+	value1 << value2.c_str();
+
+	return value1;
+}

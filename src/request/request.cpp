@@ -480,7 +480,7 @@ int			Request::appendTemporary(std::string const & filename, STRBinary const & p
 	return 1;
 }
 
-int			Request::readTemporary(std::string const & filename, std::string & packet)
+int			Request::readTemporary(std::string const & filename, STRBinary & packet)
 { return this->_temporary.read(filename, packet); }
 
 int			Request::displayTemporary(std::string const & filename)

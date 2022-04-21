@@ -196,6 +196,13 @@ int		Response::createBody(void) {
 		{
 			std::string new_p = getPathAfterReplacingLocationByRoot();
 
+			if (!this->getMethod().compare("POST")) {
+				if (this->_request->readTemporary("request", packet) > 0) {
+					std::cout << "REQUEST [" << packet << "]" << std::endl;
+					return 0;
+				}
+			}
+
 			if (isFiley(new_p) == 1)
 			{
 				if ((createErrorPages(new_p, packet) > 0) || (this->_body_fd <= 0)) {

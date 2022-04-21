@@ -41,6 +41,7 @@ class TmpFile
 
 		void					resetCursor(void);
 		int					read(std::string & value);
+		int					read(STRBinary & value);
 		int					write(std::string const & value);
 		int					write(STRBinary value);
 		int					display(void);

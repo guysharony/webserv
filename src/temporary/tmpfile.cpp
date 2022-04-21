@@ -91,9 +91,39 @@ int			TmpFile::read(std::string & value)
 
 	value.clear();
 
+	if (!(it->revents & POLLIN))
+		return -1;
+
 	pos = ::read(this->_fd, buffer, BUFFER_SIZE - 1);
 
 	value = std::string(buffer);
+
+	return (pos > 0 && value.length() > 0);
+}
+
+int			TmpFile::read(STRBinary & value)
+{
+	Descriptors::poll_type	it;
+	std::vector<char>		packet(5000);
+	ssize_t				pos;
+
+	pos = 0;
+
+	if ((it = this->getPoll()) == this->_descriptors->descriptors.end()) {
+		return -1;
+	}
+
+	value.clear();
+
+	if (!(it->revents & POLLIN))
+		return -1;
+
+	pos = ::read(this->_fd, packet.data(), packet.size());
+
+	if (static_cast<int>(packet.size()) > pos)
+		packet.resize(pos);
+
+	value = packet;
 
 	return (pos > 0 && value.length() > 0);
 }
