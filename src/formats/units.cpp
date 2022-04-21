@@ -174,3 +174,34 @@ std::string		intToHex(int num)
 	return (buffer);
 }
 
+std::string		toBase62(int num)
+{
+	std::string	buffer;
+	int			tmp;
+	bool			neg = num < 0;
+
+	if (neg)
+		num = -num;
+
+	if (!num)
+		return ("0");
+
+	while (num > 0) {
+		tmp = num % 62;
+
+		if (tmp < 10)
+			buffer.insert(buffer.begin(), tmp + 48);
+		else if (tmp >= 10 && tmp < 36)
+			buffer.insert(buffer.begin(), tmp + 55);
+		else {
+			buffer.insert(buffer.begin(), tmp + 61);
+		}
+
+		num /= 62;
+	}
+
+	if (neg)
+		buffer.insert(buffer.begin(), '-');
+
+	return (buffer);
+}

@@ -475,6 +475,17 @@ void			Response::postMethod(void) {
 			this->_descriptors->setDescriptorType(this->_body_fd, "file");
 			std::cout << "[" << p << "] is a file." << std::endl;
 		} else if (isDirectory(p)) {
+			if ((this->_body_fd = uniqueFile(p, O_CREAT | O_TRUNC | O_RDWR, S_IRWXU)) < 0) {
+				this->_status = STATUS_NOT_ALLOWED;
+				return;
+			}
+
+			this->_body_write = true;
+
+			fcntl(this->_body_fd, F_SETFL, O_NONBLOCK);
+
+			this->_descriptors->setDescriptor(this->_body_fd, POLLOUT);
+			this->_descriptors->setDescriptorType(this->_body_fd, "file");
 			std::cout << "[" << p << "] is a directory." << std::endl;
 		}
 	} else {

@@ -56,3 +56,41 @@ int							isDirectory(std::string path)
 	struct stat s;
 	return (stat(path.c_str(), &s) != -1 && s.st_mode & S_IFDIR);
 }
+
+std::string					randomString(size_t length)
+{
+	std::string	filename;
+
+	for (size_t i = 0; i < length; ++i)
+		filename.append(toBase62(rand() % 62 + 1));
+
+	return filename;
+}
+
+std::string					uniqueFilename(std::string path, size_t length) {
+	std::string	name;
+
+	name = secureAddress(path, randomString(length));
+
+	return exists(name) ? uniqueFilename(path, length) : name;
+}
+
+int							uniqueFile(std::string path, int flags)
+{
+	if (!exists(path))
+		mkdir(path.c_str(), 0700);
+	else if (isFile(path))
+		return -1;
+
+	return open(uniqueFilename(path).c_str(), flags);
+}
+
+int							uniqueFile(std::string path, int flags, mode_t mode)
+{
+	if (!exists(path))
+		mkdir(path.c_str(), 0700);
+	else if (isFile(path))
+		return -1;
+
+	return open(uniqueFilename(path).c_str(), flags, mode);
+}
