@@ -43,8 +43,8 @@ class Client {
 		void					setEvent(int event);
 		void					setClose(bool value);
 
-		int					readResponse(std::string & packet);
-		void					appendRequest(std::vector<char> packet);
+		int					readResponse(STRBinary & packet);
+		void					appendRequest(std::vector<char> & packet);
 		void					closeResponse(void);
 
 		int					prepareResponse(void);

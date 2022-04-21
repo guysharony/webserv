@@ -266,7 +266,8 @@ void		ConfigServer::_adjustErrorPages(configuration_struct &config) {
 	error_pages_type	error_page;
 	std::string		error_path;
 
-	for (error_pages_type::iterator it = config.error_page.begin(); it != config.error_page.end(); it++) {
+	error_pages_type::iterator ite = config.error_page.end();
+	for (error_pages_type::iterator it = config.error_page.begin(); it != ite; ++it) {
 		if (getAbsolutePath(secureAddress(config.root, it->second), error_path)) {
 			error_page[it->first] = error_path;
 		}
@@ -278,19 +279,20 @@ void		ConfigServer::_adjustErrorPages(configuration_struct &config) {
 void		ConfigServer::_adjustLocations(configuration_struct &config) {
 	std::string	path;
 
-	for (location_type location = config.locations.begin(); location != config.locations.end(); location++) {
+	location_type	location_end = config.locations.end();
+	for (location_type location = config.locations.begin(); location != location_end; ++location) {
 		if (location->redirect.empty())
 			location->redirect = config.redirect;
 
 		path = location->root.empty() ? config.root : location->root;
-		if (!getAbsolutePath(path, location->root))
+		if (path.length() > 0 && !getAbsolutePath(path, location->root))
 			Message::error("'" + path + "' can't be found.");
 
 		if (location->client_max_body_size == -1)
 			location->client_max_body_size = config.client_max_body_size;
 
 		path = location->cgi_path.empty() ? config.cgi_path : location->cgi_path;
-		if (!getAbsolutePath(path, location->cgi_path))
+		if (path.length() > 0 && !getAbsolutePath(path, location->cgi_path))
 			Message::error("'" + path + "' can't be found.");
 
 		std::string		error_path;

@@ -89,10 +89,8 @@ bool		Webserv::run(void) {
 				if (this->handleServer())
 					break;
 			} else if (this->context.type == "client") {
-				if (this->handleClient()) {
-
+				if (this->handleClient())
 					break;
-				}
 			}
 		}
 
@@ -101,8 +99,6 @@ bool		Webserv::run(void) {
 			this->descriptors.compressDescriptors();
 		}
 	}
-
-	std::cout << "END" << std::endl;
 
 	return true;
 }
@@ -145,7 +141,7 @@ bool			Webserv::handleClient(void) {
 		}
 	} else if ((*this->context.client)->getEvent() == EVT_SEND_RESPONSE) {
 		if (this->context.poll->revents & POLLOUT) {
-			std::string packet;
+			STRBinary packet;
 
 			if ((*this->context.client)->readResponse(packet) > 0) {
 				if (this->clientSend(packet) <= 0) {
@@ -212,17 +208,20 @@ int				Webserv::clientReceive(void) {
 		if (static_cast<int>(packet.size()) > res) {
 			packet.resize(res);
 		}
-		
+
 		if ((*this->context.client)->getEvent() == NONE)
 			(*this->context.client)->setEvent(EVT_REQUEST_LINE);
 
 		(*this->context.client)->appendRequest(packet);
+		
 	}
+
+	packet.clear();
 
 	return res;
 }
 
-int				Webserv::clientSend(std::string value) {
+int				Webserv::clientSend(STRBinary value) {
 	if (this->context.type != "client")
 		return -1;
 

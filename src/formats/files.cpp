@@ -48,5 +48,69 @@ int							exists(std::string path)
 int							isFile(std::string path)
 {
 	struct stat s;
-	return (stat(path.c_str(), &s) != -1 && S_ISREG(s.st_mode));
+	return (stat(path.c_str(), &s) != -1 && s.st_mode & S_IFREG);
+}
+
+int							isDirectory(std::string path)
+{
+	struct stat s;
+	return (stat(path.c_str(), &s) != -1 && s.st_mode & S_IFDIR);
+}
+
+std::string					randomString(size_t length)
+{
+	std::string	filename;
+
+	for (size_t i = 0; i < length; ++i)
+		filename.append(toBase62(rand() % 62 + 1));
+
+	return filename;
+}
+
+std::string					uniqueFilename(std::string path, size_t length) {
+	std::string	name;
+
+	name = secureAddress(path, randomString(length));
+
+	return exists(name) ? uniqueFilename(path, length) : name;
+}
+
+int							uniqueFile(std::string path, std::string & filename, int flags)
+{
+	std::string	tmp;
+
+	if (!exists(path))
+		mkdir(path.c_str(), 0700);
+	else if (isFile(path))
+		return -1;
+
+	tmp = uniqueFilename(path);
+	filename = tmp.substr(path.length());
+
+	return open(tmp.c_str(), flags);
+}
+
+int							uniqueFile(std::string path, int flags, mode_t mode)
+{
+	if (!exists(path))
+		mkdir(path.c_str(), 0700);
+	else if (isFile(path))
+		return -1;
+
+	return open(uniqueFilename(path).c_str(), flags, mode);
+}
+
+int							uniqueFile(std::string path, std::string & filename, int flags, mode_t mode)
+{
+	std::string	tmp;
+
+	if (!exists(path))
+		mkdir(path.c_str(), 0700);
+	else if (isFile(path))
+		return -1;
+
+	tmp = uniqueFilename(path);
+	filename = tmp.substr(path.length());
+
+	return open(tmp.c_str(), flags, mode);
 }

@@ -12,6 +12,7 @@ class Temporary
 
 		bool					create(std::string const & name);
 		int					read(std::string const & filename, std::string &dest);
+		int					read(std::string const &filename, STRBinary & dest);
 		int					append(std::string const &filename, std::string const & source);
 		int					append(std::string const &filename, STRBinary source);
 		int					display(std::string const &filename);

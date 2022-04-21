@@ -53,7 +53,7 @@ class Webserv {
 		bool							contextInitialize(void);
 
 		int							clientReceive(void);
-		int							clientSend(std::string value);
+		int							clientSend(STRBinary value);
 
 	private:
 		bool							_run;

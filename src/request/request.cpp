@@ -28,7 +28,11 @@ Request::Request(Config *config, Descriptors *descriptors)
 }
 
 Request::~Request()
-{ this->_header.clear(); }
+{
+	this->_temp.clear();
+	this->_current.clear();
+	this->_header.clear();
+}
 
 
 /* Getters */
@@ -124,7 +128,7 @@ void			Request::setConnection(int connection)
 { this->_connection = connection; }
 
 /* Methods */
-void			Request::append(std::vector<char> packet)
+void			Request::append(std::vector<char> & packet)
 { this->_temp.append(packet); }
 
 void			Request::execute(void) {
@@ -347,7 +351,7 @@ int			Request::appendTemporary(std::string const & filename, STRBinary const & p
 	return 1;
 }
 
-int			Request::readTemporary(std::string const & filename, std::string & packet)
+int			Request::readTemporary(std::string const & filename, STRBinary & packet)
 { return this->_temporary.read(filename, packet); }
 
 int			Request::displayTemporary(std::string const & filename)
@@ -519,15 +523,19 @@ void		Request::displayAllLocations(void) {
 }
 
 Config::configuration_type Request::selectServer(void) {
-	Config::configuration_type it;
-	Config::configuration_type default_server = this->_config->configuration.end();
+	Config::configuration_type ite = this->_config->configuration.end();
+	Config::configuration_type default_server = ite;
 
-	for (it = this->_config->configuration.begin(); it != this->_config->configuration.end(); it++) {
-		for (Config::listen_type::iterator it2 = it->listen.begin(); it2 != it->listen.end(); it2++) {
-			for (Config::ports_type::iterator it3 = it2->second.begin(); it3 != it2->second.end(); it3++) {
+	for (Config::configuration_type it = this->_config->configuration.begin(); it != ite; ++it) {
+
+		Config::listen_type::iterator it2e = it->listen.end();
+		for (Config::listen_type::iterator it2 = it->listen.begin(); it2 != it2e; ++it2) {
+
+			Config::ports_type::iterator it3e = it2->second.end();
+			for (Config::ports_type::iterator it3 = it2->second.begin(); it3 != it3e; ++it3) {
 				if (!(*it3).compare(this->_port))
 				{
-					if (default_server == this->_config->configuration.end()) {
+					if (default_server == ite) {
 						default_server = it;
 					}
 
