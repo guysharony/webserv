@@ -9,6 +9,7 @@
 # include <sstream>
 # include <sys/time.h>
 # include <unistd.h>
+# include "../formats/files.hpp"
 # include "../request/request.hpp"
 # include "../cgi/CgiParser.hpp"
 # include "../cgi/CGI.hpp"

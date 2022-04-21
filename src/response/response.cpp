@@ -101,8 +101,9 @@ void					Response::initialize(void) {
 		if (this->_request->getMethod().compare("DELETE") == 0 && this->_status == STATUS_OK)
 			deleteMethod();
 
-		if (this->_request->getMethod().compare("POST") == 0 && this->_status == STATUS_OK)
+		if (this->_request->getMethod().compare("POST") == 0 && this->_status == STATUS_OK) {
 			postMethod();
+		}
 	}
 
 	this->_server_found = (this->_server != this->_request->getConfig()->configuration.end());
@@ -175,110 +176,67 @@ int		Response::createBody(void) {
 			this->_cgi_parser = NULL;
 		}
 	} else {
-		if (this->_status == STATUS_NOT_FOUND)
-		{
-			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_NOT_FOUND] : "", packet) > 0) || (this->_body_fd <= 0)) {
+		if (this->_status != STATUS_OK) {
+			if ((createErrorPages(this->_server_found ? this->_server->error_page[this->_status] : "", packet) > 0) || (this->_body_fd <= 0)) {
 				this->_request->appendTemporary("body", packet);
 				return (this->_body_fd <= 0);
-			}
-		}
-		else if (this->_status == STATUS_HTTP_VERSION_NOT_SUPPORTED)
-		{
-			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_HTTP_VERSION_NOT_SUPPORTED] : "", packet) > 0) || (this->_body_fd <= 0)) {
-				this->_request->appendTemporary("body", packet);
-				return (this->_body_fd <= 0);
-			}
-		}
-		else if (this->_status == STATUS_NOT_ALLOWED)
-		{
-			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_NOT_ALLOWED] : "", packet) > 0) || (this->_body_fd <= 0)) {
-				this->_request->appendTemporary("body", packet);
-				return (this->_body_fd <= 0);
-			}
-		}
-		else if (this->_status == STATUS_INTERNAL_SERVER_ERROR)
-		{
-			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_INTERNAL_SERVER_ERROR] : "", packet) > 0) || (this->_body_fd <= 0)) {
-				this->_request->appendTemporary("body", packet);
-				return (this->_body_fd <= 0);
-			}
-		}
-		else if (this->_status == STATUS_BAD_REQUEST)
-		{
-			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_BAD_REQUEST] : "", packet) > 0) || (this->_body_fd <= 0)) {
-				this->_request->appendTemporary("body", packet);
-				return (this->_body_fd <= 0);
-			}
-		}
-		else if (this->_status == STATUS_REQUEST_ENTITY_TOO_LARGE)
-		{
-			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_REQUEST_ENTITY_TOO_LARGE] : "", packet) > 0) || (this->_body_fd <= 0)) {
-				this->_request->appendTemporary("body", packet);
-				return (this->_body_fd <= 0);
-			}
-		}
-		else if (this->_status == STATUS_FORBIDDEN)
-		{
-			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_FORBIDDEN] : "", packet) > 0) || (this->_body_fd <= 0)) {
-				this->_request->appendTemporary("body", packet);
-				return (this->_body_fd <= 0);
-			}
-		}
-		else if (this->_status == STATUS_OK)
-		{
-			try {
-				location = this->_request->selectLocation(this->_server);
-			} catch(const Config::LocationNotFoundException& e) {
-				this->_status = STATUS_NOT_FOUND;
-				return 0;
 			}
 
-			if (location->root.size() > 0)
+			return 1;
+		}
+
+		try {
+			location = this->_request->selectLocation(this->_server);
+		} catch(const Config::LocationNotFoundException& e) {
+			this->_status = STATUS_NOT_FOUND;
+			return 0;
+		}
+
+		if (location->root.size() > 0)
+		{
+			std::string new_p = getPathAfterReplacingLocationByRoot();
+
+			if (isFiley(new_p) == 1)
 			{
-				std::string new_p = getPathAfterReplacingLocationByRoot();
-
-				if (isFiley(new_p) == 1)
-				{
-					if ((createErrorPages(new_p, packet) > 0) || (this->_body_fd <= 0)) {
-						this->_request->appendTemporary("body", packet);
-						return (this->_body_fd <= 0);
-					}
-				}
-				else if (isFiley(new_p) == 2)
-				{
-					std::vector<std::string>::iterator it;
-
-					for (it = location->index.begin() ; it != location->index.end() ; it++)
-					{
-						std::string path = location->root + "/" + (*it);
-						if (isFiley(path) == 1)
-						{
-							if ((createErrorPages(path, packet) > 0) || (this->_body_fd <= 0)) {
-								this->_request->appendTemporary("body", packet);
-								return (this->_body_fd <= 0);
-							}
-							break;
-						}
-					}
-
-					if (it == location->index.end() && this->_autoIndex) {
-						if (getListOfDirectories(new_p.c_str(), packet) > 0) {
-							this->_request->appendTemporary("body", packet);
-							return 0;
-						}
-						return 1;
-					}
-				}
-				else
-				{
-					this->_status = STATUS_NOT_FOUND;
-					return 0;
+				if ((createErrorPages(new_p, packet) > 0) || (this->_body_fd <= 0)) {
+					this->_request->appendTemporary("body", packet);
+					return (this->_body_fd <= 0);
 				}
 			}
-			else {
+			else if (isFiley(new_p) == 2)
+			{
+				std::vector<std::string>::iterator it;
+
+				for (it = location->index.begin() ; it != location->index.end() ; it++)
+				{
+					std::string path = location->root + "/" + (*it);
+					if (isFiley(path) == 1)
+					{
+						if ((createErrorPages(path, packet) > 0) || (this->_body_fd <= 0)) {
+							this->_request->appendTemporary("body", packet);
+							return (this->_body_fd <= 0);
+						}
+						break;
+					}
+				}
+
+				if (it == location->index.end() && this->_autoIndex) {
+					if (getListOfDirectories(new_p.c_str(), packet) > 0) {
+						this->_request->appendTemporary("body", packet);
+						return 0;
+					}
+					return 1;
+				}
+			}
+			else
+			{
 				this->_status = STATUS_NOT_FOUND;
 				return 0;
 			}
+		}
+		else {
+			this->_status = STATUS_NOT_FOUND;
+			return 0;
 		}
 	}
 
@@ -487,7 +445,16 @@ void			Response::deleteMethod(void) {
 void			Response::postMethod(void) {
 	std::string p = this->getPathAfterReplacingLocationByRoot();
 
-	std::cout << "POST METHOD [" << p << "]" << std::endl;
+	if (exists(p)) {
+		if (isFile(p)) {
+			this->_status = STATUS_OK;
+			std::cout << "[" << p << "] is a file." << std::endl;
+		} else if (isDirectory(p)) {
+			std::cout << "[" << p << "] is a directory." << std::endl;
+		}
+	} else {
+		std::cout << "[" << p << "] can't be found." << std::endl;
+	}
 }
 
 void			Response::checkPath(void) {

@@ -48,5 +48,11 @@ int							exists(std::string path)
 int							isFile(std::string path)
 {
 	struct stat s;
-	return (stat(path.c_str(), &s) != -1 && S_ISREG(s.st_mode));
+	return (stat(path.c_str(), &s) != -1 && s.st_mode & S_IFREG);
+}
+
+int							isDirectory(std::string path)
+{
+	struct stat s;
+	return (stat(path.c_str(), &s) != -1 && s.st_mode & S_IFDIR);
 }

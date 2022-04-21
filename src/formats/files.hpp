@@ -15,5 +15,6 @@ std::vector<std::string> 	listFromDirectory(std::string src);
 
 int						exists(std::string path);
 int						isFile(std::string path);
+int						isDirectory(std::string path);
 
 #endif
