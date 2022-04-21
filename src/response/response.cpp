@@ -129,6 +129,9 @@ void					Response::createHeaders(void) {
 	this->_headers["Content-Location"] = this->_path;
 	this->_headers["Content-Type"] = findContentType();
 
+	if (this->_status == STATUS_MOVED_PERMANENTLY){
+		this->_headers["Location"] = this->_location->redirect;
+	}
 	this->_event = EVT_SEND_RESPONSE_LINE;
 }
 
@@ -204,6 +207,12 @@ int		Response::createBody(void) {
 
 				this->_body_write = false;
 				return 1;
+			}
+      
+      if (location->redirect.size() > 0)
+			{
+				this->_status = STATUS_MOVED_PERMANENTLY;
+				return 0;
 			}
 
 			if (isFiley(new_p) == 1)
