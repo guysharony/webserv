@@ -7,7 +7,7 @@ Response::Response(Request *request, Descriptors *descriptors)
 	_cgi_parser(NULL),
 	_directory_list(),
 	_server_found(false),
-	_body_start(false),
+	_body_read(false),
 	_body_fd(-1),
 	_event(EVT_INITIALIZE),
 	_descriptors(descriptors)
@@ -70,13 +70,13 @@ int					Response::execute(void) {
 
 void					Response::initialize(void) {
 	this->_body_fd = -1;
-	this->_body_start = false;
+	this->_body_read = false;
 	this->_server = this->_request->getConfig()->configuration.end();
 	this->_status = this->_request->getStatus();
 	this->_request->createTemporary("body");
 
 	Config::location_type location;
-	if (this->_status < STATUS_BAD_REQUEST) {
+	if (this->_status < STATUS_BAD_REQUEST && this->_status != STATUS_NOT_ALLOWED) {
 		try {
 			this->_server = this->_request->selectServer();
 		} catch(const Config::ServerNotFoundException & e) {
@@ -100,6 +100,10 @@ void					Response::initialize(void) {
 
 		if (this->_request->getMethod().compare("DELETE") == 0 && this->_status == STATUS_OK)
 			deleteMethod();
+
+		if (this->_request->getMethod().compare("POST") == 0 && this->_status == STATUS_OK) {
+			postMethod();
+		}
 	}
 
 	this->_server_found = (this->_server != this->_request->getConfig()->configuration.end());
@@ -118,13 +122,16 @@ void					Response::createHeaders(void) {
 	size_t	body_length = this->_request->sizeTemporary("body");
 
 	if (this->_status < STATUS_INTERNAL_SERVER_ERROR && this->_server_found)
-		this->_headers["server"] = this->_server->server_name;
+		this->_headers["Server"] = this->_server->server_name;
 
-	this->_headers["date"] = findDate();
-	this->_headers["content-length"] = intToStr(body_length + 2);
-	this->_headers["content-location"] = this->_path;
-	this->_headers["content-type"] = findContentType();
+	this->_headers["Date"] = findDate();
+	this->_headers["Content-Length"] = intToStr(body_length + 2);
+	this->_headers["Content-Location"] = this->_path;
+	this->_headers["Content-Type"] = findContentType();
 
+	if (this->_status == STATUS_MOVED_PERMANENTLY){
+		this->_headers["Location"] = this->_location->redirect;
+	}
 	this->_event = EVT_SEND_RESPONSE_LINE;
 }
 
@@ -152,7 +159,7 @@ int		Response::createBody(void) {
 	Config::location_type	location;
 	STRBinary				packet;
 
-	if (this->_request->isCgi(this->_server)) {
+	if (this->_request->isCgi(this->_server) && (this->_status == STATUS_OK)) {
 		if (this->readCGI(packet) > 0) {
 			this->_cgi_parser->append(packet);
 			this->_cgi_parser->parseCgiResponse();
@@ -172,110 +179,82 @@ int		Response::createBody(void) {
 			this->_cgi_parser = NULL;
 		}
 	} else {
-		if (this->_status == STATUS_NOT_FOUND)
-		{
-			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_NOT_FOUND] : "", packet) > 0) || (this->_body_fd <= 0)) {
+		if (this->_status != STATUS_OK && this->_status != STATUS_CREATED) {
+			if ((createErrorPages(this->_server_found ? this->_server->error_page[this->_status] : "", packet) > 0) || (this->_body_fd <= 0)) {
 				this->_request->appendTemporary("body", packet);
 				return (this->_body_fd <= 0);
-			}
-		}
-		else if (this->_status == STATUS_HTTP_VERSION_NOT_SUPPORTED)
-		{
-			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_HTTP_VERSION_NOT_SUPPORTED] : "", packet) > 0) || (this->_body_fd <= 0)) {
-				this->_request->appendTemporary("body", packet);
-				return (this->_body_fd <= 0);
-			}
-		}
-		else if (this->_status == STATUS_NOT_ALLOWED)
-		{
-			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_NOT_ALLOWED] : "", packet) > 0) || (this->_body_fd <= 0)) {
-				this->_request->appendTemporary("body", packet);
-				return (this->_body_fd <= 0);
-			}
-		}
-		else if (this->_status == STATUS_INTERNAL_SERVER_ERROR)
-		{
-			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_INTERNAL_SERVER_ERROR] : "", packet) > 0) || (this->_body_fd <= 0)) {
-				this->_request->appendTemporary("body", packet);
-				return (this->_body_fd <= 0);
-			}
-		}
-		else if (this->_status == STATUS_BAD_REQUEST)
-		{
-			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_BAD_REQUEST] : "", packet) > 0) || (this->_body_fd <= 0)) {
-				this->_request->appendTemporary("body", packet);
-				return (this->_body_fd <= 0);
-			}
-		}
-		else if (this->_status == STATUS_REQUEST_ENTITY_TOO_LARGE)
-		{
-			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_REQUEST_ENTITY_TOO_LARGE] : "", packet) > 0) || (this->_body_fd <= 0)) {
-				this->_request->appendTemporary("body", packet);
-				return (this->_body_fd <= 0);
-			}
-		}
-		else if (this->_status == STATUS_FORBIDDEN)
-		{
-			if ((createErrorPages(this->_server_found ? this->_server->error_page[STATUS_FORBIDDEN] : "", packet) > 0) || (this->_body_fd <= 0)) {
-				this->_request->appendTemporary("body", packet);
-				return (this->_body_fd <= 0);
-			}
-		}
-		else if (this->_status == STATUS_OK)
-		{
-			try {
-				location = this->_request->selectLocation(this->_server);
-			} catch(const Config::LocationNotFoundException& e) {
-				this->_status = STATUS_NOT_FOUND;
-				return 0;
 			}
 
-			if (location->root.size() > 0)
-			{
-				std::string new_p = getPathAfterReplacingLocationByRoot();
+			return 1;
+		}
 
-				if (isFiley(new_p) == 1)
-				{
-					if ((createErrorPages(new_p, packet) > 0) || (this->_body_fd <= 0)) {
-						this->_request->appendTemporary("body", packet);
-						return (this->_body_fd <= 0);
-					}
-				}
-				else if (isFiley(new_p) == 2)
-				{
-					std::vector<std::string>::iterator it;
+		try {
+			location = this->_request->selectLocation(this->_server);
+		} catch(const Config::LocationNotFoundException& e) {
+			this->_status = STATUS_NOT_FOUND;
+			return 0;
+		}
 
-					for (it = location->index.begin() ; it != location->index.end() ; it++)
-					{
-						std::string path = location->root + "/" + (*it);
-						if (isFiley(path) == 1)
-						{
-							if ((createErrorPages(path, packet) > 0) || (this->_body_fd <= 0)) {
-								this->_request->appendTemporary("body", packet);
-								return (this->_body_fd <= 0);
-							}
-							break;
-						}
-					}
+		if (location->root.size() > 0)
+		{
+			std::string new_p = getPathAfterReplacingLocationByRoot();
 
-					if (it == location->index.end() && this->_autoIndex) {
-						if (getListOfDirectories(new_p.c_str(), packet) > 0) {
-							this->_request->appendTemporary("body", packet);
-							return 0;
-						}
-						return 1;
-					}
-				}
-				else
-				{
-					this->_status = STATUS_NOT_FOUND;
+			if (!this->getMethod().compare("POST") && this->_body_write) {
+				if (this->_request->readTemporary("request", packet) > 0) {
+					this->write(packet);
 					return 0;
 				}
+
+				this->_body_write = false;
+				return 1;
 			}
-			else {
+
+			if (location->redirect.size() > 0) {
+				this->_status = STATUS_MOVED_PERMANENTLY;
+				return 0;
+			}
+
+			if (isFiley(new_p) == 1)
+			{
+				if ((createErrorPages(new_p, packet) > 0) || (this->_body_fd <= 0)) {
+					this->_request->appendTemporary("body", packet);
+					return (this->_body_fd <= 0);
+				}
+			}
+			else if (isFiley(new_p) == 2)
+			{
+				std::vector<std::string>::iterator it;
+
+				for (it = location->index.begin() ; it != location->index.end() ; it++)
+				{
+					std::string path = location->root + "/" + (*it);
+					if (isFiley(path) == 1)
+					{
+						if ((createErrorPages(path, packet) > 0) || (this->_body_fd <= 0)) {
+							this->_request->appendTemporary("body", packet);
+							return (this->_body_fd <= 0);
+						}
+						break;
+					}
+				}
+
+				if (it == location->index.end() && this->_autoIndex) {
+					if (getListOfDirectories(new_p.c_str(), packet) > 0) {
+						this->_request->appendTemporary("body", packet);
+						return 0;
+					}
+					return 1;
+				}
+			}
+			else
+			{
 				this->_status = STATUS_NOT_FOUND;
 				return 0;
 			}
+		}
+		else {
+			this->_status = STATUS_NOT_FOUND;
+			return 0;
 		}
 	}
 
@@ -319,7 +298,7 @@ std::string	Response::getStatusMessage(void) {
 	return "";
 }
 
-int		Response::readResponse(std::string & packet) {
+int		Response::readResponse(STRBinary & packet) {
 	if (this->_event == EVT_SEND_RESPONSE_LINE) {
 		this->_event = EVT_SEND_RESPONSE_HEADERS;
 		packet = "HTTP/1.1 " + intToStr(this->_status) + " " + getStatusMessage() + "\r\n";
@@ -344,11 +323,9 @@ int		Response::readResponse(std::string & packet) {
 	}
 
 	if (this->_event == EVT_SEND_RESPONSE_BODY) {
-		std::string line;
-		if (this->_request->readTemporary("body", line) > 0) {
-			packet = line;
+		packet.clear();
+		if (this->_request->readTemporary("body", packet) > 0)
 			return 1;
-		}
 
 		packet = CRLF;
 		this->_event = EVT_INITIALIZE;
@@ -465,7 +442,7 @@ int			Response::readCGI(STRBinary & packet) {
 		::close(this->_body_fd);
 		this->_descriptors->deleteDescriptor(this->_body_fd);
 		this->_body_fd = -1;
-		this->_body_start = false;
+		this->_body_read = false;
 	}
 
 	return res;
@@ -481,6 +458,47 @@ void			Response::deleteMethod(void) {
 	}
 	else
 		this->_status = STATUS_NOT_FOUND;
+}
+
+void			Response::postMethod(void) {
+	std::string p = this->getPathAfterReplacingLocationByRoot();
+
+	this->_request->resetCursorTemporary("request");
+	this->_request->eventTemporary("request", POLLIN);
+
+	if (exists(p)) {
+		if (isFile(p)) {
+			this->_status = STATUS_OK;
+			if ((this->_body_fd = open(p.c_str(), O_RDWR)) < 0) {
+				this->_status = STATUS_NOT_ALLOWED;
+				return;
+			}
+
+			this->_body_write = true;
+
+			fcntl(this->_body_fd, F_SETFL, O_NONBLOCK);
+
+			lseek(this->_body_fd, 0, SEEK_END);
+
+			this->_descriptors->setDescriptor(this->_body_fd, POLLOUT);
+			this->_descriptors->setDescriptorType(this->_body_fd, "file");
+		} else if (isDirectory(p)) {
+			if ((this->_body_fd = uniqueFile(p, this->_body_filename, O_CREAT | O_TRUNC | O_RDWR, S_IRWXU)) < 0) {
+				this->_status = STATUS_NOT_ALLOWED;
+				return;
+			}
+
+			this->_status = STATUS_CREATED;
+			this->_body_write = true;
+
+			fcntl(this->_body_fd, F_SETFL, O_NONBLOCK);
+
+			this->_descriptors->setDescriptor(this->_body_fd, POLLOUT);
+			this->_descriptors->setDescriptorType(this->_body_fd, "file");
+		}
+	} else {
+		this->_status = STATUS_NOT_ALLOWED;
+	}
 }
 
 void			Response::checkPath(void) {
@@ -563,7 +581,7 @@ int					Response::read(STRBinary & value)
 	value.clear();
 
 	if (!(it->revents & POLLIN)) {
-		return !this->_body_start;
+		return !this->_body_read;
 	}
 
 	pos = ::read(this->_body_fd, packet.data(), packet.size());
@@ -574,7 +592,27 @@ int					Response::read(STRBinary & value)
 
 	value = packet;
 
-	this->_body_start = true;
+	this->_body_read = true;
 
 	return (pos > 0 && value.length() > 0);
+}
+
+int					Response::write(STRBinary & value)
+{
+	Descriptors::poll_type	it;
+	ssize_t				pos;
+
+	if ((it = this->getPoll()) == this->_descriptors->descriptors.end()) {
+		return -1;
+	}
+
+	if (!(it->revents & POLLOUT)) {
+		return !this->_body_write;
+	}
+
+	pos = ::write(this->_body_fd, value.data(), value.length());
+
+	this->_body_write = true;
+
+	return 1;
 }

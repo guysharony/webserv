@@ -7,12 +7,7 @@ TmpFile::TmpFile(Descriptors *descriptors, std::string const &filename)
 	_path(),
 	_filename(filename)
 {
-	mkdir("/tmp/webserv/", 0777);
-
-	this->_path = this->_generate_filepath();
-
-	this->_fd = open(this->_path.c_str(), O_CREAT | O_TRUNC | O_RDWR, S_IRWXU);
-	if (this->_fd < 0)
+	if ((this->_fd = uniqueFile("/tmp/webserv/", O_CREAT | O_TRUNC | O_RDWR, S_IRWXU)) < 0)
 		Message::error("Failed in creating file.");
 
 	fcntl(this->_fd, F_SETFL, O_NONBLOCK);
@@ -91,9 +86,39 @@ int			TmpFile::read(std::string & value)
 
 	value.clear();
 
+	if (!(it->revents & POLLIN))
+		return -1;
+
 	pos = ::read(this->_fd, buffer, BUFFER_SIZE - 1);
 
 	value = std::string(buffer);
+
+	return (pos > 0 && value.length() > 0);
+}
+
+int			TmpFile::read(STRBinary & value)
+{
+	Descriptors::poll_type	it;
+	std::vector<char>		packet(5000);
+	ssize_t				pos;
+
+	pos = 0;
+
+	if ((it = this->getPoll()) == this->_descriptors->descriptors.end()) {
+		return -1;
+	}
+
+	value.clear();
+
+	if (!(it->revents & POLLIN))
+		return -1;
+
+	pos = ::read(this->_fd, packet.data(), packet.size());
+
+	if (static_cast<int>(packet.size()) > pos)
+		packet.resize(pos);
+
+	value = packet;
 
 	return (pos > 0 && value.length() > 0);
 }
@@ -110,6 +135,7 @@ int			TmpFile::write(STRBinary value)
 	return ::write(this->_fd, value.c_str(), value.length());
 }
 
+/*
 std::string	TmpFile::_generate_filepath(void) {
 	std::string	name;
 
@@ -117,6 +143,7 @@ std::string	TmpFile::_generate_filepath(void) {
 
 	return exists(name) ? this->_generate_filepath() : name;
 }
+*/
 
 void			TmpFile::close(void) {
 	::close(this->_fd);

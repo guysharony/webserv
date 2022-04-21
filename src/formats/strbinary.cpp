@@ -13,7 +13,7 @@ STRBinary::STRBinary(STRBinary const & other)
 { *this = other; }
 
 STRBinary::~STRBinary()
-{ }
+{ this->clear(); }
 
 STRBinary		&STRBinary::operator=(STRBinary const &rhs)
 {
@@ -27,6 +27,16 @@ STRBinary		&STRBinary::operator=(STRBinary const &rhs)
 STRBinary		&STRBinary::operator=(std::vector<char> const &rhs)
 {
 	this->_data = rhs;
+
+	return (*this);
+}
+
+STRBinary		&STRBinary::operator=(std::string & rhs)
+{
+	this->clear();
+
+	for (size_t i = 0; i < rhs.length(); ++i)
+		this->_data.push_back(rhs[i]);
 
 	return (*this);
 }
@@ -111,4 +121,11 @@ size_t		STRBinary::length(void)
 		tmp++;
 
 	return tmp;
+}
+
+std::basic_ostream<char>	&operator<<(std::basic_ostream<char> &value1, STRBinary &value2)
+{
+	value1 << value2.c_str();
+
+	return value1;
 }

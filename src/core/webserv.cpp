@@ -2,7 +2,7 @@
 
 static int g_sigint = 0;
 
-void signalHandler(int sig)
+void signalHandlerInt(int sig)
 {
 	if (sig == SIGINT)
 		g_sigint = 1;
@@ -73,8 +73,8 @@ void		Webserv::closeServers(void) {
 }
 
 bool		Webserv::run(void) {
-	signal(SIGINT, &signalHandler);
-	signal(SIGPIPE, &signalHandler);
+	signal(SIGINT, &signalHandlerInt);
+	signal(SIGPIPE, SIG_IGN);
 	while (this->_run) {
 		if (g_sigint == 1)
 			break; // Perhaps we need to shutdown/send messages to active clients first
@@ -141,10 +141,13 @@ bool			Webserv::handleClient(void) {
 		}
 	} else if ((*this->context.client)->getEvent() == EVT_SEND_RESPONSE) {
 		if (this->context.poll->revents & POLLOUT) {
-			std::string packet;
+			STRBinary packet;
 
 			if ((*this->context.client)->readResponse(packet) > 0) {
-				this->clientSend(packet);
+				if (this->clientSend(packet) <= 0) {
+					this->_clientReject();
+					return true;
+				}
 				return false;
 			}
 
@@ -205,24 +208,26 @@ int				Webserv::clientReceive(void) {
 		if (static_cast<int>(packet.size()) > res) {
 			packet.resize(res);
 		}
-		
+
 		if ((*this->context.client)->getEvent() == NONE)
 			(*this->context.client)->setEvent(EVT_REQUEST_LINE);
 
 		(*this->context.client)->appendRequest(packet);
+		
 	}
+
+	packet.clear();
 
 	return res;
 }
 
-int				Webserv::clientSend(std::string value) {
+int				Webserv::clientSend(STRBinary value) {
 	if (this->context.type != "client")
 		return -1;
 
 	int rc = send(this->context.poll->fd, value.c_str(), value.length(), 0);
 	if (rc < 0)
 	{
-		Message::error("send() failed." + toString(errno));
 		(*this->context.client)->setClose(true);
 		return 0;
 	}

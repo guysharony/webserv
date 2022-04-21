@@ -35,6 +35,7 @@ class Descriptors {
 		/* Setters */
 		void							setDescriptor(int descriptor, short events);
 		void							setDescriptorType(int descriptor, std::string type);
+		void							setDescriptorEvent(int descriptor, short events);
 
 		/* Methods */
 		void							deleteDescriptor(int descriptor);

@@ -51,7 +51,7 @@ class Request {
 		/* Temporary */
 		int									createTemporary(std::string const & filename);
 		int									fdTemporary(std::string const & filename);
-		int									readTemporary(std::string const & filename, std::string &packet);
+		int									readTemporary(std::string const & filename, STRBinary &packet);
 		int									appendTemporary(std::string const & filename, std::string packet);
 		int									appendTemporary(std::string const & filename, STRBinary const & packet);
 		int									eventTemporary(std::string const & filename, short event);
@@ -64,7 +64,7 @@ class Request {
 		/* Methods */
 		void									execute(void);
 
-		void									append(std::vector<char> value);
+		void									append(std::vector<char> & value);
 		void									displayAllLocations(void);
 		Config::configuration_type				selectServer(void);
 		Config::location_type					selectLocation(Config::configuration_type server);

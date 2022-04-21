@@ -36,5 +36,6 @@ float 			toFloat(std::string str);
 ssize_t			fromSizeUnit(std::string num);
 int				hexToInt(std::string num);;
 std::string		intToHex(int num);
+std::string		toBase62(int num);
 
 #endif

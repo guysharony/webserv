@@ -41,6 +41,7 @@ class TmpFile
 
 		void					resetCursor(void);
 		int					read(std::string & value);
+		int					read(STRBinary & value);
 		int					write(std::string const & value);
 		int					write(STRBinary value);
 		int					display(void);
@@ -53,7 +54,7 @@ class TmpFile
 		std::string			_filename;
 
 		Descriptors			*_descriptors;
-		std::string			_generate_filepath(void);
+		// std::string			_generate_filepath(void);
 
 		TmpFile(void);
 		TmpFile(TmpFile const & src);

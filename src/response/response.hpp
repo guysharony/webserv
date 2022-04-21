@@ -9,6 +9,7 @@
 # include <sstream>
 # include <sys/time.h>
 # include <unistd.h>
+# include "../formats/files.hpp"
 # include "../request/request.hpp"
 # include "../cgi/CgiParser.hpp"
 # include "../cgi/CGI.hpp"
@@ -43,7 +44,7 @@ class Response {
 		int							createBody(void);
 		int							readCGI(STRBinary & packet);
 
-		int							readResponse(std::string & packet);
+		int							readResponse(STRBinary & packet);
 
 	private:
 		Request						*_request;
@@ -54,7 +55,9 @@ class Response {
 		std::vector<std::string>			_directory_list;
 		bool							_server_found;
 		DIR							*dir;
-		bool							_body_start;
+		std::string					_body_filename;
+		bool							_body_write;
+		bool							_body_read;
 		int							_body_fd;
 		int							_status;
 		int							_event;
@@ -75,12 +78,14 @@ class Response {
 		/* Methods */
 		void							initialize(void);
 		int							read(STRBinary & value);
+		int							write(STRBinary & value);
 		int							createErrorPages(std::string path, STRBinary & packet);
 
 		std::string					findDate(void);
 		std::string					findContentType(void);
 
 		void 						deleteMethod(void);
+		void							postMethod(void);
 
 		void							checkPath(void);
 };

@@ -23,6 +23,17 @@ std::string	Descriptors::getDescriptorType(int descriptor)
 void			Descriptors::setDescriptorType(int descriptor, std::string type)
 { this->descriptors_type[descriptor] = type; }
 
+void			Descriptors::setDescriptorEvent(int descriptor, short events)
+{
+	poll_type	ite = this->descriptors.end();
+	for (poll_type it = this->descriptors.begin(); it != ite; ++it) {
+		if (it->fd == descriptor) {
+			it->events = events;
+			return;
+		}
+	}
+}
+
 void			Descriptors::deleteDescriptor(int descriptor)
 {
 	poll_type	ite = this->descriptors.end();
