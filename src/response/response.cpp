@@ -208,9 +208,8 @@ int		Response::createBody(void) {
 				this->_body_write = false;
 				return 1;
 			}
-      
-      if (location->redirect.size() > 0)
-			{
+
+			if (location->redirect.size() > 0) {
 				this->_status = STATUS_MOVED_PERMANENTLY;
 				return 0;
 			}
@@ -477,9 +476,10 @@ void			Response::postMethod(void) {
 
 			fcntl(this->_body_fd, F_SETFL, O_NONBLOCK);
 
+			lseek(this->_body_fd, 0, SEEK_END);
+
 			this->_descriptors->setDescriptor(this->_body_fd, POLLOUT);
 			this->_descriptors->setDescriptorType(this->_body_fd, "file");
-			std::cout << "[" << p << "] is a file." << std::endl;
 		} else if (isDirectory(p)) {
 			if ((this->_body_fd = uniqueFile(p, this->_body_filename, O_CREAT | O_TRUNC | O_RDWR, S_IRWXU)) < 0) {
 				this->_status = STATUS_NOT_ALLOWED;
@@ -493,10 +493,9 @@ void			Response::postMethod(void) {
 
 			this->_descriptors->setDescriptor(this->_body_fd, POLLOUT);
 			this->_descriptors->setDescriptorType(this->_body_fd, "file");
-			std::cout << "[" << p << "] is a directory." << std::endl;
 		}
 	} else {
-		std::cout << "[" << p << "] can't be found." << std::endl;
+		this->_status = STATUS_NOT_ALLOWED;
 	}
 }
 
