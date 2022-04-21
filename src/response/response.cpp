@@ -268,6 +268,9 @@ std::string	Response::getStatusMessage(void) {
 	if (this->_status == STATUS_OK)
 		return "OK";
 
+	if (this->_status == STATUS_CREATED)
+		return "CREATED";
+
 	if (this->_status == STATUS_NOT_FOUND)
 		return "NOT FOUND";
 
