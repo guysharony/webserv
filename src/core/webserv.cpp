@@ -89,10 +89,8 @@ bool		Webserv::run(void) {
 				if (this->handleServer())
 					break;
 			} else if (this->context.type == "client") {
-				if (this->handleClient()) {
-
+				if (this->handleClient())
 					break;
-				}
 			}
 		}
 
@@ -101,8 +99,6 @@ bool		Webserv::run(void) {
 			this->descriptors.compressDescriptors();
 		}
 	}
-
-	std::cout << "END" << std::endl;
 
 	return true;
 }

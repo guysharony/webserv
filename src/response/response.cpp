@@ -76,7 +76,7 @@ void					Response::initialize(void) {
 	this->_request->createTemporary("body");
 
 	Config::location_type location;
-	if (this->_status < STATUS_BAD_REQUEST) {
+	if (this->_status < STATUS_BAD_REQUEST && this->_status != STATUS_NOT_ALLOWED) {
 		try {
 			this->_server = this->_request->selectServer();
 		} catch(const Config::ServerNotFoundException & e) {
@@ -155,7 +155,7 @@ int		Response::createBody(void) {
 	Config::location_type	location;
 	STRBinary				packet;
 
-	if (this->_request->isCgi(this->_server)) {
+	if (this->_request->isCgi(this->_server) && (this->_status == STATUS_OK)) {
 		if (this->readCGI(packet) > 0) {
 			this->_cgi_parser->append(packet);
 			this->_cgi_parser->parseCgiResponse();

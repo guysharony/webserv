@@ -652,15 +652,19 @@ void		Request::displayAllLocations(void) {
 }
 
 Config::configuration_type Request::selectServer(void) {
-	Config::configuration_type it;
-	Config::configuration_type default_server = this->_config->configuration.end();
+	Config::configuration_type ite = this->_config->configuration.end();
+	Config::configuration_type default_server = ite;
 
-	for (it = this->_config->configuration.begin(); it != this->_config->configuration.end(); it++) {
-		for (Config::listen_type::iterator it2 = it->listen.begin(); it2 != it->listen.end(); it2++) {
-			for (Config::ports_type::iterator it3 = it2->second.begin(); it3 != it2->second.end(); it3++) {
+	for (Config::configuration_type it = this->_config->configuration.begin(); it != ite; ++it) {
+
+		Config::listen_type::iterator it2e = it->listen.end();
+		for (Config::listen_type::iterator it2 = it->listen.begin(); it2 != it2e; ++it2) {
+
+			Config::ports_type::iterator it3e = it2->second.end();
+			for (Config::ports_type::iterator it3 = it2->second.begin(); it3 != it3e; ++it3) {
 				if (!(*it3).compare(this->_port))
 				{
-					if (default_server == this->_config->configuration.end()) {
+					if (default_server == ite) {
 						default_server = it;
 					}
 
