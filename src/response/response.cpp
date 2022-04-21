@@ -481,12 +481,16 @@ int			Response::readCGI(std::string & packet) {
 
 void			Response::deleteMethod(void) {
 	std::string p = this->getPathAfterReplacingLocationByRoot();
-	if (isFiley(p) == 1) {
+	int ret;
+	ret = isFiley(p);
+	if (ret == 1) {
 		if (remove(p.c_str()) == 0)
 			this->_status = STATUS_NO_CONTENT;
 		else
 			this->_status = STATUS_FORBIDDEN;
 	}
+	else if (ret == -1)
+		this->_status = STATUS_FORBIDDEN;
 	else
 		this->_status = STATUS_NOT_FOUND;
 }
