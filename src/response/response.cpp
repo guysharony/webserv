@@ -122,12 +122,12 @@ void					Response::createHeaders(void) {
 	size_t	body_length = this->_request->sizeTemporary("body");
 
 	if (this->_status < STATUS_INTERNAL_SERVER_ERROR && this->_server_found)
-		this->_headers["server"] = this->_server->server_name;
+		this->_headers["Server"] = this->_server->server_name;
 
-	this->_headers["date"] = findDate();
-	this->_headers["content-length"] = intToStr(body_length + 2);
-	this->_headers["content-location"] = this->_path;
-	this->_headers["content-type"] = findContentType();
+	this->_headers["Date"] = findDate();
+	this->_headers["Content-Length"] = intToStr(body_length + 2);
+	this->_headers["Content-Location"] = this->_path;
+	this->_headers["Content-Type"] = findContentType();
 
 	this->_event = EVT_SEND_RESPONSE_LINE;
 }
@@ -176,7 +176,7 @@ int		Response::createBody(void) {
 			this->_cgi_parser = NULL;
 		}
 	} else {
-		if (this->_status != STATUS_OK) {
+		if (this->_status != STATUS_OK && this->_status != STATUS_CREATED) {
 			if ((createErrorPages(this->_server_found ? this->_server->error_page[this->_status] : "", packet) > 0) || (this->_body_fd <= 0)) {
 				this->_request->appendTemporary("body", packet);
 				return (this->_body_fd <= 0);
@@ -202,11 +202,8 @@ int		Response::createBody(void) {
 					return 0;
 				}
 
-				lseek(this->_body_fd, 0, SEEK_SET);
-				this->_descriptors->setDescriptorEvent(this->_body_fd, POLLIN);
 				this->_body_write = false;
-				this->_body_read = true;
-				return 0;
+				return 1;
 			}
 
 			if (isFiley(new_p) == 1)
@@ -475,11 +472,12 @@ void			Response::postMethod(void) {
 			this->_descriptors->setDescriptorType(this->_body_fd, "file");
 			std::cout << "[" << p << "] is a file." << std::endl;
 		} else if (isDirectory(p)) {
-			if ((this->_body_fd = uniqueFile(p, O_CREAT | O_TRUNC | O_RDWR, S_IRWXU)) < 0) {
+			if ((this->_body_fd = uniqueFile(p, this->_body_filename, O_CREAT | O_TRUNC | O_RDWR, S_IRWXU)) < 0) {
 				this->_status = STATUS_NOT_ALLOWED;
 				return;
 			}
 
+			this->_status = STATUS_CREATED;
 			this->_body_write = true;
 
 			fcntl(this->_body_fd, F_SETFL, O_NONBLOCK);

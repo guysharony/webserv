@@ -55,6 +55,7 @@ class Response {
 		std::vector<std::string>			_directory_list;
 		bool							_server_found;
 		DIR							*dir;
+		std::string					_body_filename;
 		bool							_body_write;
 		bool							_body_read;
 		int							_body_fd;

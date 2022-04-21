@@ -26,7 +26,8 @@ int						isDirectory(std::string path);
 
 std::string				randomString(size_t length = 20);
 std::string				uniqueFilename(std::string path, size_t length = 20);
-int						uniqueFile(std::string path, int flags);
 int						uniqueFile(std::string path, int flags, mode_t mode);
+int						uniqueFile(std::string path, std::string & filename, int flags);
+int						uniqueFile(std::string path, std::string & filename, int flags, mode_t mode);
 
 #endif
