@@ -106,7 +106,10 @@ int CGI::launch_cgi(std::string const &filename)
 	{
 		this->_init_env(filename);
 		if (this->_redirect_io(fd))
+		{
+			write(fd[1], "Status: 500\r\n\r\nCould not redirect to CGI", 40);
 			Message::error("Status: 500\r\n\r\nCould not redirect to CGI");
+		}			
 
 		executable = &(server->cgi_path[0]);
 		argument = const_cast<char *>(&filename[0]);
