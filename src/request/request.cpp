@@ -624,7 +624,7 @@ bool					Request::isCgi(Config::configuration_type server) {
 		
 		it++;
 	}
-		if (it != server->cgi_extentions.end() && isFiley(server->root + this->_path) == 1){
+		if (it != server->cgi_extentions.end()){
 		if(server->cgi_path.size() == 0)
 			this->setStatus(STATUS_INTERNAL_SERVER_ERROR);
 		return true;
