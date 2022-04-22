@@ -95,8 +95,6 @@ void					Response::initialize(void) {
 	}
 
 	if (!this->_request->isCgi(this->_server)) {
-		if (_request->getStatus() == STATUS_INTERNAL_SERVER_ERROR)
-			this->_status = STATUS_INTERNAL_SERVER_ERROR;
 		if (this->_status < STATUS_BAD_REQUEST)
 			checkPath();
 

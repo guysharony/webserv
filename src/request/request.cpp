@@ -609,8 +609,6 @@ bool					Request::isCgi(Config::configuration_type server) {
 	if (!this->_method.compare("POST")) {
 		if (server->cgi_path.size() > 0)
 			return true;
-
-		this->setStatus(STATUS_INTERNAL_SERVER_ERROR);
 		return false;
 	}
 
