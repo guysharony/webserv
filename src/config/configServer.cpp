@@ -86,7 +86,7 @@ void			ConfigServer::_parseListen(configuration_struct &config) {
 	if (params.size() != 2 && params.size() != 1)
 		Message::error("'listen' is not valid.");
 
-	host = params.size() == 2 ? params[0] : "127.0.0.1";
+	host = params.size() == 2 ? params[0] : "0.0.0.0";
 	port = params.size() == 2 ? params[1] : params[0];
 
 	for (listen_type::iterator it2 = config.listen.begin(); it2 != config.listen.end(); it2++) {
