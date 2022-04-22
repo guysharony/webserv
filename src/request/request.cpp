@@ -63,6 +63,12 @@ int			Request::getTimeout(void)
 const std::map<std::string, std::string>	&Request::getHeader(void) const
 { return (this->_header); }
 
+std::string	Request::getReferer(void)
+{ return (this->_header.count("referrer") ? this->_header["referrer"] : "-"); }
+
+std::string	Request::getUserAgent(void)
+{ return (this->_header.count("user-agent") ? this->_header["user-agent"] : "-"); }
+
 int			Request::getStatus(void)
 { return (this->_status); }
 

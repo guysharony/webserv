@@ -31,6 +31,7 @@ class Response {
 		std::string					getHost(void);
 		std::string					getPort(void);
 		int							getStatus(void);
+		std::string					getContentLength(void);
 		std::string					getStatusMessage(void);
 		std::string					getMethod(void);
 		std::string					getPath(void);

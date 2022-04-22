@@ -36,6 +36,9 @@ std::string			Response::getPort(void)
 std::string			Response::getMethod(void)
 { return this->_request->getMethod(); }
 
+std::string			Response::getContentLength(void)
+{ return intToStr(this->_request->sizeTemporary("body") + 2); }
+
 std::string			Response::getPath(void)
 { return this->_request->getPath(); }
 

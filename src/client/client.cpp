@@ -115,6 +115,7 @@ int				Client::readResponse(STRBinary & packet)
 
 int				Client::prepareResponse(void) {
 	if (!this->_response.execute()) {
+		this->log();
 		this->_request.eventTemporary("body", POLLIN);
 		this->_request.setEnd(0);
 		return 1;
@@ -125,7 +126,6 @@ int				Client::prepareResponse(void) {
 
 void				Client::closeResponse(void)
 {
-	this->log();
 	this->setEvent(NONE);
 	this->_request.closeTemporary("request");
 	this->_request.closeTemporary("body");
@@ -163,4 +163,8 @@ std::string		Client::getStatusColor(void) {
 }
 
 void				Client::log(void)
-{ std::cout << "\033[0;" << this->getStatusColor() << "m" << this->_response.getHost() << ":" << this->_response.getPort() << " -- [" << getDate("%d/%b/%G %T") << "] -- " << this->_response.getMethod() << " [" << this->_response.getURI() << "] " << this->_response.getStatus() << "\033[0m" << std::endl; }
+{
+	// std::cout << '172.17.0.1 - - [22/Apr/2022:07:48:49 +0000] "GET /favicon.ico HTTP/1.1" 404 555 "http://www.localhost:8081/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36"' << std::endl;
+	std::cout << this->getClientAddr() << " - - [" << getDate("%d/%b/%G:%T %z") << "] \"" << this->_response.getMethod() << " " << this->_response.getURI() << " HTTP/1.1\" " << this->_response.getStatus() << " " << this->_response.getContentLength() << " \"" << this->_request.getReferer() << "\" \"" << this->_request.getUserAgent() << "\"" << std::endl;
+	// std::cout << "\033[0;" << this->getStatusColor() << "m" << this->_response.getHost() << ":" << this->_response.getPort() << " -- [" << getDate("%d/%b/%G %T") << "] -- " << this->_response.getMethod() << " [" << this->_response.getURI() << "] " << this->_response.getStatus() << "\033[0m" << std::endl;
+}

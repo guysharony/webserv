@@ -26,6 +26,8 @@ class Request {
 		std::string							getMethod(void);
 		std::string							getVersion(void);
 		std::string							getPath(void);
+		std::string							getReferer(void);
+		std::string							getUserAgent(void);
 		std::string							getParameters(void);
 		std::string							getURI(void);
 		std::string							getHost(void);
