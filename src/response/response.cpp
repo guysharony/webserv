@@ -159,8 +159,10 @@ std::string			Response::findContentType(void)
 int		Response::createBody(void) {
 	Config::location_type	location;
 	STRBinary				packet;
+	bool 					isCgi = this->_request->isCgi(this->_server);
 
-	if (this->_request->isCgi(this->_server) && (this->_status == STATUS_OK)) {
+	this->_status = this->_request->getStatus();
+	if (isCgi && (this->_status == STATUS_OK)) {
 		if (this->readCGI(packet) > 0) {
 			this->_cgi_parser->append(packet);
 			this->_cgi_parser->parseCgiResponse();
