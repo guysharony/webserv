@@ -73,13 +73,18 @@ void print_buffer(std::string buffer, size_t max_size, std::string color){
 int		isFiley(std::string path)
 {
 	struct stat status;
-	if (stat(path.c_str(), &status) == 0 )
+	int ret;
+
+	ret = stat(path.c_str(), &status);
+	if (ret == 0 )
 	{
 		if (status.st_mode & S_IFDIR)
 			return 2;
 		else if (status.st_mode & S_IFREG)
 			return 1;
 	}
+	else if (ret == -1)
+		return ret;
 	return 0;
 }
 

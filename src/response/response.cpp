@@ -129,9 +129,10 @@ void					Response::createHeaders(void) {
 	this->_headers["Content-Location"] = this->_path;
 	this->_headers["Content-Type"] = findContentType();
 
-	if (this->_status == STATUS_MOVED_PERMANENTLY){
+	if (this->_status == STATUS_MOVED_PERMANENTLY) {
 		this->_headers["Location"] = this->_location->redirect;
 	}
+
 	this->_event = EVT_SEND_RESPONSE_LINE;
 }
 
@@ -267,6 +268,9 @@ int			Response::getStatus(void)
 std::string	Response::getStatusMessage(void) {
 	if (this->_status == STATUS_OK)
 		return "OK";
+
+	if (this->_status == STATUS_CREATED)
+		return "CREATED";
 
 	if (this->_status == STATUS_NOT_FOUND)
 		return "NOT FOUND";
@@ -450,12 +454,16 @@ int			Response::readCGI(STRBinary & packet) {
 
 void			Response::deleteMethod(void) {
 	std::string p = this->getPathAfterReplacingLocationByRoot();
-	if (isFiley(p) == 1) {
+	int ret;
+	ret = isFiley(p);
+	if (ret == 1) {
 		if (remove(p.c_str()) == 0)
 			this->_status = STATUS_NO_CONTENT;
 		else
 			this->_status = STATUS_FORBIDDEN;
 	}
+	else if (ret == -1)
+		this->_status = STATUS_FORBIDDEN;
 	else
 		this->_status = STATUS_NOT_FOUND;
 }
@@ -476,6 +484,8 @@ void			Response::postMethod(void) {
 
 			this->_body_write = true;
 
+			this->_headers["Location"] = this->_request->getPath();
+
 			fcntl(this->_body_fd, F_SETFL, O_NONBLOCK);
 
 			lseek(this->_body_fd, 0, SEEK_END);
@@ -487,6 +497,8 @@ void			Response::postMethod(void) {
 				this->_status = STATUS_NOT_ALLOWED;
 				return;
 			}
+
+			this->_headers["Location"] = secureAddress(this->_request->getPath(), this->_body_filename);
 
 			this->_status = STATUS_CREATED;
 			this->_body_write = true;
@@ -614,5 +626,5 @@ int					Response::write(STRBinary & value)
 
 	this->_body_write = true;
 
-	return 1;
+	return pos > 0;
 }
