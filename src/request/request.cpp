@@ -545,7 +545,7 @@ Config::configuration_type Request::selectServer(void) {
 						default_server = it;
 					}
 
-					if (!it->server_name.compare(it2->first)) {
+					if (!it->server_name.compare(this->_host)) {
 						return it;
 					}
 				}

@@ -83,7 +83,7 @@ class Response {
 		int							createErrorPages(std::string path, STRBinary & packet);
 
 		std::string					findDate(void);
-		std::string					findContentType(void);
+		std::string					findContentType(std::string path);
 
 		void 						deleteMethod(void);
 		void							postMethod(void);

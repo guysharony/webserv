@@ -130,7 +130,6 @@ void					Response::createHeaders(void) {
 	this->_headers["Date"] = findDate();
 	this->_headers["Content-Length"] = intToStr(body_length + 2);
 	this->_headers["Content-Location"] = this->_path;
-	this->_headers["Content-Type"] = findContentType();
 
 	if (this->_status == STATUS_MOVED_PERMANENTLY) {
 		this->_headers["Location"] = this->_location->redirect;
@@ -139,10 +138,10 @@ void					Response::createHeaders(void) {
 	this->_event = EVT_SEND_RESPONSE_LINE;
 }
 
-std::string			Response::findContentType(void)
+std::string			Response::findContentType(std::string path)
 {
 	std::string type;
-	type = this->_path.substr(this->_path.rfind(".") + 1, this->_path.size() - this->_path.rfind("."));
+	type = path.substr(path.rfind(".") + 1, path.size() - path.rfind("."));
 
 	if (type == "html" || type == "htm" || type == "shtml")
 		return "text/html";
@@ -424,6 +423,8 @@ int		Response::createBody(void) {
 		}
 	} else {
 		if (this->_status != STATUS_OK && this->_status != STATUS_CREATED) {
+			this->_headers["Content-Type"] = this->_server_found ? findContentType(this->_server->error_page[this->_status]) : "text/html";
+
 			if ((createErrorPages(this->_server_found ? this->_server->error_page[this->_status] : "", packet) > 0) || (this->_body_fd <= 0)) {
 				this->_request->appendTemporary("body", packet);
 				return (this->_body_fd <= 0);
@@ -460,6 +461,8 @@ int		Response::createBody(void) {
 
 			if (isFiley(new_p) == 1)
 			{
+				this->_headers["Content-Type"] = findContentType(new_p);
+
 				if ((createErrorPages(new_p, packet) > 0) || (this->_body_fd <= 0)) {
 					this->_request->appendTemporary("body", packet);
 					return (this->_body_fd <= 0);
@@ -474,15 +477,20 @@ int		Response::createBody(void) {
 					std::string path = location->root + "/" + (*it);
 					if (isFiley(path) == 1)
 					{
+						this->_headers["Content-Type"] = findContentType(path);
+
 						if ((createErrorPages(path, packet) > 0) || (this->_body_fd <= 0)) {
 							this->_request->appendTemporary("body", packet);
 							return (this->_body_fd <= 0);
 						}
+
 						break;
 					}
 				}
 
 				if (it == location->index.end() && this->_autoIndex) {
+					this->_headers["Content-Type"] = "text/html";
+
 					if (getListOfDirectories(new_p.c_str(), packet) > 0) {
 						this->_request->appendTemporary("body", packet);
 						return 0;
