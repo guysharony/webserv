@@ -541,13 +541,11 @@ Config::configuration_type Request::selectServer(void) {
 			for (Config::ports_type::iterator it3 = it2->second.begin(); it3 != it3e; ++it3) {
 				if (!(*it3).compare(this->_port))
 				{
-					if (default_server == ite) {
+					if (default_server == ite)
 						default_server = it;
-					}
 
-					if (!it->server_name.compare(this->_host)) {
+					if (!it->server_name.compare(this->_host))
 						return it;
-					}
 				}
 			}
 		}
