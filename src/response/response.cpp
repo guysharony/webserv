@@ -143,20 +143,80 @@ std::string			Response::findContentType(void)
 {
 	std::string type;
 	type = this->_path.substr(this->_path.rfind(".") + 1, this->_path.size() - this->_path.rfind("."));
-	if (type == "html")
-		return("text/html");
-	else if (type == "css")
-		return("text/css");
-	else if (type == "js")
-		return("text/javascript");
-	else if (type == "jpeg" || type == "jpg")
-		return("image/jpeg");
-	else if (type == "png")
-		return("image/png");
-	else if (type == "bmp")
-		return("image/bmp");
+
+	if (type == "html" || type == "htm" || type == "shtml")
+		return "text/html";
+
+	if (type == "css")
+		return "text/css";
+
+	if (type == "xml")
+		return "text/xml";
+
+	if (type == "git")
+		return "image/gif";
+
+	if (type == "jpeg" || type == "jpg")
+		return "image/jpeg";
+
+	if (type == "js")
+		return "application/javascript";
+
+	if (type == "atom")
+		return "application/atom+xml";
+
+	if (type == "rss")
+		return "application/rss+xml";
+
+	if (type == "mml")
+		return "text/mathml";
+
+	if (type == "txt")
+		return "text/plain";
+
+	if (type == "jad")
+		return "text/vnd.sun.j2me.app-descriptor";
+
+	if (type == "wml")
+		return "text/vnd.wap.wml";
+
+	if (type == "htc")
+		return "text/x-component";
+
+	if (type == "png")
+		return "image/png";
 	
-	return("text/html"); //normalment text/plain mais je veux tester la page d'erreur 404 --> to check
+	if (type == "svg" || type == "svgz")
+		return "image/svg+xml";
+
+	if (type == "tif" || type == "tiff")
+		return "image/tiff";
+
+	if (type == "wbmp")
+		return "image/vnd.wap.wbmp";
+
+	if (type == "webp")
+		return "image/webp";
+
+	if (type == "ico")
+		return "image/x-icon";
+
+	if (type == "jng")
+		return "image/x-jng";
+
+	if (type == "bmp")
+		return "image/x-ms-bmp";
+
+	if (type == "woff")
+		return "font/woff";
+
+	if (type == "woff2")
+		return "font/woff2";
+
+	if (type == "jar" || type == "war" || type == "ear")
+		return "application/java-archive";
+	
+	return "application/octet-stream"; //normalment text/plain mais je veux tester la page d'erreur 404 --> to check
 }
 
 int		Response::createBody(void) {
