@@ -67,7 +67,7 @@ class ConfigLocation
 
 		struct 										configuration_struct
 		{
-			std::string 								server_name;
+			std::vector<std::string> 					server_names;
 			listen_type								listen;
 			std::string 								root;
 			ssize_t 									client_max_body_size;

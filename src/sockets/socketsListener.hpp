@@ -14,7 +14,7 @@ class SocketsListener
 		SocketsListener(int port);
 		SocketsListener(std::string const & ip_addr);
 		SocketsListener(std::string const & ip_addr, int port);
-		SocketsListener(std::string const & ip_addr, int port, std::string const & server_name);
+		SocketsListener(std::string const & ip_addr, int port, std::string const & server_names);
 		SocketsListener(SocketsListener const & src);
 		~SocketsListener();
 
@@ -27,7 +27,7 @@ class SocketsListener
 
 	private:
 		int			port;
-		std::string	server_name;
+		std::string	server_names;
 		std::string	ip_addr;
 };
 

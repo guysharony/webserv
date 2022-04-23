@@ -520,7 +520,7 @@ int			Request::checkHeader(std::string source, std::string & key, std::string & 
 
 void		Request::displayAllLocations(void) {
 	for (Config::configuration_type it = this->_config->configuration.begin(); it != this->_config->configuration.end(); it++) {
-		std::cout << it->server_name << std::endl;
+		std::cout << it->server_names.size() << std::endl;
 
 		for (Config::location_type it_locations = it->locations.begin(); it_locations != it->locations.end(); it_locations++) {
 			std::cout << it_locations->location << std::endl;
@@ -532,20 +532,25 @@ Config::configuration_type Request::selectServer(void) {
 	Config::configuration_type ite = this->_config->configuration.end();
 	Config::configuration_type default_server = ite;
 
-	for (Config::configuration_type it = this->_config->configuration.begin(); it != ite; ++it) {
-
+	for (Config::configuration_type it = this->_config->configuration.begin(); it != ite; ++it)
+	{
 		Config::listen_type::iterator it2e = it->listen.end();
-		for (Config::listen_type::iterator it2 = it->listen.begin(); it2 != it2e; ++it2) {
-
+		for (Config::listen_type::iterator it2 = it->listen.begin(); it2 != it2e; ++it2)
+		{
 			Config::ports_type::iterator it3e = it2->second.end();
-			for (Config::ports_type::iterator it3 = it2->second.begin(); it3 != it3e; ++it3) {
+			for (Config::ports_type::iterator it3 = it2->second.begin(); it3 != it3e; ++it3)
+			{
 				if (!(*it3).compare(this->_port))
 				{
 					if (default_server == ite)
 						default_server = it;
 
-					if (!it->server_name.compare(this->_host))
-						return it;
+					std::vector<std::string>::iterator it4e = it->server_names.end();
+					for (std::vector<std::string>::iterator it4 = it->server_names.begin(); it4 != it4e; ++it4)
+					{
+						if (!(*it4).compare(this->_host))
+							return it;
+					}
 				}
 			}
 		}

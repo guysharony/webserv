@@ -108,7 +108,7 @@ int	CGI::launch_cgi(std::string const & filename) {
 
 		// Prepare environment for execve
 		setenv("SERVER_SOFTWARE", SERVER_NAME, true);						// *** This value should be confirmed
-		setenv("SERVER_NAME", server->server_name.c_str(), true);
+		setenv("SERVER_NAME", "", true);
 		setenv("GATEWAY_INTERFACE", "CGI/1.1", true);						// *** This value should be confirmed
 		setenv("SERVER_PROTOCOL", "HTTP/1.1", true);
 		setenv("SERVER_PORT", this->_request->getPort().c_str(), true);

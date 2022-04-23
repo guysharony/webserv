@@ -3,35 +3,35 @@
 SocketsListener::SocketsListener(void)
 :
 	port(8081),
-	server_name(""),
+	server_names(""),
 	ip_addr("127.0.0.1")
 { }
 
 SocketsListener::SocketsListener(int port)
 :
 	port(port),
-	server_name(""),
+	server_names(""),
 	ip_addr("127.0.0.1")
 { }
 
 SocketsListener::SocketsListener(std::string const & ip_addr)
 :
 	port(8081),
-	server_name(""),
+	server_names(""),
 	ip_addr(ip_addr)
 { }
 
 SocketsListener::SocketsListener(std::string const & ip_addr, int port)
 :
 	port(port),
-	server_name(""),
+	server_names(""),
 	ip_addr(ip_addr)
 { }
 
-SocketsListener::SocketsListener(std::string const & ip_addr, int port, std::string const & server_name)
+SocketsListener::SocketsListener(std::string const & ip_addr, int port, std::string const & server_names)
 :
 	port(port),
-	server_name(server_name),
+	server_names(server_names),
 	ip_addr(ip_addr)
 { }
 
@@ -48,7 +48,7 @@ SocketsListener		&SocketsListener::operator=(SocketsListener const &rhs)
 	{
 		this->port = rhs.port;
 		this->ip_addr = rhs.ip_addr;
-		this->server_name = rhs.server_name;
+		this->server_names = rhs.server_names;
 	}
 	return (*this);
 }
@@ -57,7 +57,7 @@ std::string const	&SocketsListener::getAddr() const
 { return (this->ip_addr); }
 
 std::string const	&SocketsListener::getServerName() const
-{ return (this->server_name); }
+{ return (this->server_names); }
 
 in_addr_t			SocketsListener::getInetAddr() const
 {

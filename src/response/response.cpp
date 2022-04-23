@@ -125,7 +125,7 @@ void					Response::createHeaders(void) {
 	size_t	body_length = this->_request->sizeTemporary("body");
 
 	if (this->_status < STATUS_INTERNAL_SERVER_ERROR && this->_server_found)
-		this->_headers["Server"] = this->_server->server_name;
+		this->_headers["Server"] = SERVER_NAME;
 
 	this->_headers["Date"] = findDate();
 	this->_headers["Content-Length"] = intToStr(body_length + 2);

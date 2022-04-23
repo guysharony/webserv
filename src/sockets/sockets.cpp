@@ -21,8 +21,8 @@ void		Sockets::prepare(std::string const & ip_addr, int port) {
 	this->sockets.push_back(SocketsListener(ip_addr, port));
 }
 
-void		Sockets::prepare(std::string const & ip_addr, int port, std::string const & server_name) {
-	this->sockets.push_back(SocketsListener(ip_addr, port, server_name));
+void		Sockets::prepare(std::string const & ip_addr, int port, std::string const & server_names) {
+	this->sockets.push_back(SocketsListener(ip_addr, port, server_names));
 }
 
 int		Sockets::initialize(socket_listener_type server_iterator) {
