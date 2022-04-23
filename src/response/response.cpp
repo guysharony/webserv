@@ -215,8 +215,188 @@ std::string			Response::findContentType(void)
 
 	if (type == "jar" || type == "war" || type == "ear")
 		return "application/java-archive";
-	
-	return "application/octet-stream"; //normalment text/plain mais je veux tester la page d'erreur 404 --> to check
+
+	if (type == "json")
+		return "application/json";
+
+	if (type == "hqx")
+		return "application/mac-binhex40";
+
+	if (type == "doc")
+		return "application/msword";
+
+	if (type == "pdf")
+		return "application/pdf";
+
+	if (type == "ps" || type == "eps" || type == "ai")
+		return "application/postscript";
+
+	if (type == "rtf")
+		return "application/rtf";
+
+	if (type == "m3u8")
+		return "application/vnd.apple.mpegurl";
+
+	if (type == "kml")
+		return "application/vnd.google-earth.kml+xml";
+
+	if (type == "kmz")
+		return "application/vnd.google-earth.kmz";
+
+	if (type == "xls")
+		return "application/vnd.ms-excel";
+
+	if (type == "eot")
+		return "application/vnd.ms-fontobject";
+
+	if (type == "ppt")
+		return "application/vnd.ms-powerpoint";
+
+	if (type == "odg")
+		return "application/vnd.oasis.opendocument.graphics";
+
+	if (type == "odp")
+		return "application/vnd.oasis.opendocument.presentation";
+
+	if (type == "ods")
+		return "application/vnd.oasis.opendocument.spreadsheet";
+
+	if (type == "odt")
+		return "application/vnd.oasis.opendocument.text";
+
+	if (type == "pptx")
+		return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+
+	if (type == "xlsx")
+		return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+	if (type == "docx")
+		return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+	if (type == "wmlc")
+		return "application/vnd.wap.wmlc";
+
+	if (type == "7z")
+		return "application/x-7z-compressed";
+
+	if (type == "cco")
+		return "application/x-cocoa";
+
+	if (type == "jardiff")
+		return "application/x-java-archive-diff";
+
+	if (type == "jnlp")
+		return "application/x-java-jnlp-file";
+
+	if (type == "run")
+		return "application/x-makeself";
+
+	if (type == "pl" || type == "pm")
+		return "application/x-perl";
+
+	if (type == "prc" || type == "pdb")
+		return "application/x-pilot";
+
+	if (type == "rar")
+		return "application/x-rar-compressed";
+
+	if (type == "rpm")
+		return "application/x-redhat-package-manager";
+
+	if (type == "sea")
+		return "application/x-sea";
+
+	if (type == "swf")
+		return "application/x-shockwave-flash";
+
+	if (type == "sit")
+		return "application/x-stuffit";
+
+	if (type == "tcl" || type == "tk")
+		return "application/x-tcl";
+
+	if (type == "der" || type == "pem" || type == "crt")
+		return "application/x-x509-ca-cert";
+
+	if (type == "xpi")
+		return "application/x-xpinstall";
+
+	if (type == "xhtml")
+		return "application/xhtml+xml";
+
+	if (type == "xspf")
+		return "application/xspf+xml";
+
+	if (type == "zip")
+		return "application/zip";
+
+	if (type == "bin" || type == "exe" || type == "dll")
+		return "application/octet-stream";
+
+	if (type == "deb")
+		return "application/octet-stream";
+
+	if (type == "dmg")
+		return "application/octet-stream";
+
+	if (type == "iso" || type == "img")
+		return "application/octet-stream";
+
+	if (type == "msi" || type == "msp" || type == "msm")
+		return "application/octet-stream";
+
+	if (type == "mid" || type == "midi" || type == "kar")
+		return "audio/midi";
+
+	if (type == "mp3")
+		return "audio/mpeg";
+
+	if (type == "ogg")
+		return "audio/ogg";
+
+	if (type == "m4a")
+		return "audio/x-m4a";
+
+	if (type == "ra")
+		return "audio/x-realaudio";
+
+	if (type == "3gpp" || type == "3gp")
+		return "video/3gpp";
+
+	if (type == "ts")
+		return "video/mp2t";
+
+	if (type == "mp4")
+		return "video/mp4";
+
+	if (type == "mpeg" || type == "mpg")
+		return "video/mpeg";
+
+	if (type == "mov")
+		return "video/quicktime";
+
+	if (type == "webm")
+		return "video/webm";
+
+	if (type == "flv")
+		return "video/x-flv";
+
+	if (type == "m4v")
+		return "video/x-m4v";
+
+	if (type == "mng")
+		return "video/x-mng";
+
+	if (type == "asx" || type == "asf")
+		return "video/x-ms-asf";
+
+	if (type == "wmv")
+		return "video/x-ms-wmv";
+
+	if (type == "avi")
+		return "video/x-msvideo";
+
+	return "application/octet-stream";
 }
 
 int		Response::createBody(void) {
