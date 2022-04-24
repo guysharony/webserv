@@ -2,8 +2,6 @@
 
 Client::Client(Config *config, Descriptors *descriptors, int socket_fd)
 :
-	_client_addr(),
-	_client_port(-1),
 	_socket_fd(socket_fd),
 	_server_addr(),
 	_server_port(-1),
@@ -22,8 +20,9 @@ Client::Client(Config *config, Descriptors *descriptors, int socket_fd)
 	if (getpeername(socket_fd, (struct sockaddr *)&peer_addr, &peer_addr_size) < 0)
 		Message::error("getpeername() failed");
 
-	this->_client_addr = inet_ntoa(peer_addr.sin_addr);
-	this->_client_port = ntohs(peer_addr.sin_port);
+	this->_request.setClientAddress(inet_ntoa(peer_addr.sin_addr));
+	this->_request.setClientPort(ntohs(peer_addr.sin_port));
+
 	this->_socket_fd = socket_fd;
 	this->_server_addr = inet_ntoa(sock_addr.sin_addr);
 	this->_server_port = ntohs(sock_addr.sin_port);
@@ -39,9 +38,7 @@ bool				Client::operator==(Client const &rhs)
 	if (this == &rhs)
 		return (true);
 
-	if (this->_client_addr == rhs._client_addr
-		&& this->_client_port == rhs._client_port
-		&& this->_socket_fd == rhs._socket_fd
+	if (this->_socket_fd == rhs._socket_fd
 		&& this->_server_addr == rhs._server_addr
 		&& this->_server_port == rhs._server_port)
 		return (true);
@@ -51,10 +48,10 @@ bool				Client::operator==(Client const &rhs)
 
 // Getters
 std::string const	&Client::getClientAddr(void)
-{ return (this->_client_addr); }
+{ return (this->_request.getClientAddress()); }
 
 int				Client::getClientPort(void)
-{ return (this->_client_port); }
+{ return (this->_request.getClientPort()); }
 
 int				Client::getSocketFd(void)
 { return (this->_socket_fd); }
@@ -86,10 +83,10 @@ bool				Client::getClose(void)
 
 // Setters
 void				Client::setClientAddr(std::string const &addr)
-{ this->_client_addr = addr; }
+{ this->_request.setClientAddress(addr); }
 
 void				Client::setClientPort(int port)
-{ this->_client_port = port; }
+{ this->_request.setClientPort(port); }
 
 void				Client::setSocketFd(int socket_fd)
 { this->_socket_fd = socket_fd; }

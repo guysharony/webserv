@@ -79,15 +79,12 @@ int	CGI::launch_cgi(std::string const & filename) {
 		// Open tmp file using TmpFileClass
 		// Dup tmp_file_fd to stdin
 		std::string content_length = toString(this->_request->sizeTemporary("request"), false);
-		
-		std::cout << "cgi checking post" << std::endl;
+
 		if (this->_request->getMethod() == "POST") {
-			std::cout << "cgi with POST" << std::endl;
 			tmp_fd = this->_request->fdTemporary("request");
 			int c = 0;
 			while (tmp_fd < 0 && c < 10)
 			{
-				std::cout << "rechecking temp fd == " << tmp_fd << std::endl;
 				tmp_fd = this->_request->fdTemporary("request");
 				sleep(1);
 				++c;
@@ -105,20 +102,28 @@ int	CGI::launch_cgi(std::string const & filename) {
 				// setenv("CONTENT_TYPE", "application/x-www-form-urlencoded", true);
 			}
 		}
+		setenv("HTTP_CONNECTION", this->_request->getConnection() == KEEP_ALIVE ? "keep-alive" : "close", true);
 
 		// Prepare environment for execve
-		setenv("SERVER_SOFTWARE", SERVER_NAME, true);						// *** This value should be confirmed
-		setenv("SERVER_NAME", "", true);
-		setenv("GATEWAY_INTERFACE", "CGI/1.1", true);						// *** This value should be confirmed
-		setenv("SERVER_PROTOCOL", "HTTP/1.1", true);
-		setenv("SERVER_PORT", this->_request->getPort().c_str(), true);
-		setenv("PATH_INFO", filename.c_str(), true);
-		setenv("QUERY_STRING", this->_request->getParameters().c_str(), true);
-		setenv("PATH_TRANSLATED", filename.c_str(), true);
-		setenv("REQUEST_METHOD", this->_request->getMethod().c_str(), true);
-		setenv("REDIRECT_STATUS", "200", true);
-		setenv("DOCUMENT_ROOT", location->root.c_str(), true);
 		setenv("SCRIPT_FILENAME", filename.c_str(), true);
+		setenv("QUERY_STRING", this->_request->getParameters().c_str(), true);
+		setenv("REQUEST_METHOD", this->_request->getMethod().c_str(), true);
+
+		setenv("SERVER_NAME", this->_request->getHost().c_str(), true);
+		setenv("REQUEST_URI", this->_request->getURI().c_str(), true);
+		setenv("DOCUMENT_ROOT", location->root.c_str(), true);
+		setenv("SERVER_PROTOCOL", "HTTP/1.1", true);
+		setenv("GATEWAY_INTERFACE", "CGI/1.1", true);
+		setenv("SERVER_SOFTWARE", SERVER_NAME, true);
+
+		setenv("REMOTE_ADDR", this->_request->getClientAddress().c_str(), true);
+		setenv("REMOTE_PORT", toString(this->_request->getClientPort()).c_str(), true);
+		setenv("SERVER_PORT", this->_request->getPort().c_str(), true);
+
+		setenv("PATH_INFO", filename.c_str(), true);
+		setenv("PATH_TRANSLATED", filename.c_str(), true);
+
+		setenv("REDIRECT_STATUS", "200", true);
 
 		this->_executable = strdup(server->cgi_path.c_str());
 		if (!this->_executable)

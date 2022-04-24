@@ -29,6 +29,8 @@ class Request {
 		std::string							getReferer(void);
 		std::string							getUserAgent(void);
 		std::string							getParameters(void);
+		std::string const						&getClientAddress(void);
+		int									getClientPort(void);
 		std::string							getURI(void);
 		std::string							getHost(void);
 		std::string							getPort(void);
@@ -49,6 +51,8 @@ class Request {
 		void									setEnd(int value);
 		void									setConnection(int connection);
 		void									setDescriptors(Descriptors *descriptors);
+		void									setClientAddress(std::string address);
+		void									setClientPort(int port);
 
 		/* Temporary */
 		int									createTemporary(std::string const & filename);
@@ -81,6 +85,8 @@ class Request {
 		std::string							_parameters;
 		std::string							_port;
 		std::string							_host;
+		std::string							_client_address;
+		int									_client_port;
 		STRBinary								_temp;
 		STRBinary								_current;
 		Config								*_config;

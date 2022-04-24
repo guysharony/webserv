@@ -57,6 +57,12 @@ std::string	Request::getPort(void)
 std::string	Request::getHost(void)
 { return (this->_host); }
 
+std::string const	&Request::getClientAddress(void)
+{ return (this->_client_address); }
+
+int			Request::getClientPort(void)
+{ return (this->_client_port); }
+
 int			Request::getTimeout(void)
 { return (this->_timeout); }
 
@@ -132,6 +138,13 @@ void			Request::setEnd(int value)
 
 void			Request::setConnection(int connection)
 { this->_connection = connection; }
+
+void			Request::setClientAddress(std::string address)
+{ this->_client_address = address; }
+
+void			Request::setClientPort(int port)
+{ this->_client_port = port; }
+
 
 /* Methods */
 void			Request::append(std::vector<char> & packet)
@@ -318,10 +331,13 @@ void			Request::checkPort(void) {
 
 void			Request::checkTimeout(void) {
 	std::string tmp;
-	tmp = this->_header["Connection-Timeout"];
 
-	if (tmp.size() > 0 && ft_atoi(tmp.c_str()) >= 0 && ft_isalpha(tmp.c_str()) != 1)
-		this->_timeout = ft_atoi(tmp.c_str());
+	if (this->_header.count("connection-timeout")) {
+		tmp = this->_header["connection-timeout"];
+
+		if (tmp.size() > 0 && ft_atoi(tmp.c_str()) >= 0 && ft_isalpha(tmp.c_str()) != 1)
+			this->_timeout = ft_atoi(tmp.c_str());
+	}
 }
 
 
