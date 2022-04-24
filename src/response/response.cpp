@@ -124,9 +124,7 @@ std::string			Response::findDate(void) {
 void					Response::createHeaders(void) {
 	size_t	body_length = this->_request->sizeTemporary("body");
 
-	if (this->_status < STATUS_INTERNAL_SERVER_ERROR && this->_server_found)
-		this->_headers["Server"] = SERVER_NAME;
-
+	this->_headers["Server"] = SERVER_NAME;
 	this->_headers["Date"] = findDate();
 	this->_headers["Content-Length"] = intToStr(body_length + 2);
 	this->_headers["Content-Location"] = this->_path;
@@ -517,40 +515,10 @@ int			Response::getStatus(void)
 { return this->_status; }
 
 std::string	Response::getStatusMessage(void) {
-	if (this->_status == STATUS_OK)
-		return "OK";
+	if (!isHttpStatus(this->_status))
+		this->_status = STATUS_INTERNAL_SERVER_ERROR;
 
-	if (this->_status == STATUS_CREATED)
-		return "CREATED";
-
-	if (this->_status == STATUS_NOT_FOUND)
-		return "NOT FOUND";
-
-	if (this->_status == STATUS_INTERNAL_SERVER_ERROR)
-		return "INTERNEL SERVER ERROR";
-
-	if (this->_status == STATUS_CREATED)
-		return "STATUS CREATED";
-
-	if (this->_status == STATUS_MOVED_PERMANENTLY)
-		return "MOVED PERMANENTLY";
-
-	if (this->_status == STATUS_NO_CONTENT)
-		return "NO CONTENT";
-
-	if (this->_status == STATUS_REQUEST_ENTITY_TOO_LARGE)
-		return "REQUEST ENTITY TOO LARGE";
-
-	if (this->_status == STATUS_PARTIAL_CONTENT)
-		return "PARTIAL CONTENT";
-
-	if (this->_status == STATUS_NOT_ALLOWED)
-		return "NOT ALLOWED";
-
-	if (this->_status == STATUS_FORBIDDEN)
-		return "FORBIDDEN";
-
-	return "";
+	return getHttpStatusMessage(this->_status);
 }
 
 int		Response::readResponse(STRBinary & packet) {
@@ -775,22 +743,15 @@ void			Response::checkPath(void) {
 }
 
 int		Response::createErrorPages(std::string path, STRBinary & packet) {
+	std::string	status;
+	std::string	message;
+
 	if (this->_body_fd == -1) {
 		if ((this->_body_fd = open(path.c_str(), O_RDONLY)) <= 0) {
-			if (this->_status == STATUS_NOT_FOUND)
-				packet = "<!DOCTYPE html><html><title>404</title><body>404 NOT FOUND</body></html>";
-			else if (this->_status == STATUS_INTERNAL_SERVER_ERROR)
-				packet = "<!DOCTYPE html><html><title>500</title><body>500 INTERNAL SERVER ERROR</body></html>";
-			else if (this->_status == STATUS_BAD_REQUEST)
-				packet = "<!DOCTYPE html><html><title>400</title><body>400 BAD REQUEST</body></html>";
-			else if (this->_status == STATUS_FORBIDDEN)
-				packet = "<!DOCTYPE html><html><title>403</title><body>403 FORBIDDEN</body></html>";
-			else if (this->_status == STATUS_REQUEST_ENTITY_TOO_LARGE)
-				packet = "<!DOCTYPE html><html><title>413</title><body>413 ENTITY_TOO_LARGE</body></html>";
-			else if (this->_status == STATUS_NOT_ALLOWED)
-				packet = "<!DOCTYPE html><html><title>405</title><body>405 NOT ALLOWED</body></html>";
-			else if (this->_status == STATUS_HTTP_VERSION_NOT_SUPPORTED)
-				packet = "<!DOCTYPE html><html><title>405</title><body>505 STATUS_HTTP_VERSION_NOT_SUPPORTED</body></html>";
+			message = this->getStatusMessage();
+			status = toString(this->_status);
+
+			packet = "<!DOCTYPE html><html><title>" + status + "</title><body>" + status + " " + message + "</body></html>";
 
 			return 0;
 		}

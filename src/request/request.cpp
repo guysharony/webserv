@@ -400,25 +400,24 @@ int			Request::firstLineParsing(void)
 
 	tmp = this->_current.str();
 
+	if (tmp.length() >= 2047) {
+		this->setStatus(STATUS_REQUEST_URI_TOO_LARGE);
+		return (0);
+	}
+
 	if (occurence(tmp, " ") != 2) {
 		this->setStatus(STATUS_BAD_REQUEST);
 		return (0);
 	}
 
-	if (!this->checkMethod(tmp, method)) {
-		this->setStatus(STATUS_NOT_ALLOWED);
+	if (!this->checkMethod(tmp, method))
 		return (0);
-	}
 
-	if (!this->checkPath(tmp, path, parameters)) {
-		this->setStatus(STATUS_BAD_REQUEST);
+	if (!this->checkPath(tmp, path, parameters))
 		return (0);
-	}
 
-	if (!this->checkVersion(tmp, version)) {
-		this->setStatus(STATUS_HTTP_VERSION_NOT_SUPPORTED);
+	if (!this->checkVersion(tmp, version))
 		return (0);
-	}
 
 	this->_method = method;
 	this->_path = path;
@@ -441,6 +440,7 @@ int			Request::checkMethod(std::string & source, std::string & dst)
 	dst = line;
 
 	if (line.compare("GET") != 0 && line.compare("POST") != 0 && line.compare("DELETE") != 0) {
+		this->setStatus(STATUS_NOT_ALLOWED);
 		return 0;
 	}
 
@@ -449,9 +449,13 @@ int			Request::checkMethod(std::string & source, std::string & dst)
 
 int			Request::checkPath(std::string & source, std::string & path, std::string & parameters)
 {
-	size_t 		pos = source.find(" ");
-	size_t 		par = source.find("?");
-	std::string	line = source.substr(0, pos);
+	size_t 		pos;
+	size_t 		par;
+	std::string	line;
+
+	pos = source.find(" ");
+	par = source.find("?");
+	line = source.substr(0, pos);
 
 	source = source.substr(pos + 1);
 
@@ -469,6 +473,8 @@ int			Request::checkVersion(std::string & source, std::string & dst)
 		return (1);
 	}
 
+	this->setStatus(STATUS_HTTP_VERSION_NOT_SUPPORTED);
+
 	return (0);
 }
 
@@ -476,6 +482,9 @@ int			Request::checkHeaders(void)
 {
 	std::string key;
 	std::string value;
+
+	if (this->_current.length() >= 7999)
+		return 0;
 
 	if (this->checkHeader(this->_current.str(), key, value)) {
 		if (!key.compare("connection")) {
