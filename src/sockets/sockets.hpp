@@ -29,10 +29,7 @@ class Sockets {
 		typedef std::vector<SocketsListener>	sockets_listener_type;
 		typedef sockets_listener_type::iterator	socket_listener_type;
 
-		void					prepare(int port);
-		void					prepare(std::string const & ip_addr);
 		void					prepare(std::string const & ip_addr, int port);
-		void					prepare(std::string const & ip_addr, int port, std::string const & server_names);
 
 		int					listen(void);
 		int					accept(int fd);

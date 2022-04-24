@@ -5,24 +5,16 @@ Sockets::Sockets(Descriptors *descriptors)
 { }
 
 Sockets::~Sockets()
-{
-	
-}
-
-void		Sockets::prepare(int port) {
-	this->sockets.push_back(SocketsListener(port));
-}
-
-void		Sockets::prepare(std::string const & ip_addr) {
-	this->sockets.push_back(SocketsListener(ip_addr));
-}
+{ }
 
 void		Sockets::prepare(std::string const & ip_addr, int port) {
-	this->sockets.push_back(SocketsListener(ip_addr, port));
-}
+	socket_listener_type ite = this->sockets.end();
+	for (socket_listener_type it = this->sockets.begin(); it != ite; ++it) {
+		if (it->getAddr() == ip_addr && it->getPort() == port)
+			return;
+	}
 
-void		Sockets::prepare(std::string const & ip_addr, int port, std::string const & server_names) {
-	this->sockets.push_back(SocketsListener(ip_addr, port, server_names));
+	this->sockets.push_back(SocketsListener(ip_addr, port));
 }
 
 int		Sockets::initialize(socket_listener_type server_iterator) {
@@ -42,12 +34,14 @@ int		Sockets::initialize(socket_listener_type server_iterator) {
 		return -1;
 	}
 
+	/*
 	if (setsockopt(socketfd, SOL_SOCKET, SO_REUSEPORT, (char *)&enable, sizeof(enable)) < 0)
 	{
 		close(socketfd);
 		Message::error("setsockopt() failed.");
 		return -1;
 	}
+	*/
 
 	if (fcntl(socketfd, F_SETFL, O_NONBLOCK) < 0)
 	{
