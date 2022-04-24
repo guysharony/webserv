@@ -61,7 +61,6 @@ class Client {
 		Client(Client const &src);
 		Client					&operator=(Client const &rhs);
 
-		std::string				getStatusColor(void);
 		void						log(void);
 };
 

@@ -92,7 +92,9 @@ void					Response::initialize(void) {
 			location = this->_request->selectLocation(this->_server);
 			this->_location = location;
 			this->_autoIndex = this->_location->auto_index;
-		} catch(const Config::LocationNotFoundException& e) {
+		} catch (Config::MethodNotAllowed const & e) {
+			this->_status = STATUS_NOT_ALLOWED;
+		} catch (Config::LocationNotFoundException const & e) {
 			this->_status = STATUS_FORBIDDEN;
 		}
 	}
@@ -127,7 +129,6 @@ void					Response::createHeaders(void) {
 	this->_headers["Server"] = SERVER_NAME;
 	this->_headers["Date"] = findDate();
 	this->_headers["Content-Length"] = intToStr(body_length + 2);
-	this->_headers["Content-Location"] = this->_path;
 
 	if (this->_status == STATUS_MOVED_PERMANENTLY) {
 		this->_headers["Location"] = this->_location->redirect;
@@ -701,7 +702,7 @@ void			Response::postMethod(void) {
 
 			this->_body_write = true;
 
-			this->_headers["Location"] = this->_request->getPath();
+			this->_headers["Content-Location"] = this->_request->getPath();
 
 			fcntl(this->_body_fd, F_SETFL, O_NONBLOCK);
 
@@ -715,7 +716,7 @@ void			Response::postMethod(void) {
 				return;
 			}
 
-			this->_headers["Location"] = secureAddress(this->_request->getPath(), this->_body_filename);
+			this->_headers["Content-Location"] = secureAddress(this->_request->getPath(), this->_body_filename);
 
 			this->_status = STATUS_CREATED;
 			this->_body_write = true;

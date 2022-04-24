@@ -66,6 +66,50 @@ int		isHttpMethod(std::string value, int & method)
 		return (1);
 	}
 
+	if (!value.compare("CONNECT")) {
+		method = METHOD_CONNECT;
+		return (1);
+	}
+
+	if (!value.compare("OPTIONS")) {
+		method = METHOD_OPTIONS;
+		return (1);
+	}
+
+	if (!value.compare("TRACE")) {
+		method = METHOD_TRACE;
+		return (1);
+	}
+
+	return (0);
+}
+
+int		isHttpMethod(std::string value)
+{
+	if (!value.compare("GET"))
+		return (1);
+
+	if (!value.compare("HEAD"))
+		return (1);
+
+	if (!value.compare("POST"))
+		return (1);
+
+	if (!value.compare("PUT"))
+		return (1);
+
+	if (!value.compare("DELETE"))
+		return (1);
+
+	if (!value.compare("CONNECT"))
+		return (1);
+
+	if (!value.compare("OPTIONS"))
+		return (1);
+
+	if (!value.compare("TRACE"))
+		return (1);
+
 	return (0);
 }
 

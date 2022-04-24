@@ -37,6 +37,15 @@ class ConfigLocation
 			}
 		};
 
+		class MethodNotAllowed : public std::exception
+		{
+			public:
+			const char * what () const throw ()
+			{
+				return "Method not allowed";
+			}
+		};
+
 		ConfigLocation(void);
 		ConfigLocation(ConfigLocation const & src);
 		virtual ~ConfigLocation();

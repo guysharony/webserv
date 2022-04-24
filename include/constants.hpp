@@ -49,6 +49,9 @@
 # define METHOD_POST 					3
 # define METHOD_PUT 					4
 # define METHOD_DELETE 					5
+# define METHOD_CONNECT 					6
+# define METHOD_OPTIONS 					7
+# define METHOD_TRACE 					8
 
 /* connection */
 # define CLOSE							0

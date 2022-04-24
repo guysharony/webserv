@@ -143,25 +143,5 @@ int				Client::execute(void) {
 	return this->prepareResponse();
 }
 
-std::string		Client::getStatusColor(void) {
-	if (this->_response.getStatus() == STATUS_CREATED)
-		return "34";
-
-	if (this->_response.getStatus() == STATUS_NOT_FOUND)
-		return "33";
-
-	if ((this->_response.getStatus() == STATUS_BAD_REQUEST)
-		|| (this->_response.getStatus() == STATUS_INTERNAL_SERVER_ERROR)
-		|| (this->_response.getStatus() == STATUS_NOT_ALLOWED)
-		|| (this->_response.getStatus() == STATUS_FORBIDDEN))
-		return "31";
-
-	return "37";
-}
-
 void				Client::log(void)
-{
-	// std::cout << '172.17.0.1 - - [22/Apr/2022:07:48:49 +0000] "GET /favicon.ico HTTP/1.1" 404 555 "http://www.localhost:8081/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36"' << std::endl;
-	std::cout << this->getClientAddr() << " - - [" << getDate("%d/%b/%G:%T %z") << "] \"" << this->_response.getMethod() << " " << this->_response.getURI() << " HTTP/1.1\" " << this->_response.getStatus() << " " << this->_response.getContentLength() << " \"" << this->_request.getReferer() << "\" \"" << this->_request.getUserAgent() << "\"" << std::endl;
-	// std::cout << "\033[0;" << this->getStatusColor() << "m" << this->_response.getHost() << ":" << this->_response.getPort() << " -- [" << getDate("%d/%b/%G %T") << "] -- " << this->_response.getMethod() << " [" << this->_response.getURI() << "] " << this->_response.getStatus() << "\033[0m" << std::endl;
-}
+{ std::cout << this->getClientAddr() << " - - [" << getDate("%d/%b/%G:%T %z") << "] \"" << this->_response.getMethod() << " " << this->_response.getURI() << " HTTP/1.1\" " << this->_response.getStatus() << " " << this->_response.getContentLength() << " \"" << this->_request.getReferer() << "\" \"" << this->_request.getUserAgent() << "\"" << std::endl; }

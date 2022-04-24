@@ -245,13 +245,15 @@ void			Request::parseRequest(void) {
 						if (chunk_extention != std::string::npos)
 							this->_current = this->_current.substr(0, chunk_extention);
 
-						if (!isPositiveBase16(this->_current.str())) {
-							this->setStatus(STATUS_BAD_REQUEST);
+						if ((this->_chunk_size = hexToInt(this->_current.str())) <= 0) {
+							if (this->_chunk_size < 0) {
+								this->setStatus(STATUS_BAD_REQUEST);
+							}
+
 							this->setEnd(1);
 							return;
 						}
 
-						this->_chunk_size = hexToInt(this->_current.str());
 						this->_body_size = this->_chunk_size;
 						this->_current.clear();
 						this->_chunked = true;
@@ -439,8 +441,8 @@ int			Request::checkMethod(std::string & source, std::string & dst)
 
 	dst = line;
 
-	if (line.compare("GET") != 0 && line.compare("POST") != 0 && line.compare("DELETE") != 0) {
-		this->setStatus(STATUS_NOT_ALLOWED);
+	if (!isHttpMethod(line)) {
+		this->setStatus(STATUS_BAD_REQUEST);
 		return 0;
 	}
 
@@ -591,7 +593,6 @@ bool					Request::checkMethodBylocation(std::vector<int> methods_type)
 { return std::find(methods_type.begin(), methods_type.end(), convertMethodToValue(this->_method)) != methods_type.end(); }
 
 Config::location_type	Request::selectLocation(Config::configuration_type server) {
-	Config::location_type	it_location;
 	Config::location_type	ret = server->locations.end();
 	bool  				firstTime = true;
 
@@ -599,16 +600,21 @@ Config::location_type	Request::selectLocation(Config::configuration_type server)
 	if (this->_path[this->_path.size() - 1] != '/')
 		tmp = this->_path + "/";
 
-	for (it_location = server->locations.begin(); it_location != server->locations.end(); it_location++) {
-		if ((it_location->location == "/" || tmp.find(it_location->location + "/") == 0) && (firstTime || it_location->location.size() > ret->location.size())
-			&& checkMethodBylocation(it_location->methods)) {
-			ret = it_location;
+	Config::location_type ite = server->locations.end();
+	for (Config::location_type it = server->locations.begin(); it != ite; ++it) {
+		if ((it->location == "/" || tmp.find(it->location + "/") == 0)
+		&& (firstTime || it->location.size() > ret->location.size())
+		&& (ret == ite || (!checkMethodBylocation(ret->methods) && checkMethodBylocation(it->methods)))) {
+			ret = it;
 			firstTime = false;
 		}
 	}
 
 	if (firstTime) //no location found
 		throw Config::LocationNotFoundException();
+
+	if (!checkMethodBylocation(ret->methods))
+		throw Config::MethodNotAllowed();
 
 	return (ret);
 }
