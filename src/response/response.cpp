@@ -60,8 +60,9 @@ int					Response::execute(void) {
 	}
 
 	if (this->_event == EVT_CREATE_BODY) {
-		if (this->createBody() > 0)
+		if (this->createBody() > 0) {
 			this->_event = EVT_CREATE_HEADERS;
+		}
 
 		return 1;
 	}
@@ -400,9 +401,8 @@ std::string			Response::findContentType(std::string path)
 int		Response::createBody(void) {
 	Config::location_type	location;
 	STRBinary				packet;
-	bool 					isCgi = this->_request->isCgi(this->_server);
+	bool 				isCgi = this->_request->isCgi(this->_server);
 
-	this->_status = this->_request->getStatus();
 	if (isCgi && (this->_status == STATUS_OK)) {
 		if (this->readCGI(packet) > 0) {
 			this->_cgi_parser->append(packet);
@@ -424,7 +424,11 @@ int		Response::createBody(void) {
 		}
 	} else {
 		if (this->_status != STATUS_OK && this->_status != STATUS_CREATED) {
-			this->_headers["Content-Type"] = this->_server_found ? findContentType(this->_server->error_page[this->_status]) : "text/html";
+			this->_headers["Connection"] = "close";
+			this->_request->setConnection(CLOSE);
+			this->_headers["Content-Type"] = "text/html";
+			if (this->_server_found && this->_server->error_page.count(this->_status) && isFile(this->_server->error_page[this->_status]))
+				this->_headers["Content-Type"] = findContentType(this->_server->error_page[this->_status]);
 
 			if ((createErrorPages(this->_server_found ? this->_server->error_page[this->_status] : "", packet) > 0) || (this->_body_fd <= 0)) {
 				this->_request->appendTemporary("body", packet);
@@ -462,6 +466,7 @@ int		Response::createBody(void) {
 
 			if (isFiley(new_p) == 1)
 			{
+
 				this->_headers["Content-Type"] = findContentType(new_p);
 
 				if ((createErrorPages(new_p, packet) > 0) || (this->_body_fd <= 0)) {

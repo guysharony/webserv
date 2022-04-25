@@ -597,7 +597,7 @@ Config::location_type	Request::selectLocation(Config::configuration_type server)
 		}
 	}
 
-	if (firstTime) //no location found
+	if (firstTime) // no location found
 		throw Config::LocationNotFoundException();
 
 	if (!checkMethodBylocation(ret->methods))
