@@ -34,7 +34,6 @@ class TestRequests(unittest.TestCase):
 	def test_get_query_string(self):
 		url = "http://localhost:8081/php/w3_get_welcome.php?name=Test&email=greg@example.com"
 		ret = r.get(url)
-		print(ret.content)
 		self.assertTrue(ret.content.decode('utf-8').find("Welcome Test"))
 		self.assertTrue(ret.content.decode('utf-8').find("Your email address is: greg@example.com"))
 
@@ -48,6 +47,13 @@ class TestRequests(unittest.TestCase):
 		self.assertEqual(ret.status_code, 200)
 		self.assertTrue(ret.content.decode('utf-8').find("Welcome bob"))
 		self.assertTrue(ret.content.decode('utf-8').find("Your email address is: bob@example.com"))
+	
+	def test_get_cgi_file_does_not_exist(self):
+		url = "http://localhost:8081/php/asdgasg.php"
+		ret = r.get(url)
+		self.assertEqual(ret.status_code, 404)
+		self.assertTrue(ret.content.decode('utf-8').find("File not found"))
+
 
 if __name__ == '__main__':
 	unittest.main()
