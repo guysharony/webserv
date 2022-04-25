@@ -213,7 +213,6 @@ int				Webserv::clientReceive(void) {
 			(*this->context.client)->setEvent(EVT_REQUEST_LINE);
 
 		(*this->context.client)->appendRequest(packet);
-		
 	}
 
 	packet.clear();

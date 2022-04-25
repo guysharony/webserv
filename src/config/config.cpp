@@ -16,7 +16,12 @@ int			Config::load(std::string filename)
 	#ifdef DEBUG
 		for (configuration_type it = this->configuration.begin(); it != this->configuration.end(); it++)
 		{
-			std::cout << "[ server name => (" << it->server_name << ") ]" << std::endl;
+			if (it->server_names.size()) {
+				std::cout << "[ server names: ]" << std::endl;
+				for (std::vector<std::string>::iterator it2 = it->server_names.begin(); it2 != it->server_names.end(); it2++) {
+					std::cout << "[    " << *it2 << "]" << std::endl;
+				}
+			}
 
 			if (it->listen.size()) {
 				std::cout << "[ listen: ]" << std::endl;

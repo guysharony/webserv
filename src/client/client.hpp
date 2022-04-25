@@ -51,8 +51,6 @@ class Client {
 		int					execute(void);
 
 	private:
-		std::string				_client_addr;	// The IP address of the client
-		int						_client_port;	// The port of the server which is connected to the client (the one created by accept, not the one on which the server is listening)
 		int						_socket_fd;	// The socket which is used to communicate between client and server
 		std::string				_server_addr;	// The IP address of the server
 		int						_server_port;	// The port of the server FROM which the client connected (the one on which the server is listening)
@@ -63,7 +61,6 @@ class Client {
 		Client(Client const &src);
 		Client					&operator=(Client const &rhs);
 
-		std::string				getStatusColor(void);
 		void						log(void);
 };
 

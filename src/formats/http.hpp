@@ -11,6 +11,7 @@ int 				isHttpStatus(int status);
 std::string		getHttpStatusMessage(int status);
 
 /* methods */
+int				isHttpMethod(std::string value);
 int				isHttpMethod(std::string value, int & method);
 std::string 		getDate(std::string format = "%a, %d %b %G %T GMT");
 

@@ -57,11 +57,23 @@ std::string	Request::getPort(void)
 std::string	Request::getHost(void)
 { return (this->_host); }
 
+std::string const	&Request::getClientAddress(void)
+{ return (this->_client_address); }
+
+int			Request::getClientPort(void)
+{ return (this->_client_port); }
+
 int			Request::getTimeout(void)
 { return (this->_timeout); }
 
 const std::map<std::string, std::string>	&Request::getHeader(void) const
 { return (this->_header); }
+
+std::string	Request::getReferer(void)
+{ return (this->_header.count("referrer") ? this->_header["referrer"] : "-"); }
+
+std::string	Request::getUserAgent(void)
+{ return (this->_header.count("user-agent") ? this->_header["user-agent"] : "-"); }
 
 int			Request::getStatus(void)
 { return (this->_status); }
@@ -126,6 +138,13 @@ void			Request::setEnd(int value)
 
 void			Request::setConnection(int connection)
 { this->_connection = connection; }
+
+void			Request::setClientAddress(std::string address)
+{ this->_client_address = address; }
+
+void			Request::setClientPort(int port)
+{ this->_client_port = port; }
+
 
 /* Methods */
 void			Request::append(std::vector<char> & packet)
@@ -226,13 +245,15 @@ void			Request::parseRequest(void) {
 						if (chunk_extention != std::string::npos)
 							this->_current = this->_current.substr(0, chunk_extention);
 
-						if (!isPositiveBase16(this->_current.str())) {
-							this->setStatus(STATUS_BAD_REQUEST);
+						if ((this->_chunk_size = hexToInt(this->_current.str())) <= 0) {
+							if (this->_chunk_size < 0) {
+								this->setStatus(STATUS_BAD_REQUEST);
+							}
+
 							this->setEnd(1);
 							return;
 						}
 
-						this->_chunk_size = hexToInt(this->_current.str());
 						this->_body_size = this->_chunk_size;
 						this->_current.clear();
 						this->_chunked = true;
@@ -312,10 +333,13 @@ void			Request::checkPort(void) {
 
 void			Request::checkTimeout(void) {
 	std::string tmp;
-	tmp = this->_header["Connection-Timeout"];
 
-	if (tmp.size() > 0 && ft_atoi(tmp.c_str()) >= 0 && ft_isalpha(tmp.c_str()) != 1)
-		this->_timeout = ft_atoi(tmp.c_str());
+	if (this->_header.count("connection-timeout")) {
+		tmp = this->_header["connection-timeout"];
+
+		if (tmp.size() > 0 && ft_atoi(tmp.c_str()) >= 0 && ft_isalpha(tmp.c_str()) != 1)
+			this->_timeout = ft_atoi(tmp.c_str());
+	}
 }
 
 
@@ -378,37 +402,34 @@ int			Request::firstLineParsing(void)
 
 	tmp = this->_current.str();
 
+	if (tmp.length() >= 2047) {
+		this->setStatus(STATUS_REQUEST_URI_TOO_LARGE);
+		return (0);
+	}
+
 	if (occurence(tmp, " ") != 2) {
 		this->setStatus(STATUS_BAD_REQUEST);
 		return (0);
 	}
 
-	if (!this->checkMethod(tmp, method)) {
+	this->checkMethod(tmp);
+	this->checkPath(tmp);
+	this->checkVersion(tmp);
+
+	if (this->getMethod().compare("GET")
+	&& this->getMethod().compare("POST")
+	&& this->getMethod().compare("DELETE"))
 		this->setStatus(STATUS_NOT_ALLOWED);
-		return (0);
-	}
 
-	if (!this->checkPath(tmp, path, parameters)) {
-		this->setStatus(STATUS_BAD_REQUEST);
-		return (0);
-	}
-
-	if (!this->checkVersion(tmp, version)) {
+	if (this->getStatus() == STATUS_OK && this->getVersion().compare("HTTP/1.1"))
 		this->setStatus(STATUS_HTTP_VERSION_NOT_SUPPORTED);
-		return (0);
-	}
-
-	this->_method = method;
-	this->_path = path;
-	this->_parameters = parameters;
-	this->_version = version;
 
 	this->_event = EVT_REQUEST_HEADERS;
 
 	return (1);
 }
 
-int			Request::checkMethod(std::string & source, std::string & dst)
+int			Request::checkMethod(std::string & source)
 {
 	std::string	sep = " ";
 	size_t 		pos = source.find(sep);
@@ -416,44 +437,43 @@ int			Request::checkMethod(std::string & source, std::string & dst)
 
 	source = source.substr(pos + sep.length());
 
-	dst = line;
-
-	if (line.compare("GET") != 0 && line.compare("POST") != 0 && line.compare("DELETE") != 0) {
-		return 0;
-	}
-
-	return 1;
-}
-
-int			Request::checkPath(std::string & source, std::string & path, std::string & parameters)
-{
-	size_t 		pos = source.find(" ");
-	size_t 		par = source.find("?");
-	std::string	line = source.substr(0, pos);
-
-	source = source.substr(pos + 1);
-
-	path = line.substr(0, par);
-	parameters = ((par != std::string::npos) ? line.substr(par) : "");
+	this->_method = line;
 
 	return (1);
 }
 
-int			Request::checkVersion(std::string & source, std::string & dst)
+int			Request::checkPath(std::string & source)
 {
-	if (!source.compare("HTTP/1.1")) {
-		dst = source;
+	size_t 		pos;
+	size_t 		par;
+	std::string	line;
 
-		return (1);
-	}
+	pos = source.find(" ");
+	par = source.find("?");
+	line = source.substr(0, pos);
 
-	return (0);
+	source = source.substr(pos + 1);
+
+	this->_path = line.substr(0, par);
+	this->_parameters = ((par != std::string::npos) ? line.substr(par) : "");
+
+	return (1);
+}
+
+int			Request::checkVersion(std::string & source)
+{
+	this->_version = source;
+
+	return (1);
 }
 
 int			Request::checkHeaders(void)
 {
 	std::string key;
 	std::string value;
+
+	if (this->_current.length() >= 7999)
+		return 0;
 
 	if (this->checkHeader(this->_current.str(), key, value)) {
 		if (!key.compare("connection")) {
@@ -514,7 +534,7 @@ int			Request::checkHeader(std::string source, std::string & key, std::string & 
 
 void		Request::displayAllLocations(void) {
 	for (Config::configuration_type it = this->_config->configuration.begin(); it != this->_config->configuration.end(); it++) {
-		std::cout << it->server_name << std::endl;
+		std::cout << it->server_names.size() << std::endl;
 
 		for (Config::location_type it_locations = it->locations.begin(); it_locations != it->locations.end(); it_locations++) {
 			std::cout << it_locations->location << std::endl;
@@ -526,21 +546,24 @@ Config::configuration_type Request::selectServer(void) {
 	Config::configuration_type ite = this->_config->configuration.end();
 	Config::configuration_type default_server = ite;
 
-	for (Config::configuration_type it = this->_config->configuration.begin(); it != ite; ++it) {
-
+	for (Config::configuration_type it = this->_config->configuration.begin(); it != ite; ++it)
+	{
 		Config::listen_type::iterator it2e = it->listen.end();
-		for (Config::listen_type::iterator it2 = it->listen.begin(); it2 != it2e; ++it2) {
-
+		for (Config::listen_type::iterator it2 = it->listen.begin(); it2 != it2e; ++it2)
+		{
 			Config::ports_type::iterator it3e = it2->second.end();
-			for (Config::ports_type::iterator it3 = it2->second.begin(); it3 != it3e; ++it3) {
+			for (Config::ports_type::iterator it3 = it2->second.begin(); it3 != it3e; ++it3)
+			{
 				if (!(*it3).compare(this->_port))
 				{
-					if (default_server == ite) {
+					if (default_server == ite)
 						default_server = it;
-					}
 
-					if (!it->server_name.compare(it2->first)) {
-						return it;
+					std::vector<std::string>::iterator it4e = it->server_names.end();
+					for (std::vector<std::string>::iterator it4 = it->server_names.begin(); it4 != it4e; ++it4)
+					{
+						if (!(*it4).compare(this->_host))
+							return it;
 					}
 				}
 			}
@@ -557,7 +580,6 @@ bool					Request::checkMethodBylocation(std::vector<int> methods_type)
 { return std::find(methods_type.begin(), methods_type.end(), convertMethodToValue(this->_method)) != methods_type.end(); }
 
 Config::location_type	Request::selectLocation(Config::configuration_type server) {
-	Config::location_type	it_location;
 	Config::location_type	ret = server->locations.end();
 	bool  				firstTime = true;
 
@@ -565,16 +587,21 @@ Config::location_type	Request::selectLocation(Config::configuration_type server)
 	if (this->_path[this->_path.size() - 1] != '/')
 		tmp = this->_path + "/";
 
-	for (it_location = server->locations.begin(); it_location != server->locations.end(); it_location++) {
-		if ((it_location->location == "/" || tmp.find(it_location->location + "/") == 0) && (firstTime || it_location->location.size() > ret->location.size())
-			&& checkMethodBylocation(it_location->methods)) {
-			ret = it_location;
+	Config::location_type ite = server->locations.end();
+	for (Config::location_type it = server->locations.begin(); it != ite; ++it) {
+		if ((it->location == "/" || tmp.find(it->location + "/") == 0)
+		&& (firstTime || it->location.size() > ret->location.size())
+		&& (ret == ite || (!checkMethodBylocation(ret->methods) && checkMethodBylocation(it->methods)))) {
+			ret = it;
 			firstTime = false;
 		}
 	}
 
 	if (firstTime) //no location found
 		throw Config::LocationNotFoundException();
+
+	if (!checkMethodBylocation(ret->methods))
+		throw Config::MethodNotAllowed();
 
 	return (ret);
 }

@@ -26,7 +26,11 @@ class Request {
 		std::string							getMethod(void);
 		std::string							getVersion(void);
 		std::string							getPath(void);
+		std::string							getReferer(void);
+		std::string							getUserAgent(void);
 		std::string							getParameters(void);
+		std::string const						&getClientAddress(void);
+		int									getClientPort(void);
 		std::string							getURI(void);
 		std::string							getHost(void);
 		std::string							getPort(void);
@@ -47,6 +51,8 @@ class Request {
 		void									setEnd(int value);
 		void									setConnection(int connection);
 		void									setDescriptors(Descriptors *descriptors);
+		void									setClientAddress(std::string address);
+		void									setClientPort(int port);
 
 		/* Temporary */
 		int									createTemporary(std::string const & filename);
@@ -79,6 +85,8 @@ class Request {
 		std::string							_parameters;
 		std::string							_port;
 		std::string							_host;
+		std::string							_client_address;
+		int									_client_port;
 		STRBinary								_temp;
 		STRBinary								_current;
 		Config								*_config;
@@ -101,9 +109,9 @@ class Request {
 		int									firstLineParsing(void);
 		std::string							getNextLine(std::string str, size_t *i);
 		size_t								headerParsing(std::string request_buffer);
-		int									checkMethod(std::string & source, std::string & dst);
-		int									checkPath(std::string & source, std::string & path, std::string & parameters);
-		int									checkVersion(std::string & source, std::string & dst);
+		int									checkMethod(std::string & source);
+		int									checkPath(std::string & source);
+		int									checkVersion(std::string & source);
 		void									checkBody(Config::configuration_type server);
 		int									checkHeaders(void);
 		int									checkHeader(std::string source, std::string & key, std::string & value);

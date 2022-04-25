@@ -36,6 +36,9 @@ std::string			Response::getPort(void)
 std::string			Response::getMethod(void)
 { return this->_request->getMethod(); }
 
+std::string			Response::getContentLength(void)
+{ return intToStr(this->_request->sizeTemporary("body") + 2); }
+
 std::string			Response::getPath(void)
 { return this->_request->getPath(); }
 
@@ -89,7 +92,9 @@ void					Response::initialize(void) {
 			location = this->_request->selectLocation(this->_server);
 			this->_location = location;
 			this->_autoIndex = this->_location->auto_index;
-		} catch(const Config::LocationNotFoundException& e) {
+		} catch (Config::MethodNotAllowed const & e) {
+			this->_status = STATUS_NOT_ALLOWED;
+		} catch (Config::LocationNotFoundException const & e) {
 			this->_status = STATUS_FORBIDDEN;
 		}
 	}
@@ -121,13 +126,9 @@ std::string			Response::findDate(void) {
 void					Response::createHeaders(void) {
 	size_t	body_length = this->_request->sizeTemporary("body");
 
-	if (this->_status < STATUS_INTERNAL_SERVER_ERROR && this->_server_found)
-		this->_headers["Server"] = this->_server->server_name;
-
+	this->_headers["Server"] = SERVER_NAME;
 	this->_headers["Date"] = findDate();
 	this->_headers["Content-Length"] = intToStr(body_length + 2);
-	this->_headers["Content-Location"] = this->_path;
-	this->_headers["Content-Type"] = findContentType();
 
 	if (this->_status == STATUS_MOVED_PERMANENTLY) {
 		this->_headers["Location"] = this->_location->redirect;
@@ -136,24 +137,264 @@ void					Response::createHeaders(void) {
 	this->_event = EVT_SEND_RESPONSE_LINE;
 }
 
-std::string			Response::findContentType(void)
+std::string			Response::findContentType(std::string path)
 {
 	std::string type;
-	type = this->_path.substr(this->_path.rfind(".") + 1, this->_path.size() - this->_path.rfind("."));
-	if (type == "html")
-		return("text/html");
-	else if (type == "css")
-		return("text/css");
-	else if (type == "js")
-		return("text/javascript");
-	else if (type == "jpeg" || type == "jpg")
-		return("image/jpeg");
-	else if (type == "png")
-		return("image/png");
-	else if (type == "bmp")
-		return("image/bmp");
+	type = path.substr(path.rfind(".") + 1, path.size() - path.rfind("."));
+
+	if (type == "html" || type == "htm" || type == "shtml")
+		return "text/html";
+
+	if (type == "css")
+		return "text/css";
+
+	if (type == "xml")
+		return "text/xml";
+
+	if (type == "git")
+		return "image/gif";
+
+	if (type == "jpeg" || type == "jpg")
+		return "image/jpeg";
+
+	if (type == "js")
+		return "application/javascript";
+
+	if (type == "atom")
+		return "application/atom+xml";
+
+	if (type == "rss")
+		return "application/rss+xml";
+
+	if (type == "mml")
+		return "text/mathml";
+
+	if (type == "txt")
+		return "text/plain";
+
+	if (type == "jad")
+		return "text/vnd.sun.j2me.app-descriptor";
+
+	if (type == "wml")
+		return "text/vnd.wap.wml";
+
+	if (type == "htc")
+		return "text/x-component";
+
+	if (type == "png")
+		return "image/png";
 	
-	return("text/html"); //normalment text/plain mais je veux tester la page d'erreur 404 --> to check
+	if (type == "svg" || type == "svgz")
+		return "image/svg+xml";
+
+	if (type == "tif" || type == "tiff")
+		return "image/tiff";
+
+	if (type == "wbmp")
+		return "image/vnd.wap.wbmp";
+
+	if (type == "webp")
+		return "image/webp";
+
+	if (type == "ico")
+		return "image/x-icon";
+
+	if (type == "jng")
+		return "image/x-jng";
+
+	if (type == "bmp")
+		return "image/x-ms-bmp";
+
+	if (type == "woff")
+		return "font/woff";
+
+	if (type == "woff2")
+		return "font/woff2";
+
+	if (type == "jar" || type == "war" || type == "ear")
+		return "application/java-archive";
+
+	if (type == "json")
+		return "application/json";
+
+	if (type == "hqx")
+		return "application/mac-binhex40";
+
+	if (type == "doc")
+		return "application/msword";
+
+	if (type == "pdf")
+		return "application/pdf";
+
+	if (type == "ps" || type == "eps" || type == "ai")
+		return "application/postscript";
+
+	if (type == "rtf")
+		return "application/rtf";
+
+	if (type == "m3u8")
+		return "application/vnd.apple.mpegurl";
+
+	if (type == "kml")
+		return "application/vnd.google-earth.kml+xml";
+
+	if (type == "kmz")
+		return "application/vnd.google-earth.kmz";
+
+	if (type == "xls")
+		return "application/vnd.ms-excel";
+
+	if (type == "eot")
+		return "application/vnd.ms-fontobject";
+
+	if (type == "ppt")
+		return "application/vnd.ms-powerpoint";
+
+	if (type == "odg")
+		return "application/vnd.oasis.opendocument.graphics";
+
+	if (type == "odp")
+		return "application/vnd.oasis.opendocument.presentation";
+
+	if (type == "ods")
+		return "application/vnd.oasis.opendocument.spreadsheet";
+
+	if (type == "odt")
+		return "application/vnd.oasis.opendocument.text";
+
+	if (type == "pptx")
+		return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+
+	if (type == "xlsx")
+		return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+	if (type == "docx")
+		return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+	if (type == "wmlc")
+		return "application/vnd.wap.wmlc";
+
+	if (type == "7z")
+		return "application/x-7z-compressed";
+
+	if (type == "cco")
+		return "application/x-cocoa";
+
+	if (type == "jardiff")
+		return "application/x-java-archive-diff";
+
+	if (type == "jnlp")
+		return "application/x-java-jnlp-file";
+
+	if (type == "run")
+		return "application/x-makeself";
+
+	if (type == "pl" || type == "pm")
+		return "application/x-perl";
+
+	if (type == "prc" || type == "pdb")
+		return "application/x-pilot";
+
+	if (type == "rar")
+		return "application/x-rar-compressed";
+
+	if (type == "rpm")
+		return "application/x-redhat-package-manager";
+
+	if (type == "sea")
+		return "application/x-sea";
+
+	if (type == "swf")
+		return "application/x-shockwave-flash";
+
+	if (type == "sit")
+		return "application/x-stuffit";
+
+	if (type == "tcl" || type == "tk")
+		return "application/x-tcl";
+
+	if (type == "der" || type == "pem" || type == "crt")
+		return "application/x-x509-ca-cert";
+
+	if (type == "xpi")
+		return "application/x-xpinstall";
+
+	if (type == "xhtml")
+		return "application/xhtml+xml";
+
+	if (type == "xspf")
+		return "application/xspf+xml";
+
+	if (type == "zip")
+		return "application/zip";
+
+	if (type == "bin" || type == "exe" || type == "dll")
+		return "application/octet-stream";
+
+	if (type == "deb")
+		return "application/octet-stream";
+
+	if (type == "dmg")
+		return "application/octet-stream";
+
+	if (type == "iso" || type == "img")
+		return "application/octet-stream";
+
+	if (type == "msi" || type == "msp" || type == "msm")
+		return "application/octet-stream";
+
+	if (type == "mid" || type == "midi" || type == "kar")
+		return "audio/midi";
+
+	if (type == "mp3")
+		return "audio/mpeg";
+
+	if (type == "ogg")
+		return "audio/ogg";
+
+	if (type == "m4a")
+		return "audio/x-m4a";
+
+	if (type == "ra")
+		return "audio/x-realaudio";
+
+	if (type == "3gpp" || type == "3gp")
+		return "video/3gpp";
+
+	if (type == "ts")
+		return "video/mp2t";
+
+	if (type == "mp4")
+		return "video/mp4";
+
+	if (type == "mpeg" || type == "mpg")
+		return "video/mpeg";
+
+	if (type == "mov")
+		return "video/quicktime";
+
+	if (type == "webm")
+		return "video/webm";
+
+	if (type == "flv")
+		return "video/x-flv";
+
+	if (type == "m4v")
+		return "video/x-m4v";
+
+	if (type == "mng")
+		return "video/x-mng";
+
+	if (type == "asx" || type == "asf")
+		return "video/x-ms-asf";
+
+	if (type == "wmv")
+		return "video/x-ms-wmv";
+
+	if (type == "avi")
+		return "video/x-msvideo";
+
+	return "application/octet-stream";
 }
 
 int		Response::createBody(void) {
@@ -183,6 +424,8 @@ int		Response::createBody(void) {
 		}
 	} else {
 		if (this->_status != STATUS_OK && this->_status != STATUS_CREATED) {
+			this->_headers["Content-Type"] = this->_server_found ? findContentType(this->_server->error_page[this->_status]) : "text/html";
+
 			if ((createErrorPages(this->_server_found ? this->_server->error_page[this->_status] : "", packet) > 0) || (this->_body_fd <= 0)) {
 				this->_request->appendTemporary("body", packet);
 				return (this->_body_fd <= 0);
@@ -219,6 +462,8 @@ int		Response::createBody(void) {
 
 			if (isFiley(new_p) == 1)
 			{
+				this->_headers["Content-Type"] = findContentType(new_p);
+
 				if ((createErrorPages(new_p, packet) > 0) || (this->_body_fd <= 0)) {
 					this->_request->appendTemporary("body", packet);
 					return (this->_body_fd <= 0);
@@ -233,15 +478,20 @@ int		Response::createBody(void) {
 					std::string path = location->root + "/" + (*it);
 					if (isFiley(path) == 1)
 					{
+						this->_headers["Content-Type"] = findContentType(path);
+
 						if ((createErrorPages(path, packet) > 0) || (this->_body_fd <= 0)) {
 							this->_request->appendTemporary("body", packet);
 							return (this->_body_fd <= 0);
 						}
+
 						break;
 					}
 				}
 
 				if (it == location->index.end() && this->_autoIndex) {
+					this->_headers["Content-Type"] = "text/html";
+
 					if (getListOfDirectories(new_p.c_str(), packet) > 0) {
 						this->_request->appendTemporary("body", packet);
 						return 0;
@@ -268,40 +518,10 @@ int			Response::getStatus(void)
 { return this->_status; }
 
 std::string	Response::getStatusMessage(void) {
-	if (this->_status == STATUS_OK)
-		return "OK";
+	if (!isHttpStatus(this->_status))
+		this->_status = STATUS_INTERNAL_SERVER_ERROR;
 
-	if (this->_status == STATUS_CREATED)
-		return "CREATED";
-
-	if (this->_status == STATUS_NOT_FOUND)
-		return "NOT FOUND";
-
-	if (this->_status == STATUS_INTERNAL_SERVER_ERROR)
-		return "INTERNEL SERVER ERROR";
-
-	if (this->_status == STATUS_CREATED)
-		return "STATUS CREATED";
-
-	if (this->_status == STATUS_MOVED_PERMANENTLY)
-		return "MOVED PERMANENTLY";
-
-	if (this->_status == STATUS_NO_CONTENT)
-		return "NO CONTENT";
-
-	if (this->_status == STATUS_REQUEST_ENTITY_TOO_LARGE)
-		return "REQUEST ENTITY TOO LARGE";
-
-	if (this->_status == STATUS_PARTIAL_CONTENT)
-		return "PARTIAL CONTENT";
-
-	if (this->_status == STATUS_NOT_ALLOWED)
-		return "NOT ALLOWED";
-
-	if (this->_status == STATUS_FORBIDDEN)
-		return "FORBIDDEN";
-
-	return "";
+	return getHttpStatusMessage(this->_status);
 }
 
 int		Response::readResponse(STRBinary & packet) {
@@ -486,7 +706,7 @@ void			Response::postMethod(void) {
 
 			this->_body_write = true;
 
-			this->_headers["Location"] = this->_request->getPath();
+			this->_headers["Content-Location"] = this->_request->getPath();
 
 			fcntl(this->_body_fd, F_SETFL, O_NONBLOCK);
 
@@ -500,7 +720,7 @@ void			Response::postMethod(void) {
 				return;
 			}
 
-			this->_headers["Location"] = secureAddress(this->_request->getPath(), this->_body_filename);
+			this->_headers["Content-Location"] = secureAddress(this->_request->getPath(), this->_body_filename);
 
 			this->_status = STATUS_CREATED;
 			this->_body_write = true;
@@ -528,22 +748,15 @@ void			Response::checkPath(void) {
 }
 
 int		Response::createErrorPages(std::string path, STRBinary & packet) {
+	std::string	status;
+	std::string	message;
+
 	if (this->_body_fd == -1) {
 		if ((this->_body_fd = open(path.c_str(), O_RDONLY)) <= 0) {
-			if (this->_status == STATUS_NOT_FOUND)
-				packet = "<!DOCTYPE html><html><title>404</title><body>404 NOT FOUND</body></html>";
-			else if (this->_status == STATUS_INTERNAL_SERVER_ERROR)
-				packet = "<!DOCTYPE html><html><title>500</title><body>500 INTERNAL SERVER ERROR</body></html>";
-			else if (this->_status == STATUS_BAD_REQUEST)
-				packet = "<!DOCTYPE html><html><title>400</title><body>400 BAD REQUEST</body></html>";
-			else if (this->_status == STATUS_FORBIDDEN)
-				packet = "<!DOCTYPE html><html><title>403</title><body>403 FORBIDDEN</body></html>";
-			else if (this->_status == STATUS_REQUEST_ENTITY_TOO_LARGE)
-				packet = "<!DOCTYPE html><html><title>413</title><body>413 ENTITY_TOO_LARGE</body></html>";
-			else if (this->_status == STATUS_NOT_ALLOWED)
-				packet = "<!DOCTYPE html><html><title>405</title><body>405 NOT ALLOWED</body></html>";
-			else if (this->_status == STATUS_HTTP_VERSION_NOT_SUPPORTED)
-				packet = "<!DOCTYPE html><html><title>405</title><body>505 STATUS_HTTP_VERSION_NOT_SUPPORTED</body></html>";
+			message = this->getStatusMessage();
+			status = toString(this->_status);
+
+			packet = "<!DOCTYPE html><html><title>" + status + "</title><body>" + status + " " + message + "</body></html>";
 
 			return 0;
 		}

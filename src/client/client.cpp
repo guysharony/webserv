@@ -2,8 +2,6 @@
 
 Client::Client(Config *config, Descriptors *descriptors, int socket_fd)
 :
-	_client_addr(),
-	_client_port(-1),
 	_socket_fd(socket_fd),
 	_server_addr(),
 	_server_port(-1),
@@ -22,8 +20,9 @@ Client::Client(Config *config, Descriptors *descriptors, int socket_fd)
 	if (getpeername(socket_fd, (struct sockaddr *)&peer_addr, &peer_addr_size) < 0)
 		Message::error("getpeername() failed");
 
-	this->_client_addr = inet_ntoa(peer_addr.sin_addr);
-	this->_client_port = ntohs(peer_addr.sin_port);
+	this->_request.setClientAddress(inet_ntoa(peer_addr.sin_addr));
+	this->_request.setClientPort(ntohs(peer_addr.sin_port));
+
 	this->_socket_fd = socket_fd;
 	this->_server_addr = inet_ntoa(sock_addr.sin_addr);
 	this->_server_port = ntohs(sock_addr.sin_port);
@@ -39,9 +38,7 @@ bool				Client::operator==(Client const &rhs)
 	if (this == &rhs)
 		return (true);
 
-	if (this->_client_addr == rhs._client_addr
-		&& this->_client_port == rhs._client_port
-		&& this->_socket_fd == rhs._socket_fd
+	if (this->_socket_fd == rhs._socket_fd
 		&& this->_server_addr == rhs._server_addr
 		&& this->_server_port == rhs._server_port)
 		return (true);
@@ -51,10 +48,10 @@ bool				Client::operator==(Client const &rhs)
 
 // Getters
 std::string const	&Client::getClientAddr(void)
-{ return (this->_client_addr); }
+{ return (this->_request.getClientAddress()); }
 
 int				Client::getClientPort(void)
-{ return (this->_client_port); }
+{ return (this->_request.getClientPort()); }
 
 int				Client::getSocketFd(void)
 { return (this->_socket_fd); }
@@ -86,10 +83,10 @@ bool				Client::getClose(void)
 
 // Setters
 void				Client::setClientAddr(std::string const &addr)
-{ this->_client_addr = addr; }
+{ this->_request.setClientAddress(addr); }
 
 void				Client::setClientPort(int port)
-{ this->_client_port = port; }
+{ this->_request.setClientPort(port); }
 
 void				Client::setSocketFd(int socket_fd)
 { this->_socket_fd = socket_fd; }
@@ -115,6 +112,7 @@ int				Client::readResponse(STRBinary & packet)
 
 int				Client::prepareResponse(void) {
 	if (!this->_response.execute()) {
+		this->log();
 		this->_request.eventTemporary("body", POLLIN);
 		this->_request.setEnd(0);
 		return 1;
@@ -125,7 +123,6 @@ int				Client::prepareResponse(void) {
 
 void				Client::closeResponse(void)
 {
-	this->log();
 	this->setEvent(NONE);
 	this->_request.closeTemporary("request");
 	this->_request.closeTemporary("body");
@@ -146,21 +143,5 @@ int				Client::execute(void) {
 	return this->prepareResponse();
 }
 
-std::string		Client::getStatusColor(void) {
-	if (this->_response.getStatus() == STATUS_CREATED)
-		return "34";
-
-	if (this->_response.getStatus() == STATUS_NOT_FOUND)
-		return "33";
-
-	if ((this->_response.getStatus() == STATUS_BAD_REQUEST)
-		|| (this->_response.getStatus() == STATUS_INTERNAL_SERVER_ERROR)
-		|| (this->_response.getStatus() == STATUS_NOT_ALLOWED)
-		|| (this->_response.getStatus() == STATUS_FORBIDDEN))
-		return "31";
-
-	return "37";
-}
-
 void				Client::log(void)
-{ std::cout << "\033[0;" << this->getStatusColor() << "m" << this->_response.getHost() << ":" << this->_response.getPort() << " -- [" << getDate("%d/%b/%G %T") << "] -- " << this->_response.getMethod() << " [" << this->_response.getURI() << "] " << this->_response.getStatus() << "\033[0m" << std::endl; }
+{ std::cout << this->getClientAddr() << " - - [" << getDate("%d/%b/%G:%T %z") << "] \"" << this->_request.getMethod() << " " << this->_request.getURI() << " HTTP/1.1\" " << this->_response.getStatus() << " " << this->_response.getContentLength() << " \"" << this->_request.getReferer() << "\" \"" << this->_request.getUserAgent() << "\"" << std::endl; }

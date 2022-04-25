@@ -37,6 +37,15 @@ class ConfigLocation
 			}
 		};
 
+		class MethodNotAllowed : public std::exception
+		{
+			public:
+			const char * what () const throw ()
+			{
+				return "Method not allowed";
+			}
+		};
+
 		ConfigLocation(void);
 		ConfigLocation(ConfigLocation const & src);
 		virtual ~ConfigLocation();
@@ -67,7 +76,7 @@ class ConfigLocation
 
 		struct 										configuration_struct
 		{
-			std::string 								server_name;
+			std::vector<std::string> 					server_names;
 			listen_type								listen;
 			std::string 								root;
 			ssize_t 									client_max_body_size;

@@ -31,8 +31,8 @@ void			ConfigServer::parseServer(void) {
 		while ((word = this->_extractWord()) != "}") {
 			if (word == "listen") {
 				this->_parseListen(config);
-			} else if (word == "server_name") {
-				this->_parseServerName(config);
+			} else if (word == "server_names") {
+				this->_parseServerNames(config);
 			} else if (word == "root") {
 				this->_parseRoot(config);
 			} else if (word == "location") {
@@ -86,7 +86,7 @@ void			ConfigServer::_parseListen(configuration_struct &config) {
 	if (params.size() != 2 && params.size() != 1)
 		Message::error("'listen' is not valid.");
 
-	host = params.size() == 2 ? params[0] : "127.0.0.1";
+	host = params.size() == 2 ? params[0] : "0.0.0.0";
 	port = params.size() == 2 ? params[1] : params[0];
 
 	for (listen_type::iterator it2 = config.listen.begin(); it2 != config.listen.end(); it2++) {
@@ -110,14 +110,17 @@ void			ConfigServer::_parseListen(configuration_struct &config) {
 		Message::error("'port' already assigned.");
 }
 
-void			ConfigServer::_parseServerName(configuration_struct &config) {
-	if (!config.server_name.empty())
-		Message::error("'server_name' already assigned.");
+void			ConfigServer::_parseServerNames(configuration_struct &config) {
+	std::string word;
 
-	config.server_name = this->_extractWord();
+	if (config.server_names.size())
+		Message::error("'server_names' already assigned.");
 
-	if (this->_extractWord() != ";")
-		Message::error("'server_name' already assigned.");
+	while ((word = this->_extractWord()) != "}" && word != ";")
+		config.server_names.push_back(word);
+
+	if (word == "}")
+		Message::error("';' is expected.");
 }
 
 void			ConfigServer::_parseRoot(configuration_struct &config) {

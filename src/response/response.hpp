@@ -31,6 +31,7 @@ class Response {
 		std::string					getHost(void);
 		std::string					getPort(void);
 		int							getStatus(void);
+		std::string					getContentLength(void);
 		std::string					getStatusMessage(void);
 		std::string					getMethod(void);
 		std::string					getPath(void);
@@ -82,7 +83,7 @@ class Response {
 		int							createErrorPages(std::string path, STRBinary & packet);
 
 		std::string					findDate(void);
-		std::string					findContentType(void);
+		std::string					findContentType(std::string path);
 
 		void 						deleteMethod(void);
 		void							postMethod(void);

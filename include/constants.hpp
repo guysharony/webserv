@@ -37,6 +37,7 @@
 # define STATUS_FORBIDDEN				403
 # define STATUS_NOT_ALLOWED 				405
 # define STATUS_REQUEST_ENTITY_TOO_LARGE	413
+# define STATUS_REQUEST_URI_TOO_LARGE		414
 # define STATUS_INTERNAL_SERVER_ERROR		500
 # define STATUS_NOT_IMPLEMENTED			501
 # define STATUS_HTTP_VERSION_NOT_SUPPORTED	505
@@ -48,6 +49,9 @@
 # define METHOD_POST 					3
 # define METHOD_PUT 					4
 # define METHOD_DELETE 					5
+# define METHOD_CONNECT 					6
+# define METHOD_OPTIONS 					7
+# define METHOD_TRACE 					8
 
 /* connection */
 # define CLOSE							0

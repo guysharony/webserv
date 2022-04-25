@@ -7,13 +7,14 @@ int				isHttpStatus(int status)
 	|| status == STATUS_CREATED
 	|| status == STATUS_NO_CONTENT
 	|| status == STATUS_BAD_REQUEST
-	|| status == STATUS_NOT_FOUND
 	|| status == STATUS_FORBIDDEN
+	|| status == STATUS_NOT_FOUND
 	|| status == STATUS_NOT_ALLOWED
 	|| status == STATUS_PARTIAL_CONTENT
 	|| status == STATUS_NOT_IMPLEMENTED
 	|| status == STATUS_MOVED_PERMANENTLY
 	|| status == STATUS_REQUEST_ENTITY_TOO_LARGE
+	|| status == STATUS_REQUEST_URI_TOO_LARGE
 	|| status == STATUS_INTERNAL_SERVER_ERROR
 	|| status == STATUS_HTTP_VERSION_NOT_SUPPORTED);
 }
@@ -31,6 +32,7 @@ std::string		getHttpStatusMessage(int status)
 	if (status == STATUS_NOT_IMPLEMENTED) return ("Not Implemented");
 	if (status == STATUS_MOVED_PERMANENTLY) return ("Moved Permanently");
 	if (status == STATUS_REQUEST_ENTITY_TOO_LARGE) return ("Request Entity Too Large");
+	if (status == STATUS_REQUEST_URI_TOO_LARGE) return ("Request-URI Too Large");
 	if (status == STATUS_INTERNAL_SERVER_ERROR) return ("Internal Server Error");
 	if (status == STATUS_HTTP_VERSION_NOT_SUPPORTED) return ("Http Version Not Supported");
 
@@ -63,6 +65,50 @@ int		isHttpMethod(std::string value, int & method)
 		method = METHOD_DELETE;
 		return (1);
 	}
+
+	if (!value.compare("CONNECT")) {
+		method = METHOD_CONNECT;
+		return (1);
+	}
+
+	if (!value.compare("OPTIONS")) {
+		method = METHOD_OPTIONS;
+		return (1);
+	}
+
+	if (!value.compare("TRACE")) {
+		method = METHOD_TRACE;
+		return (1);
+	}
+
+	return (0);
+}
+
+int		isHttpMethod(std::string value)
+{
+	if (!value.compare("GET"))
+		return (1);
+
+	if (!value.compare("HEAD"))
+		return (1);
+
+	if (!value.compare("POST"))
+		return (1);
+
+	if (!value.compare("PUT"))
+		return (1);
+
+	if (!value.compare("DELETE"))
+		return (1);
+
+	if (!value.compare("CONNECT"))
+		return (1);
+
+	if (!value.compare("OPTIONS"))
+		return (1);
+
+	if (!value.compare("TRACE"))
+		return (1);
 
 	return (0);
 }

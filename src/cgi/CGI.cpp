@@ -32,7 +32,7 @@ int CGI::_init_env(std::string const &filename)
 	// Prepare environment for execve
 	clearenv();
 	setenv("SERVER_SOFTWARE", SERVER_NAME, true); // *** This value should be confirmed
-	setenv("SERVER_NAME", server->server_name.c_str(), true);
+	setenv("SERVER_NAME", this->_request->getHost().c_str(), true);
 	setenv("GATEWAY_INTERFACE", "CGI/1.1", true); // *** This value should be confirmed
 	setenv("SERVER_PROTOCOL", "HTTP/1.1", true);
 	setenv("SERVER_PORT", this->_request->getPort().c_str(), true);
@@ -43,6 +43,11 @@ int CGI::_init_env(std::string const &filename)
 	setenv("REDIRECT_STATUS", "200", true);
 	setenv("DOCUMENT_ROOT", location->root.c_str(), true);
 	setenv("SCRIPT_FILENAME", filename.c_str(), true);
+
+	setenv("HTTP_CONNECTION", this->_request->getConnection() == KEEP_ALIVE ? "keep-alive" : "close", true);
+	setenv("REQUEST_URI", this->_request->getURI().c_str(), true);
+	setenv("REMOTE_ADDR", this->_request->getClientAddress().c_str(), true);
+	setenv("REMOTE_PORT", toString(this->_request->getClientPort()).c_str(), true);
 
 	Message::debugln("Headers");
 	for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it)
