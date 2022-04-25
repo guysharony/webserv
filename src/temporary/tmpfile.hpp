@@ -44,12 +44,14 @@ class TmpFile
 		int					read(STRBinary & value);
 		int					write(std::string const & value);
 		int					write(STRBinary value);
+		int					clear(void);
 		int					display(void);
 		void					close(void);
 
 	private:
 		int					_fd;
 		size_t				_size;
+		size_t				_begin;
 		std::string			_path;
 		std::string			_filename;
 

@@ -2,13 +2,15 @@
 
 TmpFile::TmpFile(Descriptors *descriptors, std::string const &filename)
 :
-	_fd(-1),
+	_fd(-2),
 	_size(0),
+	_begin(0),
 	_path(),
 	_filename(filename)
 {
 	if ((this->_fd = uniqueFile("/tmp/webserv/", O_CREAT | O_TRUNC | O_RDWR, S_IRWXU)) < 0)
-		Message::error("Failed in creating file.");
+		this->_fd = -2;
+
 
 	fcntl(this->_fd, F_SETFL, O_NONBLOCK);
 
@@ -69,7 +71,7 @@ void			TmpFile::setEvents(short events)
 
 /* Methods */
 void			TmpFile::resetCursor(void)
-{ lseek(this->_fd, 0, SEEK_SET); }
+{ lseek(this->_fd, this->_begin, SEEK_SET); }
 
 int			TmpFile::read(std::string & value)
 {
@@ -94,6 +96,13 @@ int			TmpFile::read(std::string & value)
 	value = std::string(buffer);
 
 	return (pos > 0 && value.length() > 0);
+}
+
+int			TmpFile::clear(void)
+{
+	this->_begin = this->_size;
+	this->_size = 0;
+	return (1);
 }
 
 int			TmpFile::read(STRBinary & value)
@@ -135,17 +144,9 @@ int			TmpFile::write(STRBinary value)
 	return ::write(this->_fd, value.c_str(), value.length());
 }
 
-/*
-std::string	TmpFile::_generate_filepath(void) {
-	std::string	name;
-
-	name = "/tmp/webserv/" + intToHex(rand() % 9999999 + 1000000) + "_" + intToHex(rand() % 9999999 + 1000000);
-
-	return exists(name) ? this->_generate_filepath() : name;
-}
-*/
-
 void			TmpFile::close(void) {
+	if (this->_fd < 0)
+		return ;
 	::close(this->_fd);
 	remove(this->_path.c_str());
 	this->_descriptors->deleteDescriptor(this->_fd);

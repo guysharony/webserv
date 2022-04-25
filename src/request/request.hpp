@@ -63,6 +63,7 @@ class Request {
 		int									eventTemporary(std::string const & filename, short event);
 		int									displayTemporary(std::string const & filename);
 		ssize_t								sizeTemporary(std::string const & filename);
+		int									clearTemporary(std::string const & filename);
 		int									resetCursorTemporary(std::string const & filename);
 		int									closeTemporary(std::string const & filename);
 		void									parseRequest(void);

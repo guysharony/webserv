@@ -21,6 +21,7 @@ class Temporary
 		ssize_t				getSize(std::string const &filename);
 		bool					setEvents(std::string const &filename, short event);
 		int					getFD(std::string const &filename);
+		int					clear(std::string const &filename);
 		void					setDescriptors(Descriptors *descriptors);
 		bool					resetCursor(std::string const &filename);
 

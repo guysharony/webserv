@@ -13,12 +13,16 @@ Client::Client(Config *config, Descriptors *descriptors, int socket_fd)
 
 	socklen_t sock_addr_size = sizeof(sock_addr);
 
-	if (getsockname(socket_fd, (struct sockaddr *)&sock_addr, &sock_addr_size) < 0)
-		Message::error("getsockname() failed");
+	if (getsockname(socket_fd, (struct sockaddr *)&sock_addr, &sock_addr_size) < 0) {
+		this->_request.setStatus(STATUS_INTERNAL_SERVER_ERROR);
+		this->_request.setEnd(true);
+	}
 
 	socklen_t peer_addr_size = sizeof(peer_addr);
-	if (getpeername(socket_fd, (struct sockaddr *)&peer_addr, &peer_addr_size) < 0)
-		Message::error("getpeername() failed");
+	if (getpeername(socket_fd, (struct sockaddr *)&peer_addr, &peer_addr_size) < 0) {
+		this->_request.setStatus(STATUS_INTERNAL_SERVER_ERROR);
+		this->_request.setEnd(true);
+	}
 
 	this->_request.setClientAddress(inet_ntoa(peer_addr.sin_addr));
 	this->_request.setClientPort(ntohs(peer_addr.sin_port));
@@ -79,6 +83,14 @@ int				Client::getEnd(void)
 
 bool				Client::getClose(void)
 { return (this->_request.getClose()); }
+
+bool			Client::getRequestFailed(void) {
+	if (this->_request.fdTemporary("request") == -2)
+		return (true);
+	if (this->_request.fdTemporary("body") == -2)
+		return (true);
+	return (false);
+}
 
 
 // Setters
