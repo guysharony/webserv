@@ -112,7 +112,6 @@ int				Client::readResponse(STRBinary & packet)
 
 int				Client::prepareResponse(void) {
 	if (!this->_response.execute()) {
-		std::cout << "METHOD [" << this->_request.getMethod() << "]" << std::endl;
 		this->log();
 		this->_request.eventTemporary("body", POLLIN);
 		this->_request.setEnd(0);

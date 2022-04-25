@@ -416,8 +416,6 @@ int			Request::firstLineParsing(void)
 	this->checkPath(tmp);
 	this->checkVersion(tmp);
 
-	std::cout << this->getMethod() << std::endl;
-
 	if (this->getMethod().compare("GET")
 	&& this->getMethod().compare("POST")
 	&& this->getMethod().compare("DELETE"))
