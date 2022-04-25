@@ -153,7 +153,8 @@ void			Request::append(std::vector<char> & packet)
 void			Request::execute(void) {
 	Config::configuration_type server;
 
-	this->parseRequest();
+	if (!this->getEnd())
+		this->parseRequest();
 
 	if (this->getEnd()) {
 		try {
