@@ -106,14 +106,17 @@ int CGI::launch_cgi(std::string const &filename)
 	{
 		this->_init_env(filename);
 		if (this->_redirect_io(fd))
-			Message::error("Internal Error: could not redirect to CGI"); // *** Consider printing Status to stdout ?
+		{
+			write(fd[1], "Status: 500\r\n\r\nCould not redirect to CGI", 40);
+			Message::error("Status: 500\r\n\r\nCould not redirect to CGI");
+		}			
 
 		executable = &(server->cgi_path[0]);
 		argument = const_cast<char *>(&filename[0]);
 		char *const argv[3] = {executable, argument, NULL};
 
 		execve(executable, argv, environ);
-		Message::error("Internal Error: could not execute CGI"); // *** Consider printing Status to stdout ?
+		Message::error("Status: 500\r\n\r\nCould not execute CGI");
 	}
 
 	close(fd[1]);
