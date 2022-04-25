@@ -4,6 +4,7 @@ TmpFile::TmpFile(Descriptors *descriptors, std::string const &filename)
 :
 	_fd(-1),
 	_size(0),
+	_begin(0),
 	_path(),
 	_filename(filename)
 {
@@ -69,7 +70,7 @@ void			TmpFile::setEvents(short events)
 
 /* Methods */
 void			TmpFile::resetCursor(void)
-{ lseek(this->_fd, 0, SEEK_SET); }
+{ lseek(this->_fd, this->_begin, SEEK_SET); }
 
 int			TmpFile::read(std::string & value)
 {
@@ -94,6 +95,13 @@ int			TmpFile::read(std::string & value)
 	value = std::string(buffer);
 
 	return (pos > 0 && value.length() > 0);
+}
+
+int			TmpFile::clear(void)
+{
+	this->_begin = this->_size;
+	this->_size = 0;
+	return (1);
 }
 
 int			TmpFile::read(STRBinary & value)
@@ -134,16 +142,6 @@ int			TmpFile::write(STRBinary value)
 	this->_size += value.length();
 	return ::write(this->_fd, value.c_str(), value.length());
 }
-
-/*
-std::string	TmpFile::_generate_filepath(void) {
-	std::string	name;
-
-	name = "/tmp/webserv/" + intToHex(rand() % 9999999 + 1000000) + "_" + intToHex(rand() % 9999999 + 1000000);
-
-	return exists(name) ? this->_generate_filepath() : name;
-}
-*/
 
 void			TmpFile::close(void) {
 	::close(this->_fd);
