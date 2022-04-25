@@ -384,6 +384,9 @@ int			Request::displayTemporary(std::string const & filename)
 int			Request::resetCursorTemporary(std::string const & filename)
 { return this->_temporary.resetCursor(filename); };
 
+int			Request::clearTemporary(std::string const & filename)
+{ return this->_temporary.clear(filename); };
+
 ssize_t		Request::sizeTemporary(std::string const & filename)
 { return this->_temporary.getSize(filename); };
 

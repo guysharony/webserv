@@ -403,6 +403,21 @@ int		Response::createBody(void) {
 	STRBinary				packet;
 	bool 				isCgi = this->_request->isCgi(this->_server);
 
+	if (this->_status != STATUS_OK && this->_status != STATUS_CREATED) {
+		this->_headers["Connection"] = "close";
+		this->_request->setConnection(CLOSE);
+		this->_headers["Content-Type"] = "text/html";
+		if (this->_server_found && this->_server->error_page.count(this->_status) && isFile(this->_server->error_page[this->_status]))
+			this->_headers["Content-Type"] = findContentType(this->_server->error_page[this->_status]);
+
+		if ((createErrorPages(this->_server_found ? this->_server->error_page[this->_status] : "", packet) > 0) || (this->_body_fd <= 0)) {
+			this->_request->appendTemporary("body", packet);
+			return (this->_body_fd <= 0);
+		}
+
+		return 1;
+	}
+
 	if (isCgi && (this->_status == STATUS_OK)) {
 		if (this->readCGI(packet) > 0) {
 			this->_cgi_parser->append(packet);
@@ -422,22 +437,9 @@ int		Response::createBody(void) {
 			delete (this->_cgi_parser);
 			this->_cgi_parser = NULL;
 		}
+
+		return (this->_status == STATUS_OK || this->_status == STATUS_CREATED);
 	} else {
-		if (this->_status != STATUS_OK && this->_status != STATUS_CREATED) {
-			this->_headers["Connection"] = "close";
-			this->_request->setConnection(CLOSE);
-			this->_headers["Content-Type"] = "text/html";
-			if (this->_server_found && this->_server->error_page.count(this->_status) && isFile(this->_server->error_page[this->_status]))
-				this->_headers["Content-Type"] = findContentType(this->_server->error_page[this->_status]);
-
-			if ((createErrorPages(this->_server_found ? this->_server->error_page[this->_status] : "", packet) > 0) || (this->_body_fd <= 0)) {
-				this->_request->appendTemporary("body", packet);
-				return (this->_body_fd <= 0);
-			}
-
-			return 1;
-		}
-
 		try {
 			location = this->_request->selectLocation(this->_server);
 		} catch(const Config::LocationNotFoundException& e) {
@@ -757,6 +759,7 @@ int		Response::createErrorPages(std::string path, STRBinary & packet) {
 	std::string	message;
 
 	if (this->_body_fd == -1) {
+		this->_request->clearTemporary("body");
 		if ((this->_body_fd = open(path.c_str(), O_RDONLY)) <= 0) {
 			message = this->getStatusMessage();
 			status = toString(this->_status);
