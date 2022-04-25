@@ -127,6 +127,11 @@ bool			Webserv::handleServer(void) {
 }
 
 bool			Webserv::handleClient(void) {
+	if ((*this->context.client)->getRequestFailed() == true)
+	{
+		this->_clientReject();
+		return false;
+	}
 	if ((*this->context.client)->getEvent() < EVT_SEND_RESPONSE) {
 		if ((this->context.poll->revents & POLLIN) && ((*this->context.client)->getEvent() != EVT_PREPARE_RESPONSE)) {
 			if (this->clientReceive() <= 0) {

@@ -33,6 +33,7 @@ class Client {
 		int					getLine(void);
 		int					getEnd(void);
 		bool					getClose(void);
+		bool					getRequestFailed(void);
 
 		// Setters
 		void					setClientAddr(std::string const &addr);

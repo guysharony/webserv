@@ -2,14 +2,15 @@
 
 TmpFile::TmpFile(Descriptors *descriptors, std::string const &filename)
 :
-	_fd(-1),
+	_fd(-2),
 	_size(0),
 	_begin(0),
 	_path(),
 	_filename(filename)
 {
-	if ((this->_fd = uniqueFile("/tmp/webserv/", O_CREAT | O_TRUNC | O_RDWR, S_IRWXU)) < 0)
-		Message::error("Failed in creating file.");
+	if ((this->_fd = uniqueFile("/tmp/webserv/", O_CREAT | O_TRUNC | O_RDWR, S_IRWXU)) >= 0)
+		this->_fd = -2;
+
 
 	fcntl(this->_fd, F_SETFL, O_NONBLOCK);
 
@@ -144,6 +145,8 @@ int			TmpFile::write(STRBinary value)
 }
 
 void			TmpFile::close(void) {
+	if (this->_fd < 0)
+		return ;
 	::close(this->_fd);
 	remove(this->_path.c_str());
 	this->_descriptors->deleteDescriptor(this->_fd);

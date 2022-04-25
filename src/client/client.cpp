@@ -84,6 +84,14 @@ int				Client::getEnd(void)
 bool				Client::getClose(void)
 { return (this->_request.getClose()); }
 
+bool			Client::getRequestFailed(void) {
+	if (this->_request.fdTemporary("request") == -2)
+		return (true);
+	if (this->_request.fdTemporary("body") == -2)
+		return (true);
+	return (false);
+}
+
 
 // Setters
 void				Client::setClientAddr(std::string const &addr)
