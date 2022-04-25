@@ -109,9 +109,9 @@ class Request {
 		int									firstLineParsing(void);
 		std::string							getNextLine(std::string str, size_t *i);
 		size_t								headerParsing(std::string request_buffer);
-		int									checkMethod(std::string & source, std::string & dst);
-		int									checkPath(std::string & source, std::string & path, std::string & parameters);
-		int									checkVersion(std::string & source, std::string & dst);
+		int									checkMethod(std::string & source);
+		int									checkPath(std::string & source);
+		int									checkVersion(std::string & source);
 		void									checkBody(Config::configuration_type server);
 		int									checkHeaders(void);
 		int									checkHeader(std::string source, std::string & key, std::string & value);

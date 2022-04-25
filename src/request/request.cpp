@@ -412,26 +412,26 @@ int			Request::firstLineParsing(void)
 		return (0);
 	}
 
-	if (!this->checkMethod(tmp, method))
-		return (0);
+	this->checkMethod(tmp);
+	this->checkPath(tmp);
+	this->checkVersion(tmp);
 
-	if (!this->checkPath(tmp, path, parameters))
-		return (0);
+	std::cout << this->getMethod() << std::endl;
 
-	if (!this->checkVersion(tmp, version))
-		return (0);
+	if (this->getMethod().compare("GET")
+	&& this->getMethod().compare("POST")
+	&& this->getMethod().compare("DELETE"))
+		this->setStatus(STATUS_NOT_ALLOWED);
 
-	this->_method = method;
-	this->_path = path;
-	this->_parameters = parameters;
-	this->_version = version;
+	if (this->getStatus() == STATUS_OK && this->getVersion().compare("HTTP/1.1"))
+		this->setStatus(STATUS_HTTP_VERSION_NOT_SUPPORTED);
 
 	this->_event = EVT_REQUEST_HEADERS;
 
 	return (1);
 }
 
-int			Request::checkMethod(std::string & source, std::string & dst)
+int			Request::checkMethod(std::string & source)
 {
 	std::string	sep = " ";
 	size_t 		pos = source.find(sep);
@@ -439,17 +439,12 @@ int			Request::checkMethod(std::string & source, std::string & dst)
 
 	source = source.substr(pos + sep.length());
 
-	dst = line;
+	this->_method = line;
 
-	if (!isHttpMethod(line)) {
-		this->setStatus(STATUS_BAD_REQUEST);
-		return 0;
-	}
-
-	return 1;
+	return (1);
 }
 
-int			Request::checkPath(std::string & source, std::string & path, std::string & parameters)
+int			Request::checkPath(std::string & source)
 {
 	size_t 		pos;
 	size_t 		par;
@@ -461,23 +456,17 @@ int			Request::checkPath(std::string & source, std::string & path, std::string &
 
 	source = source.substr(pos + 1);
 
-	path = line.substr(0, par);
-	parameters = ((par != std::string::npos) ? line.substr(par) : "");
+	this->_path = line.substr(0, par);
+	this->_parameters = ((par != std::string::npos) ? line.substr(par) : "");
 
 	return (1);
 }
 
-int			Request::checkVersion(std::string & source, std::string & dst)
+int			Request::checkVersion(std::string & source)
 {
-	if (!source.compare("HTTP/1.1")) {
-		dst = source;
+	this->_version = source;
 
-		return (1);
-	}
-
-	this->setStatus(STATUS_HTTP_VERSION_NOT_SUPPORTED);
-
-	return (0);
+	return (1);
 }
 
 int			Request::checkHeaders(void)

@@ -112,6 +112,7 @@ int				Client::readResponse(STRBinary & packet)
 
 int				Client::prepareResponse(void) {
 	if (!this->_response.execute()) {
+		std::cout << "METHOD [" << this->_request.getMethod() << "]" << std::endl;
 		this->log();
 		this->_request.eventTemporary("body", POLLIN);
 		this->_request.setEnd(0);
@@ -144,4 +145,4 @@ int				Client::execute(void) {
 }
 
 void				Client::log(void)
-{ std::cout << this->getClientAddr() << " - - [" << getDate("%d/%b/%G:%T %z") << "] \"" << this->_response.getMethod() << " " << this->_response.getURI() << " HTTP/1.1\" " << this->_response.getStatus() << " " << this->_response.getContentLength() << " \"" << this->_request.getReferer() << "\" \"" << this->_request.getUserAgent() << "\"" << std::endl; }
+{ std::cout << this->getClientAddr() << " - - [" << getDate("%d/%b/%G:%T %z") << "] \"" << this->_request.getMethod() << " " << this->_request.getURI() << " HTTP/1.1\" " << this->_response.getStatus() << " " << this->_response.getContentLength() << " \"" << this->_request.getReferer() << "\" \"" << this->_request.getUserAgent() << "\"" << std::endl; }
