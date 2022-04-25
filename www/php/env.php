@@ -4,9 +4,6 @@
 	</head>
 	<body>
 	<?php
-		$stderr = fopen('php://stderr', 'w');
-		fwrite($stderr, PHP_EOL . "Running env.php" . PHP_EOL);
-
 		echo '<p>Current Working Directory</p>';
 		echo getcwd();
 

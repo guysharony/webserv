@@ -8,7 +8,7 @@ TmpFile::TmpFile(Descriptors *descriptors, std::string const &filename)
 	_path(),
 	_filename(filename)
 {
-	if ((this->_fd = uniqueFile("/tmp/webserv/", O_CREAT | O_TRUNC | O_RDWR, S_IRWXU)) >= 0)
+	if ((this->_fd = uniqueFile("/tmp/webserv/", O_CREAT | O_TRUNC | O_RDWR, S_IRWXU)) < 0)
 		this->_fd = -2;
 
 
