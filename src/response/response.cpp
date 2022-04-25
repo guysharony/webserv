@@ -403,7 +403,7 @@ int		Response::createBody(void) {
 	STRBinary				packet;
 	bool 				isCgi = this->_request->isCgi(this->_server);
 
-	if (this->_status != STATUS_OK && this->_status != STATUS_CREATED) {
+	if (this->_status != STATUS_OK && this->_status != STATUS_CREATED && this->_status != STATUS_MOVED_PERMANENTLY) {
 		this->_headers["Connection"] = "close";
 		this->_request->setConnection(CLOSE);
 		this->_headers["Content-Type"] = "text/html";
@@ -463,7 +463,7 @@ int		Response::createBody(void) {
 
 			if (location->redirect.size() > 0) {
 				this->_status = STATUS_MOVED_PERMANENTLY;
-				return 0;
+				return 1;
 			}
 
 			if (isFiley(new_p) == 1)

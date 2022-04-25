@@ -593,8 +593,7 @@ Config::location_type	Request::selectLocation(Config::configuration_type server)
 	Config::location_type ite = server->locations.end();
 	for (Config::location_type it = server->locations.begin(); it != ite; ++it) {
 		if ((it->location == "/" || tmp.find(it->location + "/") == 0)
-		&& (firstTime || it->location.size() > ret->location.size())
-		&& (ret == ite || (!checkMethodBylocation(ret->methods) && checkMethodBylocation(it->methods)))) {
+		&& (firstTime || it->location.size() > ret->location.size())) {
 			ret = it;
 			firstTime = false;
 		}
