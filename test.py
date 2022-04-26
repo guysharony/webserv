@@ -1,8 +1,8 @@
 import unittest
 import requests as r
 
-def _get(url):
-	ret = r.get(url)
+def _get(url, redirect=True):
+	ret = r.get(url, allow_redirects=redirect)
 	return ret.status_code
 
 class TestRequests(unittest.TestCase):
@@ -29,7 +29,7 @@ class TestRequests(unittest.TestCase):
 		]
 
 		for test in tests:
-			self.assertEqual(_get(url + test[0]), test[1])
+			self.assertEqual(_get(url + test[0], redirect=False), test[1])
 
 	def test_get_query_string(self):
 		url = "http://localhost:8081/php/w3_get_welcome.php?name=Test&email=greg@example.com"
