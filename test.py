@@ -5,6 +5,19 @@ def _get(url, redirect=True):
 	ret = r.get(url, allow_redirects=redirect)
 	return ret.status_code
 
+class TestIndexLinks(unittest.TestCase):
+	def test_cgi(self):
+		url = "http://localhost:8081/php/env.php"
+		ret = r.get(url)
+		self.assertEqual(ret.status_code, 200)
+		self.assertTrue(ret.content.decode().find("HTTP_"))
+	
+	def test_port8082(self):
+		url = "http://localhost:8082/"
+		ret = r.get(url)
+		self.assertEqual(ret.status_code, 200)
+		self.assertTrue(ret.content.decode().find("Welcome to my web server"))
+
 class TestRequests(unittest.TestCase):
 	def test_requests(self):
 		url = "http://localhost:8081/"
