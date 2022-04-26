@@ -18,6 +18,36 @@ class TestIndexLinks(unittest.TestCase):
 		self.assertEqual(ret.status_code, 200)
 		self.assertTrue(ret.content.decode().find("Welcome to my web server"))
 
+	def test_get_form(self):
+		url = "http://localhost:8081/php/w3_get_form.php"
+		ret = r.get(url)
+		self.assertEqual(ret.status_code, 200)
+		self.assertTrue(ret.content.decode().find("form"))
+		self.assertTrue(ret.content.decode().find("name"))
+		self.assertTrue(ret.content.decode().find("email"))
+		url = "http://localhost:8081/php/w3_get_welcome.php?name=Test&email=greg@example.com"
+		ret = r.get(url)
+		self.assertTrue(ret.content.decode('utf-8').find("Welcome Test"))
+		self.assertTrue(ret.content.decode('utf-8').find("Your email address is: greg@example.com"))
+
+	def test_post_form(self):
+		url = "http://localhost:8081/php/w3_post_form.php"
+		ret = r.get(url)
+		self.assertEqual(ret.status_code, 200)
+		self.assertTrue(ret.content.decode().find("form"))
+		self.assertTrue(ret.content.decode().find("name"))
+		self.assertTrue(ret.content.decode().find("email"))
+		url = "http://localhost:8081/php/w3_post_welcome.php"
+		data = {
+			"name": "bob",
+			"email": "bob@example.com"
+		}
+		ret = r.post(url, data=data)
+		self.assertEqual(ret.status_code, 200)
+		self.assertTrue(ret.content.decode('utf-8').find("Welcome bob"))
+		self.assertTrue(ret.content.decode('utf-8').find("Your email address is: bob@example.com"))
+
+
 class TestRequests(unittest.TestCase):
 	def test_requests(self):
 		url = "http://localhost:8081/"
