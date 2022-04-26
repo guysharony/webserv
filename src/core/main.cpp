@@ -4,7 +4,9 @@ int		main(int argc, char **argv)
 {
 	srand(time(NULL));
 
-	if (argc > 2 || !isFile(toString(argv[1])))
+	std::string path = argc > 1 ? toString(argv[1]) : "./config/webserv.conf";
+
+	if (argc > 2 || !isFile(path))
 	{
 		std::cout << "usage: " << argv[0] << " [config_file]" << std::endl;
 		std::cout << "	config_file: Path to a configuration file." << std::endl;
@@ -14,7 +16,7 @@ int		main(int argc, char **argv)
 	Webserv		webserv;
 
 	try {
-		if (webserv.load(argc > 1 ? argv[1] : "./config/webserv.conf")) {
+		if (webserv.load(path)) {
 			webserv.run();
 		}
 	} catch (const std::exception& e) {
