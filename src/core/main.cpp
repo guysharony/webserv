@@ -4,7 +4,7 @@ int		main(int argc, char **argv)
 {
 	srand(time(NULL));
 
-	if (argc > 2)
+	if (argc > 2 || !isFile(toString(argv[1])))
 	{
 		std::cout << "usage: " << argv[0] << " [config_file]" << std::endl;
 		std::cout << "	config_file: Path to a configuration file." << std::endl;
