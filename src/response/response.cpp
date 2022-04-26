@@ -99,7 +99,7 @@ void					Response::initialize(void) {
 		}
 	}
 
-	if (!this->_request->isCgi(this->_server)) {
+	if (!this->_request->isCgi(this->_server, getPathAfterReplacingLocationByRoot())) {
 		if (this->_status < STATUS_BAD_REQUEST)
 			checkPath();
 
@@ -400,7 +400,7 @@ std::string			Response::findContentType(std::string path)
 int		Response::createBody(void) {
 	Config::location_type	location;
 	STRBinary				packet;
-	bool 				isCgi = this->_request->isCgi(this->_server);
+	bool 				isCgi = this->_request->isCgi(this->_server, getPathAfterReplacingLocationByRoot());
 
 	if (this->_status != STATUS_OK && this->_status != STATUS_CREATED && this->_status != STATUS_MOVED_PERMANENTLY) {
 		this->_headers["Connection"] = "close";
@@ -642,6 +642,7 @@ std::string	Response::getPathAfterReplacingLocationByRoot(void) {
 	std::string loc_p = this->_location->location;
 	std::string p = this->_request->getPath();
 
+
 	size_t i;
 	i = p.find(loc_p);
 
@@ -649,6 +650,19 @@ std::string	Response::getPathAfterReplacingLocationByRoot(void) {
 		if (loc_p.compare("/") != 0)
 			p.erase(i, loc_p.size());
 		p.insert(i, this->_location->root);
+		if (isDirectory(p)){
+				std::vector<std::string>::iterator it;
+
+				for (it = _location->index.begin() ; it != _location->index.end() ; it++)
+				{
+					std::string path = secureAddress(p, *it);
+					if (isFile(path))
+					{
+						p = path;
+						break;
+					}
+				}
+		}
 		return(p);
 	}
 

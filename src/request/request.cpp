@@ -590,17 +590,17 @@ int					Request::convertMethodToValue(std::string method) {
 	return 0;
 }
 
-bool					Request::isCgi(Config::configuration_type server) {
+bool					Request::isCgi(Config::configuration_type server, std::string path) {
 	size_t	i;
 
 	if (!server->cgi_path.size())
 		return false;
 
-	i = this->_path.find_last_of(".");
+	i = path.find_last_of(".");
 	if (i == std::string ::npos)
 		return false;
 
-	std::string ext = this->_path.substr(i, this->_path.size() - 1);
+	std::string ext = path.substr(i, path.size() - 1);
 	std::vector<std::string>::iterator it = server->cgi_extentions.begin();
 	while (it != server->cgi_extentions.end()) {
 		if ((*it).compare(ext) == 0)

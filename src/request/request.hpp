@@ -73,7 +73,7 @@ class Request {
 		void									append(std::vector<char> & value);
 		Config::configuration_type				selectServer(void);
 		Config::location_type					selectLocation(Config::configuration_type server);
-		bool									isCgi(Config::configuration_type server);
+		bool									isCgi(Config::configuration_type server, std::string path);
 
 	private:
 		std::string							_method;
