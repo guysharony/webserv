@@ -54,6 +54,15 @@ class TestRequests(unittest.TestCase):
 		self.assertEqual(ret.status_code, 404)
 		self.assertTrue(ret.content.decode('utf-8').find("File not found"))
 
+	@unittest.skip("Crashes Server")
+	def test_request_with_invalid_host(self):
+		url = "http://localhost:8081/hello.htm"
+		headers = {
+			"Host": "www.tutorialspoint.com",
+		}
+		ret = r.get(url, headers=headers)
+		self.assertEqual(ret.status_code, 404)
+
 
 if __name__ == '__main__':
 	unittest.main()
