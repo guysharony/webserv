@@ -98,7 +98,8 @@ int			Request::getLine(void) {
 
 	std::size_t	end;
 
-	if (this->getEvent() < EVT_REQUEST_BODY) {
+	if ((this->getEvent() < EVT_REQUEST_BODY)
+	|| (this->getEvent() == EVT_REQUEST_BODY && this->_encoding == CHUNKED)) {
 		end = this->_temp.find(CRLF);
 		if (end != std::string::npos) {
 			this->_current = this->_temp.substr(0, end);
@@ -223,15 +224,13 @@ void			Request::parseRequest(void) {
 						if (chunk_extention != std::string::npos)
 							this->_current = this->_current.substr(0, chunk_extention);
 
-						if ((this->_chunk_size = hexToInt(this->_current.str())) <= 0) {
-							if (this->_chunk_size < 0) {
-								this->setStatus(STATUS_BAD_REQUEST);
-							}
-
+						if (!isPositiveBase16(this->_current.str())) {
+							this->setStatus(STATUS_BAD_REQUEST);
 							this->setEnd(1);
 							return;
 						}
 
+						this->_chunk_size = hexToInt(this->_current.str());
 						this->_body_size = this->_chunk_size;
 						this->_current.clear();
 						this->_chunked = true;
@@ -244,10 +243,15 @@ void			Request::parseRequest(void) {
 
 					this->_body_size -= this->_current.length();
 
+					if (res == 2 && this->_body_size > 0) {
+						this->_current.append(std::string("\r\n"));
+						this->_body_size -= 2;
+					}
+
 					this->_content_length += this->_current.length();
 					this->appendTemporary("request", this->_current);
 
-					if (this->_body_size == 0) {
+					if (this->_body_size <= 0) {
 						this->_chunked = false;
 					}
 				}
@@ -589,11 +593,8 @@ int					Request::convertMethodToValue(std::string method) {
 bool					Request::isCgi(Config::configuration_type server) {
 	size_t	i;
 
-	if (!this->_method.compare("POST")) {
-		if (server->cgi_path.size() > 0)
-			return true;
+	if (!server->cgi_path.size())
 		return false;
-	}
 
 	i = this->_path.find_last_of(".");
 	if (i == std::string ::npos)
