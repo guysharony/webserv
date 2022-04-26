@@ -467,7 +467,6 @@ int		Response::createBody(void) {
 
 			if (isFile(new_p))
 			{
-
 				this->_headers["Content-Type"] = findContentType(new_p);
 
 				if ((createErrorPages(new_p, packet) > 0) || (this->_body_fd <= 0)) {
