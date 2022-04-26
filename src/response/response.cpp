@@ -482,7 +482,7 @@ int		Response::createBody(void) {
 
 				for (it = location->index.begin() ; it != location->index.end() ; it++)
 				{
-					std::string path = location->root + "/" + (*it);
+					std::string path = secureAddress(new_p, *it);
 					if (isFiley(path) == 1)
 					{
 						this->_headers["Content-Type"] = findContentType(path);
