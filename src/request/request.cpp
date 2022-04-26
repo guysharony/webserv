@@ -161,7 +161,9 @@ void			Request::execute(void) {
 		try {
 			server = this->selectServer();
 			this->checkBody(server);
-		} catch(const Config::ServerNotFoundException & e) { }
+		} catch(const Config::ServerNotFoundException & e) { 
+			this->_status = STATUS_BAD_REQUEST;
+		}
 	}
 }
 
