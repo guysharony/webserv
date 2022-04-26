@@ -15,7 +15,7 @@ void			ConfigLocation::parseLocation(configuration_struct &config) {
 	location_struct	location;
 	std::string		word;
 
-	location.auto_index = -1;
+	location.auto_index = 0;
 	location.client_max_body_size = -1;
 
 	word = this->_extractWord();
@@ -183,7 +183,10 @@ void		ConfigLocation::_parseCGIPath(location_struct &location) {
 	if (!location.cgi_path.empty())
 		Message::error("'cgi_path' already assigned.");
 
-	location.cgi_path = this->_extractWord();
+	std::string	tmp = this->_extractWord();
+
+	if (!getAbsolutePath(tmp, location.cgi_path))
+		Message::error("'cgi_path " + tmp + ";' not found.");
 
 	if (this->_extractWord() != ";")
 		Message::error("'cgi_path' already assigned.");

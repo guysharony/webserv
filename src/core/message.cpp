@@ -13,9 +13,7 @@ Message::~Message()
 { }
 
 void	Message::error(std::string const & message)
-{
-	throw Message::ErrorException(message);
-}
+{ throw Message::ErrorException(message); }
 
 void	Message::bindError(std::string host, int port, int error)
 {

@@ -5,11 +5,11 @@
 # include <string>
 # include <map>
 # include <queue>
-# include <utility> // pair
-# include <sys/types.h>	// socket - included for portability
-# include <sys/socket.h> // socket, AF_LOCAL, SOCK_STREAM, inet_addr
-# include <netinet/in.h> // sockaddr_in, inet_addr
-# include <arpa/inet.h>	// htons, inet_addr
+# include <utility>
+# include <sys/types.h>
+# include <sys/socket.h>
+# include <netinet/in.h>
+# include <arpa/inet.h>
 
 # include "../response/response.hpp"
 
@@ -20,7 +20,7 @@ class Client {
 
 		bool					operator==(Client const &rhs);
 
-		// Getters
+
 		std::string const		&getClientAddr(void);
 		int					getClientPort(void);
 		int					getSocketFd(void);
@@ -35,7 +35,7 @@ class Client {
 		bool					getClose(void);
 		bool					getRequestFailed(void);
 
-		// Setters
+
 		void					setClientAddr(std::string const &addr);
 		void					setClientPort(int port);
 		void					setSocketFd(int socket_fd);
@@ -52,10 +52,10 @@ class Client {
 		int					execute(void);
 
 	private:
-		int						_socket_fd;	// The socket which is used to communicate between client and server
-		std::string				_server_addr;	// The IP address of the server
-		int						_server_port;	// The port of the server FROM which the client connected (the one on which the server is listening)
-		Request					_request;		// All of the request/response pairs associated with this client
+		int						_socket_fd;
+		std::string				_server_addr;
+		int						_server_port;
+		Request					_request;
 		Response					_response;
 
 		Client(void);
