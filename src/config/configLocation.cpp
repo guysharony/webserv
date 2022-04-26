@@ -15,7 +15,7 @@ void			ConfigLocation::parseLocation(configuration_struct &config) {
 	location_struct	location;
 	std::string		word;
 
-	location.auto_index = -1;
+	location.auto_index = 0;
 	location.client_max_body_size = -1;
 
 	word = this->_extractWord();

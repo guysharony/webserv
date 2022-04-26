@@ -490,7 +490,7 @@ int		Response::createBody(void) {
 							return (this->_body_fd <= 0);
 						}
 
-						break;
+						return (1);
 					}
 				}
 
@@ -503,6 +503,9 @@ int		Response::createBody(void) {
 					}
 					return 1;
 				}
+
+				this->_status = STATUS_FORBIDDEN;
+				return 0;
 			}
 			else
 			{
