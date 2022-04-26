@@ -40,7 +40,9 @@ void 					replaceAll(std::string  &str, const std::string &from, const std::stri
 /* formats */
 int						isTchar(std::string value);
 int						isAlpha(char value);
+int						isAlpha(std::string value);
 int						isDigit(char value);
+int						isAlphaNum(char value);
 
 
 #endif

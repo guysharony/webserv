@@ -14,7 +14,6 @@ class ConfigServer: public ConfigLocation
 		void				parseServer(void);
 
 	private:
-		// Directives
 		void				_parseListen(configuration_struct &config);
 		void				_parseServerNames(configuration_struct &config);
 		void				_parseRoot(configuration_struct &config);

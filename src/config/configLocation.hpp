@@ -102,7 +102,6 @@ class ConfigLocation
 		void											parseLocation(configuration_struct &config);
 
 	private:
-		// Directives
 		void											_parseMethods(location_struct &location);
 		void											_parseRoot(location_struct &location);
 		void											_parseIndex(location_struct &location);

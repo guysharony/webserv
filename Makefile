@@ -22,7 +22,6 @@ SRCS			:=	cgi/CGI \
 					formats/strings \
 					formats/units \
 					request/request \
-					request/utils \
 					response/response \
 					sockets/sockets \
 					sockets/socketsListener \
@@ -56,10 +55,6 @@ $(OBJS): $(OBJS_DIR)%.o : $(SRCS_DIR)%.cpp | $(OBJS_DIR)
 	@mkdir -p $(dir $@)
 	$(CC) $(FLAGS) -c $(INCLUDES) $< -o $@
 
-debug: fclean
-debug: FLAGS += -DDEBUG
-debug: all
-
 clean:
 	rm -rf $(OBJS_DIR)
 	rm -rf $(LOGS_DIR)
@@ -73,4 +68,4 @@ test: all | $(LOGS_DIR)
 	
 -include $(DEPS)
 
-.PHONY: all clean fclean re test debug
+.PHONY: all clean fclean re test

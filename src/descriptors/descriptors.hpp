@@ -1,20 +1,20 @@
 #ifndef DESCRIPTORS_HPP
 # define DESCRIPTORS_HPP
 
-# include <iostream>		// std::cout
-# include <sys/types.h>		// socket - included for portability
-# include <sys/socket.h> 	// socket, AF_LOCAL, SOCK_STREAM, inet_addr
-# include <cstring>			// memset
-# include <string>			// string
-# include <netinet/in.h> 	// sockaddr_in, inet_addr
-# include <arpa/inet.h>		// htons, inet_addr
-# include <unistd.h>		// close
-# include <vector>			// vector
-# include <sys/poll.h>		// poll
+# include <iostream>
+# include <sys/types.h>
+# include <sys/socket.h>
+# include <cstring>
+# include <string>
+# include <netinet/in.h>
+# include <arpa/inet.h>
+# include <unistd.h>
+# include <vector>
+# include <sys/poll.h>
 # include <sys/ioctl.h>
-# include <set>			// set
-# include <map>			// map
-# include <queue>			// queue
+# include <set>
+# include <map>
+# include <queue>
 # include "../../include/constants.hpp"
 
 class Descriptors {
@@ -24,10 +24,10 @@ class Descriptors {
 		~Descriptors();
 
 		typedef std::vector<pollfd>		polls_type;
-		typedef polls_type::iterator	poll_type;
+		typedef polls_type::iterator		poll_type;
 
 		std::map<int, std::string>		descriptors_type;
-		polls_type						descriptors;
+		polls_type					descriptors;
 
 		/* Getters */
 		std::string 					getDescriptorType(int descriptor);
