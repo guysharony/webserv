@@ -151,3 +151,24 @@ void			TmpFile::close(void) {
 	remove(this->_path.c_str());
 	this->_descriptors->deleteDescriptor(this->_fd);
 }
+
+int			TmpFile::display(void)
+{
+	char			letter;
+	std::ifstream 	file(this->_path.c_str(), std::ifstream::binary);
+
+	if (!file) {
+		std::cout << "Can't open file." << std::endl;
+		return (0);
+	}
+
+	while (!file.eof()) {
+		if (!file.get(letter)) letter = 0;
+
+		std::cout << letter;
+	}
+
+	file.close();
+
+	return (1);
+}

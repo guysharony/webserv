@@ -265,7 +265,9 @@ int		isTchar(std::string value)
 }
 
 int		isAlpha(char value)
-{ return ((value >= 'a' && value <= 'z') || (value >= 'A' && value <= 'Z')); }
+{
+	return ((value >= 'a' && value <= 'z') || (value >= 'A' && value <= 'Z'));
+}
 
 int		isAlpha(std::string value)
 {

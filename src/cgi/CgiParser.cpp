@@ -4,6 +4,7 @@ CgiParser::CgiParser(Request *request)
 :
 	_request(request),
 	_status(STATUS_OK),
+	// _body(""),
 	_temp(""),
 	_current(""),
 	_encoding(NONE),
@@ -23,6 +24,7 @@ CgiParser &CgiParser::operator=(CgiParser const & rhs)
 		this->_encoding = rhs._encoding;
 		this->_event = rhs._event;
 		this->_headers = rhs._headers;
+		// this->_body = rhs._body;
 	}
 
 	return (*this);
@@ -39,10 +41,38 @@ int									CgiParser::getStatus()
 const std::map<std::string, std::string>	&CgiParser::getHeaders() const
 { return(this->_headers); }
 
+/*
+std::string							CgiParser::getBody()
+{ return(this->_body); }
+*/
+
 int									CgiParser::getEvent(void)
 { return (this->_event); }
 
-int									CgiParser::getLine(void) {
+
+/*
+std::string	CgiParser::getNextLine(std::string str, size_t *i) {
+	std::string ret;
+	size_t j;
+
+	if (*i == std::string::npos)
+		return "";
+
+	j = str.find(CRLF, *i);
+	if (j != std::string::npos) {
+		ret = str.substr(*i, j - *i);
+		*i = j;
+	}
+	else
+	{
+		ret = str.substr(*i, str.size() - *i - 1);
+		*i = str.size() - 1;
+	}
+	return ret;
+}
+*/
+
+int			CgiParser::getLine(void) {
 	this->_current.clear();
 
 	std::size_t	end;
@@ -133,9 +163,12 @@ void			CgiParser::parseCgiResponse(void) {
 	while ((res = this->getLine()) > 0) {
 		if (this->getEvent() == EVT_REQUEST_HEADERS) {
 			if (!this->_current.length()) {
+				Message::debug("SEPARATOR\n");
 				this->setEvent(EVT_REQUEST_BODY);
 				continue;
 			}
+
+			Message::debug("REQUEST HEADER [" + this->_current.str() + "]\n");
 
 			if (!this->checkHeaders()) {
 				this->setStatus(STATUS_BAD_REQUEST);
@@ -148,7 +181,52 @@ void			CgiParser::parseCgiResponse(void) {
 				continue;
 			}
 
+			Message::debug("LENGTH BODY [" + this->_current.str() + "]\n");
 			this->_request->appendTemporary("body", this->_current);
 		}
 	}
 }
+
+/*
+size_t CgiParser::parseHeaders(std::string buffer) {
+	size_t i;
+	std::string line;
+	std::string key;
+	std::string value;
+	size_t header_length;
+
+	header_length = buffer.find(D_CRLF);
+	if (header_length == std::string::npos){
+		_status = STATUS_BAD_REQUEST;
+		std::cerr << RED << "no header cgi is found!!" << std::endl;
+		return -1;
+	}
+	i = 0;
+	while (_status != STATUS_BAD_REQUEST && (line = getNextLine(buffer, &i)) != "" && i <= header_length){
+		key = line.substr(0, line.find_first_of(':'));
+		value = line.substr(line.find_first_of(':') + 1, line.size() - (line.find_first_of(':') + 1));
+		key = trim2(key);
+		value = trim2(value);
+		this->_headers[key] = value;
+		i++;
+	}
+	return header_length;
+}
+
+void CgiParser::parseStatus() {
+	for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); it++){
+		if (it->first.compare("status")){
+			this->_status = atoi(it->second.c_str());
+		}
+	}
+}
+
+void CgiParser::parseCgiBuffer(std::string buffer) {
+	size_t i;
+
+	i = parseHeaders(buffer);
+	parseStat();
+	this->_body = trim2(buffer.substr(i, buffer.size() - i));
+	std::cout << "body =" << _body << std::endl;
+}
+*/
