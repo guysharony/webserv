@@ -6,7 +6,7 @@ void signalHandlerInt(int sig)
 {
 	if (sig == SIGINT)
 		g_sigint = 1;
-	signal(SIGINT, SIG_DFL); // If user sends signal twice, program will exit immediately
+	signal(SIGINT, SIG_DFL);
 }
 
 Webserv::Webserv(void)
@@ -77,10 +77,10 @@ bool		Webserv::run(void) {
 	signal(SIGPIPE, SIG_IGN);
 	while (this->_run) {
 		if (g_sigint == 1)
-			break; // Perhaps we need to shutdown/send messages to active clients first
+			break;
 
 		if (!this->listen())
-			continue; // Allow server to continue after a failure or timeout in poll
+			continue;
 
 		for (this->polls_index = 0; this->polls_index < this->polls_size; ++this->polls_index) {
 			this->contextInitialize();
@@ -117,7 +117,6 @@ bool			Webserv::handleServer(void) {
 
 	if (this->context.poll->revents & POLLIN) {
 		if ((fd = this->sockets.accept(this->context.poll->fd)) > 0) {
-			Message::debug("Adding client\n");
 			this->_clients.push_back(new Client(&this->config, &this->descriptors, fd));
 			return true;
 		}
@@ -179,20 +178,14 @@ Webserv::client_type	Webserv::_clientFind(void) {
 
 	client_type ite = this->_clients.end();
 	for (client_type it = this->_clients.begin(); it != ite; ++it) {
-		if ((*it)->getSocketFd() == this->context.poll->fd) {
-			// Message::debug("Client already exists\n");
+		if ((*it)->getSocketFd() == this->context.poll->fd)
 			return it;
-		}
 	}
 
 	return this->_clients.end();
 }
 
 void					Webserv::_clientReject(void) {
-	Message::debug("Closing connection: ");
-	Message::debug(this->context.poll->fd);
-	Message::debug("\n");
-
 	close(this->context.poll->fd);
 	this->context.poll->fd = -1;
 	this->_compress_array = true;

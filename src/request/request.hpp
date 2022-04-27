@@ -61,7 +61,6 @@ class Request {
 		int									appendTemporary(std::string const & filename, std::string packet);
 		int									appendTemporary(std::string const & filename, STRBinary const & packet);
 		int									eventTemporary(std::string const & filename, short event);
-		int									displayTemporary(std::string const & filename);
 		ssize_t								sizeTemporary(std::string const & filename);
 		int									clearTemporary(std::string const & filename);
 		int									resetCursorTemporary(std::string const & filename);
@@ -72,7 +71,6 @@ class Request {
 		void									execute(void);
 
 		void									append(std::vector<char> & value);
-		void									displayAllLocations(void);
 		Config::configuration_type				selectServer(void);
 		Config::location_type					selectLocation(Config::configuration_type server);
 		bool									isCgi(Config::configuration_type server, std::string path);
