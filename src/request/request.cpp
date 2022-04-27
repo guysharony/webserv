@@ -161,10 +161,7 @@ void			Request::execute(void) {
 		try {
 			server = this->selectServer();
 			this->checkBody(server);
-		} catch(const Config::ServerNotFoundException & e) {
-			// Handle error here
-			// throw e; // delete this once error is handled properly
-		}
+		} catch(const Config::ServerNotFoundException & e) { }
 	}
 }
 
@@ -290,7 +287,6 @@ std::ostream	&operator<<(std::ostream &os, Request &req) {
 	os << "version : [" << req.getVersion() << "]" << std::endl;
 	for (it = req.getHeader().begin(); it != req.getHeader().end(); it++)
 		os << "[" << it->first << "] : [" << it->second << "]" << std::endl;
-	// os << "body : [" << req.getBody() << "]" << std::endl;
 	return os;
 }
 
