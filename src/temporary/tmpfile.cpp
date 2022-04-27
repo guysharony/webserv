@@ -8,7 +8,7 @@ TmpFile::TmpFile(Descriptors *descriptors, std::string const &filename)
 	_path(),
 	_filename(filename)
 {
-	if ((this->_fd = uniqueFile("/tmp/webserv/", O_CREAT | O_TRUNC | O_RDWR, S_IRWXU)) < 0)
+	if ((this->_fd = uniqueFile("/tmp/webserv/", this->_path, O_CREAT | O_TRUNC | O_RDWR, S_IRWXU)) < 0)
 		this->_fd = -2;
 
 
@@ -148,6 +148,6 @@ void			TmpFile::close(void) {
 	if (this->_fd < 0)
 		return ;
 	::close(this->_fd);
-	remove(this->_path.c_str());
+	remove(secureAddress("/tmp/webserv/", this->_path).c_str());
 	this->_descriptors->deleteDescriptor(this->_fd);
 }
