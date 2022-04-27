@@ -6,6 +6,18 @@ def _get(url, redirect=True):
 	return ret.status_code
 
 class TestIndexLinks(unittest.TestCase):
+	def test_index(self):
+		url = "http://localhost:8081/index.html"
+		ret = r.get(url)
+		self.assertEqual(ret.status_code, 200)
+		self.assertTrue(ret.content.decode().find("Welcome to my web server") >= 0)
+
+	def test_root(self):
+		url = "http://localhost:8081/"
+		ret = r.get(url)
+		self.assertEqual(ret.status_code, 200)
+		self.assertTrue(ret.content.decode().find("Welcome to my web server") >= 0)
+
 	def test_cgi(self):
 		url = "http://localhost:8081/php/env.php"
 		ret = r.get(url)
@@ -73,6 +85,31 @@ class TestIndexLinks(unittest.TestCase):
 		ret = r.get(url)
 		self.assertEqual(ret.status_code, 404)
 
+	def test_403_error(self):
+		url = "http://localhost:8081/auto-index-off/"
+		ret = r.get(url)
+		self.assertEqual(ret.status_code, 403)
+		self.assertTrue(ret.content.decode().find("403 Forbidden") >= 0)
+		self.assertTrue(ret.content.decode().find("This request cannot be authorized") >= 0)
+
+	def test_404_error(self):
+		url = "http://localhost:8081/fakefile.html/"
+		ret = r.get(url)
+		self.assertEqual(ret.status_code, 404)
+		self.assertTrue(ret.content.decode().find("Error 404") >= 0)
+		self.assertTrue(ret.content.decode().find("The page you are looking for can't be found.") >= 0)
+
+	@unittest.skip("Test crashes server")
+	def test_405_error(self):
+		url = "http://localhost:8081/post_body/"
+		try:
+			ret = r.get(url)
+			self.assertEqual(ret.status_code, 405)
+			self.assertTrue(ret.content.decode().find("405 method not allowed") >= 0)
+			self.assertTrue(ret.content.decode().find("The method requested is not allowed") >= 0)
+		except Exception as e:
+			print("error")
+			raise e		
 
 
 class TestRequests(unittest.TestCase):
