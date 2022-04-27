@@ -340,7 +340,7 @@ void			Request::checkTimeout(void) {
 	if (this->_header.count("connection-timeout")) {
 		tmp = this->_header["connection-timeout"];
 
-		if (tmp.size() > 0 && toInteger(tmp) >= 0 && isAlpha(tmp.c_str()) != 1)
+		if (tmp.size() > 0 && toInteger(tmp) >= 0 && isAlpha(tmp) != 1)
 			this->_timeout = toInteger(tmp);
 	}
 }
