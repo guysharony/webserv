@@ -111,6 +111,40 @@ class TestIndexLinks(unittest.TestCase):
 			print("error")
 			raise e		
 
+	def test_auto_index_on(self):
+		url = "http://localhost:8081/auto-index-on/"
+		ret = r.get(url)
+		self.assertEqual(ret.status_code, 200)
+		self.assertTrue(ret.content.decode().find("Index of /auto-index-on/") >= 0)
+		self.assertTrue(ret.content.decode().find("directory_of_my_choice") >= 0)
+
+	def test_auto_index_off(self):
+		url = "http://localhost:8081/auto-index-off/"
+		ret = r.get(url)
+		self.assertEqual(ret.status_code, 403)
+		self.assertTrue(ret.content.decode().find("403 Forbidden") >= 0)
+		self.assertTrue(ret.content.decode().find("This request cannot be authorized") >= 0)
+
+	def test_403_error_default(self):
+		url = "http://localhost:8085/auto-index-off/"
+		ret = r.get(url)
+		self.assertEqual(ret.status_code, 403)
+		self.assertTrue(ret.content.decode().find("403 Forbidden") >= 0)
+
+	def test_404_error_default(self):
+		url = "http://localhost:8085/fakefile.html/"
+		ret = r.get(url)
+		self.assertEqual(ret.status_code, 404)
+		self.assertTrue(ret.content.decode().find("404 Not Found") >= 0)
+
+	def test_redirect(self):
+		url = "http://localhost:8081/redirect"
+		ret = r.get(url, allow_redirects=False)
+		self.assertEqual(ret.status_code, 301)
+		ret = r.get(url, allow_redirects=True)
+		self.assertEqual(ret.status_code, 200)
+		self.assertTrue(ret.content.decode().find("Welcome to my web server") >= 0)
+
 
 class TestRequests(unittest.TestCase):
 	def test_requests(self):
