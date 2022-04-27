@@ -635,7 +635,7 @@ std::string	Response::getUrl(std::string dirent, bool isFolder) {
 }
 
 
-std::string	Response::getPathAfterReplacingLocationByRoot(void) {
+std::string	Response::getPathAfterReplacingLocationByRoot(bool index) {
 	if (this->_status == STATUS_NOT_FOUND)
 		return "";
 	if (this->_status < STATUS_BAD_REQUEST){
@@ -650,7 +650,7 @@ std::string	Response::getPathAfterReplacingLocationByRoot(void) {
 			if (loc_p.compare("/") != 0)
 				p.erase(i, loc_p.size());
 			p.insert(i, this->_location->root);
-			if (isDirectory(p)){
+			if (isDirectory(p) && index) {
 					std::vector<std::string>::iterator it;
 
 					for (it = _location->index.begin() ; it != _location->index.end() ; it++)
@@ -714,7 +714,7 @@ void			Response::deleteMethod(void) {
 }
 
 void			Response::postMethod(void) {
-	std::string p = this->getPathAfterReplacingLocationByRoot();
+	std::string p = this->getPathAfterReplacingLocationByRoot(false);
 
 	this->_request->resetCursorTemporary("request");
 	this->_request->eventTemporary("request", POLLIN);
@@ -861,7 +861,7 @@ int					Response::write(STRBinary & value)
 		return !this->_body_write;
 	}
 
-	pos = ::write(this->_body_fd, value.data(), value.length());
+	pos = ::write(this->_body_fd, value.c_str(), value.length());
 
 	this->_body_write = true;
 

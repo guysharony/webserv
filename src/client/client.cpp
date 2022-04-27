@@ -3,8 +3,6 @@
 Client::Client(Config *config, Descriptors *descriptors, int socket_fd)
 :
 	_socket_fd(socket_fd),
-	_server_addr(),
-	_server_port(-1),
 	_request(config, descriptors),
 	_response(&_request, descriptors)
 {
@@ -26,10 +24,10 @@ Client::Client(Config *config, Descriptors *descriptors, int socket_fd)
 
 	this->_request.setClientAddress(inet_ntoa(peer_addr.sin_addr));
 	this->_request.setClientPort(ntohs(peer_addr.sin_port));
+	this->_request.setServerAddress(inet_ntoa(sock_addr.sin_addr));
+	this->_request.setServerPort(ntohs(sock_addr.sin_port));
 
 	this->_socket_fd = socket_fd;
-	this->_server_addr = inet_ntoa(sock_addr.sin_addr);
-	this->_server_port = ntohs(sock_addr.sin_port);
 }
 
 Client::~Client(void)
@@ -40,12 +38,7 @@ bool				Client::operator==(Client const &rhs)
 	if (this == &rhs)
 		return (true);
 
-	if (this->_socket_fd == rhs._socket_fd
-		&& this->_server_addr == rhs._server_addr
-		&& this->_server_port == rhs._server_port)
-		return (true);
-
-	return (false);
+	return (this->_socket_fd == rhs._socket_fd);
 }
 
 std::string const	&Client::getClientAddr(void)
@@ -58,10 +51,10 @@ int				Client::getSocketFd(void)
 { return (this->_socket_fd); }
 
 std::string const	&Client::getServerAddr(void)
-{ return (this->_server_addr); }
+{ return (this->_request.getServerAddress()); }
 
 int				Client::getServerPort(void)
-{ return (this->_server_port); }
+{ return (this->_request.getServerPort()); }
 
 int				Client::getEvent(void)
 { return (this->_request.getEvent()); }
@@ -100,10 +93,10 @@ void				Client::setSocketFd(int socket_fd)
 { this->_socket_fd = socket_fd; }
 
 void				Client::setServerAddr(std::string const &addr)
-{ this->_server_addr = addr; }
+{ this->_request.setServerAddress(addr); }
 
 void				Client::setServerPort(int port)
-{ this->_server_port = port; }
+{ this->_request.setServerPort(port); }
 
 void				Client::setEvent(int value)
 { this->_request.setEvent(value); }

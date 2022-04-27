@@ -31,6 +31,8 @@ class Request {
 		std::string							getParameters(void);
 		std::string const						&getClientAddress(void);
 		int									getClientPort(void);
+		std::string const						&getServerAddress(void);
+		int									getServerPort(void);
 		std::string							getURI(void);
 		std::string							getHost(void);
 		std::string							getPort(void);
@@ -53,6 +55,8 @@ class Request {
 		void									setDescriptors(Descriptors *descriptors);
 		void									setClientAddress(std::string address);
 		void									setClientPort(int port);
+		void									setServerAddress(std::string address);
+		void									setServerPort(int port);
 
 		/* Temporary */
 		int									createTemporary(std::string const & filename);
@@ -86,6 +90,8 @@ class Request {
 		std::string							_host;
 		std::string							_client_address;
 		int									_client_port;
+		std::string							_server_address;
+		int									_server_port;
 		STRBinary								_temp;
 		STRBinary								_current;
 		Config								*_config;
@@ -119,7 +125,5 @@ class Request {
 		bool									checkMethodBylocation(std::vector<int> methosds_type);
 		int									convertMethodToValue(std::string method);
 };
-
-std::ostream&		operator<<(std::ostream& os, Request& re);
 
 #endif

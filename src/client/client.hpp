@@ -53,8 +53,6 @@ class Client {
 
 	private:
 		int						_socket_fd;
-		std::string				_server_addr;
-		int						_server_port;
 		Request					_request;
 		Response					_response;
 
