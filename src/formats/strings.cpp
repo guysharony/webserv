@@ -265,11 +265,17 @@ int		isTchar(std::string value)
 }
 
 int		isAlpha(char value)
+{ return ((value >= 'a' && value <= 'z') || (value >= 'A' && value <= 'Z')); }
+
+int		isAlpha(std::string value)
 {
-	return ((value >= 'a' && value <= 'z') || (value >= 'A' && value <= 'Z'));
+	for (size_t i = 0; i < value.length(); ++i) {
+		if (!isAlpha(value[i]))
+			return false;
+	}
+
+	return true;
 }
 
 int		isDigit(char value)
-{
-	return (value >= '0' && value <= '9');
-}
+{ return (value >= '0' && value <= '9'); }

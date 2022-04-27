@@ -22,7 +22,6 @@ SRCS			:=	cgi/CGI \
 					formats/strings \
 					formats/units \
 					request/request \
-					request/utils \
 					response/response \
 					sockets/sockets \
 					sockets/socketsListener \

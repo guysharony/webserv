@@ -37,7 +37,7 @@ std::string			Response::getMethod(void)
 { return this->_request->getMethod(); }
 
 std::string			Response::getContentLength(void)
-{ return intToStr(this->_request->sizeTemporary("body") + 2); }
+{ return toString(this->_request->sizeTemporary("body") + 2); }
 
 std::string			Response::getPath(void)
 { return this->_request->getPath(); }
@@ -129,7 +129,7 @@ void					Response::createHeaders(void) {
 
 	this->_headers["Server"] = SERVER_NAME;
 	this->_headers["Date"] = findDate();
-	this->_headers["Content-Length"] = intToStr(body_length + 2);
+	this->_headers["Content-Length"] = toString(body_length + 2);
 
 	if (this->_status == STATUS_MOVED_PERMANENTLY) {
 		this->_headers["Location"] = this->_location->redirect;
@@ -466,7 +466,7 @@ int		Response::createBody(void) {
 				return 1;
 			}
 
-			if (isFiley(new_p) == 1)
+			if (isFile(new_p))
 			{
 
 				this->_headers["Content-Type"] = findContentType(new_p);
@@ -476,14 +476,14 @@ int		Response::createBody(void) {
 					return (this->_body_fd <= 0);
 				}
 			}
-			else if (isFiley(new_p) == 2)
+			else if (isDirectory(new_p))
 			{
 				std::vector<std::string>::iterator it;
 
 				for (it = location->index.begin() ; it != location->index.end() ; it++)
 				{
 					std::string path = secureAddress(new_p, *it);
-					if (isFiley(path) == 1)
+					if (isFile(path))
 					{
 						this->_headers["Content-Type"] = findContentType(path);
 
@@ -534,7 +534,7 @@ std::string	Response::getStatusMessage(void) {
 int		Response::readResponse(STRBinary & packet) {
 	if (this->_event == EVT_SEND_RESPONSE_LINE) {
 		this->_event = EVT_SEND_RESPONSE_HEADERS;
-		packet = "HTTP/1.1 " + intToStr(this->_status) + " " + getStatusMessage() + "\r\n";
+		packet = "HTTP/1.1 " + toString(this->_status) + " " + getStatusMessage() + "\r\n";
 		return 1;
 	}
 
@@ -597,7 +597,7 @@ int		Response::getListOfDirectories(const char *path, STRBinary & packet) {
 	std::string p = getPathAfterReplacingLocationByRoot();
 
 	for (std::vector<std::string>::iterator it = this->_directory_list.begin(); it != this->_directory_list.end(); it++) {
-		if (isFiley(p + "/" + *it) == 2) {
+		if (isDirectory(p + "/" + *it)) {
 			packet = getUrl(*it, true) + (this->_directory_list.size() == 1 ? "</table>\n</body>\n</html>\n" : "");
 			this->_directory_list.erase(it);
 			return 1;
@@ -605,7 +605,7 @@ int		Response::getListOfDirectories(const char *path, STRBinary & packet) {
 	}
 
 	for (std::vector<std::string>::iterator it = this->_directory_list.begin(); it != this->_directory_list.end(); it++) {
-		if (isFiley(p + "/" + *it) == 1) {
+		if (isFile(p + "/" + *it)) {
 			packet = getUrl(*it, false) + (this->_directory_list.size() == 1 ? "</table>\n</body>\n</html>\n" : "");
 			this->_directory_list.erase(it);
 			return 1;
@@ -634,21 +634,36 @@ std::string	Response::getUrl(std::string dirent, bool isFolder) {
 }
 
 
-std::string	Response::getPathAfterReplacingLocationByRoot(void) {
+std::string	Response::getPathAfterReplacingLocationByRoot(bool index) {
 	if (this->_status == STATUS_NOT_FOUND)
 		return "";
 
-	std::string loc_p = this->_location->location;
-	std::string p = this->_request->getPath();
+	if (this->_status != STATUS_BAD_REQUEST) {
+		std::string loc_p = this->_location->location;
+		std::string p = this->_request->getPath();
 
-	size_t i;
-	i = p.find(loc_p);
+		size_t i;
+		i = p.find(loc_p);
 
-	if (i != std::string::npos) {
-		if (loc_p.compare("/") != 0)
-			p.erase(i, loc_p.size());
-		p.insert(i, this->_location->root);
-		return(p);
+		if (i != std::string::npos) {
+			if (loc_p.compare("/") != 0)
+				p.erase(i, loc_p.size());
+			p.insert(i, this->_location->root);
+			if (isDirectory(p) && index) {
+					std::vector<std::string>::iterator it;
+
+					for (it = _location->index.begin() ; it != _location->index.end() ; it++)
+					{
+						std::string path = secureAddress(p, *it);
+						if (isFile(path))
+						{
+							p = path;
+							break;
+						}
+					}
+			}
+			return(p);
+		}
 	}
 
 	return "";
@@ -685,15 +700,13 @@ int			Response::readCGI(STRBinary & packet) {
 
 void			Response::deleteMethod(void) {
 	std::string p = this->getPathAfterReplacingLocationByRoot();
-	int ret;
-	ret = isFiley(p);
-	if (ret == 1) {
+	if (isFile(p)) {
 		if (remove(p.c_str()) == 0)
 			this->_status = STATUS_NO_CONTENT;
 		else
 			this->_status = STATUS_FORBIDDEN;
 	}
-	else if (ret == -1)
+	else if (!exists(p))
 		this->_status = STATUS_FORBIDDEN;
 	else
 		this->_status = STATUS_NOT_FOUND;

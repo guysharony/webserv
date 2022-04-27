@@ -333,8 +333,6 @@ void			Request::checkPort(void) {
 	{
 		this->_host = this->_header["host"].substr(0, i);
 		this->_port = this->_header["host"].substr(i + 1, this->_header["host"].size() - i);
-//		if (tmp.size() > 0 && ft_atoi(tmp.c_str()) >= 0 && ft_isalpha(tmp.c_str()) != 1)    si on le veut comme int le port
-//			_port = ft_atoi(tmp.c_str());
 	}
 }
 
@@ -344,8 +342,8 @@ void			Request::checkTimeout(void) {
 	if (this->_header.count("connection-timeout")) {
 		tmp = this->_header["connection-timeout"];
 
-		if (tmp.size() > 0 && ft_atoi(tmp.c_str()) >= 0 && ft_isalpha(tmp.c_str()) != 1)
-			this->_timeout = ft_atoi(tmp.c_str());
+		if (tmp.size() > 0 && toInteger(tmp) >= 0 && isAlpha(tmp.c_str()) != 1)
+			this->_timeout = toInteger(tmp);
 	}
 }
 
