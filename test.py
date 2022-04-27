@@ -99,17 +99,12 @@ class TestIndexLinks(unittest.TestCase):
 		self.assertTrue(ret.content.decode().find("Error 404") >= 0)
 		self.assertTrue(ret.content.decode().find("The page you are looking for can't be found.") >= 0)
 
-	@unittest.skip("Test crashes server")
 	def test_405_error(self):
 		url = "http://localhost:8081/post_body/"
-		try:
-			ret = r.get(url)
-			self.assertEqual(ret.status_code, 405)
-			self.assertTrue(ret.content.decode().find("405 method not allowed") >= 0)
-			self.assertTrue(ret.content.decode().find("The method requested is not allowed") >= 0)
-		except Exception as e:
-			print("error")
-			raise e		
+		ret = r.get(url)
+		self.assertEqual(ret.status_code, 405)
+		self.assertTrue(ret.content.decode().find("405 method not allowed") >= 0)
+		self.assertTrue(ret.content.decode().find("The method requested is not allowed") >= 0)
 
 	def test_auto_index_on(self):
 		url = "http://localhost:8081/auto-index-on/"
