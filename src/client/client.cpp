@@ -35,6 +35,8 @@ Client::Client(Config *config, Descriptors *descriptors, int socket_fd)
 Client::~Client(void)
 { }
 
+
+// Operators
 bool				Client::operator==(Client const &rhs)
 {
 	if (this == &rhs)
@@ -48,6 +50,7 @@ bool				Client::operator==(Client const &rhs)
 	return (false);
 }
 
+// Getters
 std::string const	&Client::getClientAddr(void)
 { return (this->_request.getClientAddress()); }
 
@@ -90,6 +93,7 @@ bool			Client::getRequestFailed(void) {
 }
 
 
+// Setters
 void				Client::setClientAddr(std::string const &addr)
 { this->_request.setClientAddress(addr); }
 
@@ -114,7 +118,7 @@ void				Client::setClose(bool value)
 void				Client::appendRequest(std::vector<char> & packet)
 { this->_request.append(packet); }
 
-
+/* Response */
 int				Client::readResponse(STRBinary & packet)
 { return this->_response.readResponse(packet); }
 

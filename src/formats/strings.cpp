@@ -279,4 +279,3 @@ int		isAlpha(std::string value)
 
 int		isDigit(char value)
 { return (value >= '0' && value <= '9'); }
-

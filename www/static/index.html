@@ -4,30 +4,56 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>Welcome</title>
-		<link rel="stylesheet" href="css/style.css">
+		<style>
+			* {
+				font-family: Arial, sans-serif;
+			}
+
+			:root {
+				--title-font-size: 2.5rem;
+				--title-font-color: #333;
+				--message-font-size: 1.3rem;
+				--message-font-color: #4d4d4d;
+			}
+
+			html, body {
+				margin: 0;
+				height: 100%;
+			}
+
+			.container {
+				height: 100%;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+
+			.content {
+				display: flex;
+				flex-direction: column;
+				gap: 35px;
+			}
+
+			h1 {
+				margin: 0;
+				font-size: var(--title-font-size);
+				color: var(--title-font-color);
+				font-weight: 500;
+				letter-spacing: 1px;
+			}
+
+			p {
+				margin: 0;
+				font-size: var(--message-font-size);
+				color: var(--message-font-color);
+			}
+		</style>
 	</head>
 	<body>
 		<div class="container">
 			<div class="content">
 				<h1>Webserv,</h1>
 				<p>Welcome to my web server created in C++.</p>
-
-				<ul>
-					<h3> Test Pages </h3>
-					<li><a href="http://localhost:8081/php/env.php">Test CGI</a></li>
-					<li><a href="http://localhost:8082/">Test port 8082</a></li>
-					<li><a href="http://localhost:8081/php/w3_get_form.php">Test GET form</a></li>
-					<li><a href="http://localhost:8081/php/w3_post_form.php">Test POST form</a></li>
-					<li><a href="http://localhost:8081/php/w3_upload_form.php">Test file upload form</a></li>
-					<li><a href="http://localhost:8081/auto-index-off/">Test 403 Error</a></li>
-					<li><a href="http://localhost:8081/fakefile.html">Test 404 Error</a></li>
-					<li><a href="http://localhost:8081/post_body/">Test 405 Error</a></li>
-					<li><a href="http://localhost:8081/auto-index-on/">Test Auto Index: On</a></li>
-					<li><a href="http://localhost:8081/auto-index-off/">Test Auto Index: Off</a></li>
-					<li><a href="http://localhost:8085/auto-index-off/">Test Default Error Page 403</a></li>
-					<li><a href="http://localhost:8085/fakefile.html">Test Default Error Page 404</a></li>
-					<li><a href="http://localhost:8081/redirect">Test Redirect</a></li>
-				</ul>
 			</div>
 		</div>
 	</body>

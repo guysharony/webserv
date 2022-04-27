@@ -3,6 +3,7 @@ NAME 			= webserv
 SRCS_DIR 		= src/
 INCLUDE_DIR 	= includes/
 OBJS_DIR 		= obj/
+LOGS_DIR 		= logs/
 WWW				= www/
 
 SRCS			:=	cgi/CGI \
@@ -47,18 +48,28 @@ all: $(NAME)
 $(OBJS_DIR):
 	@mkdir -p $(OBJS_DIR)
 
+$(LOGS_DIR):
+	@mkdir -p $(LOGS_DIR)
+
 $(OBJS): $(OBJS_DIR)%.o : $(SRCS_DIR)%.cpp | $(OBJS_DIR)
 	@mkdir -p $(dir $@)
 	$(CC) $(FLAGS) -c $(INCLUDES) $< -o $@
 
+debug: fclean
+debug: FLAGS += -DDEBUG
+debug: all
+
 clean:
 	rm -rf $(OBJS_DIR)
+	rm -rf $(LOGS_DIR)
 
 fclean: clean
 	rm -f $(NAME)
 
 re: fclean all | $(OBJS_DIR)
 
+test: all | $(LOGS_DIR)
+	
 -include $(DEPS)
 
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re test debug

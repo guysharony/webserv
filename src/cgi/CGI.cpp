@@ -1,15 +1,18 @@
 #include "CGI.hpp"
 
 CGI::CGI(Request *request)
-: _request(request)
-{ }
+	: _request(request)
+{
+}
 
 CGI::CGI(CGI const &src)
-: _request(src._request)
-{ }
+	: _request(src._request)
+{
+}
 
 CGI::~CGI(void)
-{ }
+{
+}
 
 CGI &CGI::operator=(CGI const &rhs)
 {
@@ -26,13 +29,14 @@ int CGI::_init_env(std::string const &filename)
 	Config::location_type location = this->_request->selectLocation(server);
 	std::map<std::string, std::string> headers = this->_request->getHeader();
 
+	// Prepare environment for execve
 	clearenv();
-	setenv("SERVER_SOFTWARE", SERVER_NAME, true);
+	setenv("SERVER_SOFTWARE", SERVER_NAME, true); // *** This value should be confirmed
 	setenv("SERVER_NAME", this->_request->getHost().c_str(), true);
-	setenv("GATEWAY_INTERFACE", "CGI/1.1", true);
+	setenv("GATEWAY_INTERFACE", "CGI/1.1", true); // *** This value should be confirmed
 	setenv("SERVER_PROTOCOL", "HTTP/1.1", true);
 	setenv("SERVER_PORT", this->_request->getPort().c_str(), true);
-	setenv("PATH_INFO", this->_request->getURI().c_str(), true);
+	setenv("PATH_INFO", filename.c_str(), true);
 	setenv("QUERY_STRING", this->_request->getParameters().c_str(), true);
 	setenv("PATH_TRANSLATED", filename.c_str(), true);
 	setenv("REQUEST_METHOD", this->_request->getMethod().c_str(), true);
@@ -45,12 +49,16 @@ int CGI::_init_env(std::string const &filename)
 	setenv("REMOTE_ADDR", this->_request->getClientAddress().c_str(), true);
 	setenv("REMOTE_PORT", toString(this->_request->getClientPort()).c_str(), true);
 
+	Message::debugln("Headers");
 	for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it)
 	{
 		std::string key(it->first);
 		if (key == "content-type")
 			setenv("CONTENT_TYPE", it->second.c_str(), true);
 		key = "HTTP_" + key;
+		Message::debug(key);
+		Message::debug(" = ");
+		Message::debugln(it->second.c_str());
 		setenv(toUppercase(key).c_str(), it->second.c_str(), true);
 	}
 

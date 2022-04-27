@@ -222,10 +222,7 @@ void		ConfigServer::_parseCGIPath(configuration_struct &config) {
 	if (!config.cgi_path.empty())
 		Message::error("'cgi_path' already assigned.");
 
-	std::string	tmp = this->_extractWord();
-
-	if (!getAbsolutePath(tmp, config.cgi_path))
-		Message::error("'cgi_path " + tmp + ";' not found.");
+	config.cgi_path = this->_extractWord();
 
 	if (this->_extractWord() != ";")
 		Message::error("'cgi_path' already assigned.");
