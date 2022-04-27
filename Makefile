@@ -37,7 +37,7 @@ DEPS 			= $(OBJS:.o=.d)
 
 CC_OVERRIDE 	?= c++
 CC				:= $(CC_OVERRIDE)
-FLAGS 			= -MMD -g -Wall -Wextra -Werror -std=c++98 -DWWW=\"$(WWW)\" #-pedantic
+FLAGS 			= -MMD -g -Wall -Wextra -Werror -std=c++98 -DWWW=\"$(WWW)\"#-pedantic
 
 $(NAME): $(OBJS) | $(OBJS_DIR)
 	$(CC) $(FLAGS) $(OBJS) $(INCLUDES) -o $(NAME)
