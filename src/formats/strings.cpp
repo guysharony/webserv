@@ -269,7 +269,16 @@ int		isAlpha(char value)
 	return ((value >= 'a' && value <= 'z') || (value >= 'A' && value <= 'Z'));
 }
 
-int		isDigit(char value)
+int		isAlpha(std::string value)
 {
-	return (value >= '0' && value <= '9');
+	for (size_t i = 0; i < value.length(); ++i) {
+		if (!isAlpha(value[i]))
+			return false;
+	}
+
+	return true;
 }
+
+int		isDigit(char value)
+{ return (value >= '0' && value <= '9'); }
+
