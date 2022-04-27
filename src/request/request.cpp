@@ -98,8 +98,7 @@ int			Request::getLine(void) {
 
 	std::size_t	end;
 
-	if ((this->getEvent() < EVT_REQUEST_BODY)
-	|| (this->getEvent() == EVT_REQUEST_BODY && this->_encoding == CHUNKED)) {
+	if ((this->getEvent() < EVT_REQUEST_BODY) || (this->getEvent() == EVT_REQUEST_BODY && this->_encoding == CHUNKED && !this->_chunked)) {
 		end = this->_temp.find(CRLF);
 		if (end != std::string::npos) {
 			this->_current = this->_temp.substr(0, end);
@@ -115,6 +114,14 @@ int			Request::getLine(void) {
 		}
 
 		return (0);
+	}
+
+	if (this->getEvent() == EVT_REQUEST_BODY && this->_encoding == CHUNKED) {
+		this->_current = this->_temp.substr(0, this->_body_size > static_cast<ssize_t>(this->_temp.length()) ? this->_temp.length() : this->_body_size);
+		this->_temp = this->_temp.substr(this->_body_size > static_cast<ssize_t>(this->_temp.length()) ? this->_current.length() : this->_body_size + 2);
+
+		this->_body_size -= this->_current.length();
+		return (1);
 	}
 
 	this->_current = this->_temp;
@@ -221,40 +228,30 @@ void			Request::parseRequest(void) {
 		if ((res = this->getLine()) > 0) {
 			if (this->_encoding == CHUNKED) {
 				if (!this->_chunked) {
-					if (this->_current.length()) {
-						chunk_extention = this->_current.find(";");
-						if (chunk_extention != std::string::npos)
-							this->_current = this->_current.substr(0, chunk_extention);
+					chunk_extention = this->_current.str().find(";");
+					if (chunk_extention != std::string::npos)
+						this->_current = this->_current.str().substr(0, chunk_extention);
 
-						if (!isPositiveBase16(this->_current.str())) {
-							this->setStatus(STATUS_BAD_REQUEST);
-							this->setEnd(1);
-							return;
-						}
-
-						this->_chunk_size = hexToInt(this->_current.str());
-						this->_body_size = this->_chunk_size;
-						this->_current.clear();
-						this->_chunked = true;
+					if (!isPositiveBase16(this->_current.str())) {
+						this->setStatus(STATUS_BAD_REQUEST);
+						this->setEnd(1);
+						return;
 					}
+
+					this->_chunk_size = hexToInt(this->_current.str());
+					this->_body_size = this->_chunk_size;
+					this->_current.clear();
+					this->_chunked = true;
 				} else {
 					if (!this->_chunk_size) {
 						this->setEnd(1);
 						return;
 					}
 
-					this->_body_size -= this->_current.length();
-
-					if (res == 2 && this->_body_size > 0) {
-						this->_current.append(std::string("\r\n"));
-						this->_body_size -= 2;
-					}
-
-					this->_content_length += this->_current.length();
 					this->appendTemporary("request", this->_current);
-
 					if (this->_body_size <= 0) {
 						this->_chunked = false;
+						return;
 					}
 				}
 			} else if (this->_encoding == LENGTH) {
@@ -275,20 +272,6 @@ void			Request::parseRequest(void) {
 			}
 		}
 	}
-}
-
-std::ostream	&operator<<(std::ostream &os, Request &req) {
-	std::map<std::string, std::string>::const_iterator it;
-
-	os << "Method : [" << req.getMethod() << "]" << std::endl;
-	os << "path : [" << req.getPath() << "]" << std::endl;
-	os << "parameters : [" << req.getParameters() << "]" << std::endl;
-	os << "port : [" << req.getPort() << "]" << std::endl;
-	os << "host : [" << req.getHost() << "]" << std::endl;
-	os << "version : [" << req.getVersion() << "]" << std::endl;
-	for (it = req.getHeader().begin(); it != req.getHeader().end(); it++)
-		os << "[" << it->first << "] : [" << it->second << "]" << std::endl;
-	return os;
 }
 
 void			Request::checkPort(void) {

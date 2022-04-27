@@ -120,6 +120,4 @@ class Request {
 		int									convertMethodToValue(std::string method);
 };
 
-std::ostream&		operator<<(std::ostream& os, Request& re);
-
 #endif
