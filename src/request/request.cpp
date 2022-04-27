@@ -207,7 +207,6 @@ void			Request::parseRequest(void) {
 				this->createTemporary("request");
 
 				if (!this->firstLineParsing()) {
-					std::cout << "test 10" << std::endl;
 					this->setEnd(1);
 					return;
 				}
@@ -217,7 +216,6 @@ void			Request::parseRequest(void) {
 					checkTimeout();
 					if (this->_host.empty()) {
 						this->setStatus(STATUS_BAD_REQUEST);
-						std::cout << "test 1" << std::endl;
 						this->setEnd(1);
 						return;
 					}
@@ -604,7 +602,7 @@ Config::location_type	Request::selectLocation(Config::configuration_type server)
 		}
 	}
 
-	if (firstTime) // no location found
+	if (firstTime)
 		throw Config::LocationNotFoundException();
 
 	if (!checkMethodBylocation(ret->methods))
@@ -637,17 +635,17 @@ int					Request::convertMethodToValue(std::string method) {
 	return 0;
 }
 
-bool					Request::isCgi(Config::configuration_type server) {
+bool					Request::isCgi(Config::configuration_type server, std::string path) {
 	size_t	i;
 
 	if (!server->cgi_path.size())
 		return false;
 
-	i = this->_path.find_last_of(".");
+	i = path.find_last_of(".");
 	if (i == std::string ::npos)
 		return false;
 
-	std::string ext = this->_path.substr(i, this->_path.size() - 1);
+	std::string ext = path.substr(i, path.size() - 1);
 	std::vector<std::string>::iterator it = server->cgi_extentions.begin();
 	while (it != server->cgi_extentions.end()) {
 		if ((*it).compare(ext) == 0)
@@ -657,10 +655,10 @@ bool					Request::isCgi(Config::configuration_type server) {
 	}
 	
 	if (it != server->cgi_extentions.end()) {
-		if (server->cgi_path.size() == 0)
+		if(server->cgi_path.size() == 0)
 			this->setStatus(STATUS_INTERNAL_SERVER_ERROR);
 		return true;
 	}
-	return false;
 
+	return false;
 }

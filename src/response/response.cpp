@@ -84,7 +84,6 @@ void					Response::initialize(void) {
 		try {
 			this->_server = this->_request->selectServer();
 		} catch(const Config::ServerNotFoundException & e) {
-			Message::debug("Server wasn't found: handling error\n");
 			this->_status = STATUS_BAD_REQUEST;
 		}
 
@@ -100,7 +99,7 @@ void					Response::initialize(void) {
 		}
 	}
 
-	if (!this->_request->isCgi(this->_server)) {
+	if (!this->_request->isCgi(this->_server, getPathAfterReplacingLocationByRoot())) {
 		if (this->_status < STATUS_BAD_REQUEST)
 			checkPath();
 
@@ -129,7 +128,10 @@ void					Response::createHeaders(void) {
 
 	this->_headers["Server"] = SERVER_NAME;
 	this->_headers["Date"] = findDate();
-	this->_headers["Content-Length"] = toString(body_length + 2);
+
+	if (body_length >= 0) {
+		this->_headers["Content-Length"] = toString(body_length + 2);
+	}
 
 	if (this->_status == STATUS_MOVED_PERMANENTLY) {
 		this->_headers["Location"] = this->_location->redirect;
@@ -401,7 +403,7 @@ std::string			Response::findContentType(std::string path)
 int		Response::createBody(void) {
 	Config::location_type	location;
 	STRBinary				packet;
-	bool 				isCgi = this->_request->isCgi(this->_server);
+	bool 				isCgi = this->_request->isCgi(this->_server, getPathAfterReplacingLocationByRoot());
 
 	if (this->_status != STATUS_OK && this->_status != STATUS_CREATED && this->_status != STATUS_MOVED_PERMANENTLY) {
 		this->_headers["Connection"] = "close";
@@ -468,7 +470,6 @@ int		Response::createBody(void) {
 
 			if (isFile(new_p))
 			{
-
 				this->_headers["Content-Type"] = findContentType(new_p);
 
 				if ((createErrorPages(new_p, packet) > 0) || (this->_body_fd <= 0)) {
@@ -492,7 +493,7 @@ int		Response::createBody(void) {
 							return (this->_body_fd <= 0);
 						}
 
-						break;
+						return (1);
 					}
 				}
 
@@ -505,6 +506,9 @@ int		Response::createBody(void) {
 					}
 					return 1;
 				}
+
+				this->_status = STATUS_FORBIDDEN;
+				return 0;
 			}
 			else
 			{
@@ -597,7 +601,7 @@ int		Response::getListOfDirectories(const char *path, STRBinary & packet) {
 	std::string p = getPathAfterReplacingLocationByRoot();
 
 	for (std::vector<std::string>::iterator it = this->_directory_list.begin(); it != this->_directory_list.end(); it++) {
-		if (isDirectory(p + "/" + *it)) {
+		if (isDirectory(secureAddress(p, *it))) {
 			packet = getUrl(*it, true) + (this->_directory_list.size() == 1 ? "</table>\n</body>\n</html>\n" : "");
 			this->_directory_list.erase(it);
 			return 1;
@@ -605,7 +609,7 @@ int		Response::getListOfDirectories(const char *path, STRBinary & packet) {
 	}
 
 	for (std::vector<std::string>::iterator it = this->_directory_list.begin(); it != this->_directory_list.end(); it++) {
-		if (isFile(p + "/" + *it)) {
+		if (isFile(secureAddress(p, *it))) {
 			packet = getUrl(*it, false) + (this->_directory_list.size() == 1 ? "</table>\n</body>\n</html>\n" : "");
 			this->_directory_list.erase(it);
 			return 1;
@@ -713,7 +717,7 @@ void			Response::deleteMethod(void) {
 }
 
 void			Response::postMethod(void) {
-	std::string p = this->getPathAfterReplacingLocationByRoot();
+	std::string p = this->getPathAfterReplacingLocationByRoot(false);
 
 	this->_request->resetCursorTemporary("request");
 	this->_request->eventTemporary("request", POLLIN);
