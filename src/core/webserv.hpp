@@ -1,8 +1,8 @@
 #ifndef WEBSERV_HPP
 # define WEBSERV_HPP
 
-# include <csignal> // signal, SIGINT, SIG_DFL
-# include <cstring> // memset
+# include <csignal>
+# include <cstring>
 # include <unistd.h>
 # include <cstdio>
 # include "../temporary/temporary.hpp"

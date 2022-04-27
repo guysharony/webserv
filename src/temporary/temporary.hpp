@@ -15,7 +15,6 @@ class Temporary
 		int					read(std::string const &filename, STRBinary & dest);
 		int					append(std::string const &filename, std::string const & source);
 		int					append(std::string const &filename, STRBinary source);
-		int					display(std::string const &filename);
 		bool					close(std::string const &filename);
 		short				getEvents(std::string const &filename);
 		ssize_t				getSize(std::string const &filename);
