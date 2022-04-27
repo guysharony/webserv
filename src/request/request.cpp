@@ -161,8 +161,25 @@ void			Request::execute(void) {
 		try {
 			server = this->selectServer();
 			this->checkBody(server);
-		} catch(const Config::ServerNotFoundException & e) { 
-			this->_status = STATUS_BAD_REQUEST;
+		} catch(const Config::ServerNotFoundException & e) {
+			Message::debug("Server wasn't found: handling error\n");
+			// Handle error here
+			// throw e; // delete this once error is handled properly
+		}
+
+		if (this->getStatus() < STATUS_BAD_REQUEST) {
+			try {
+				#ifdef DEBUG
+					Config::location_type loc = selectLocation(server);
+
+					if (loc != server->locations.end()) {
+						std::cout << YELLOW << "location = " << selectLocation(server)->location << RESET << std::endl;
+					}
+				#endif
+			} catch(const Config::LocationNotFoundException& e) {
+					this->setStatus(STATUS_NOT_FOUND);
+					std::cerr << RED << "location not found" << RESET << std::endl;
+			}
 		}
 	}
 }
@@ -174,6 +191,7 @@ void			Request::parseRequest(void) {
 	if (this->getEvent() < EVT_REQUEST_BODY) {
 		while ((res = this->getLine()) > 0) {
 			if (this->getEvent() == EVT_REQUEST_LINE) {
+				Message::debug("REQUEST LINE [" + this->_current.str() + "]\n");
 				this->_method.clear();
 				this->_version.clear();
 				this->_status = STATUS_OK;
@@ -189,7 +207,6 @@ void			Request::parseRequest(void) {
 				this->createTemporary("request");
 
 				if (!this->firstLineParsing()) {
-					std::cout << "test 10" << std::endl;
 					this->setEnd(1);
 					return;
 				}
@@ -199,11 +216,11 @@ void			Request::parseRequest(void) {
 					checkTimeout();
 					if (this->_host.empty()) {
 						this->setStatus(STATUS_BAD_REQUEST);
-						std::cout << "test 1" << std::endl;
 						this->setEnd(1);
 						return;
 					}
 
+					Message::debug("SEPARATOR\n");
 					this->_event = EVT_REQUEST_BODY;
 					if (this->_encoding == NONE) {
 						this->setEnd(1);
@@ -238,9 +255,12 @@ void			Request::parseRequest(void) {
 						this->_body_size = this->_chunk_size;
 						this->_current.clear();
 						this->_chunked = true;
+
+						Message::debug("CHUNK SIZE [" + toString(this->_chunk_size) + "]\n");
 					}
 				} else {
 					if (!this->_chunk_size) {
+						Message::debug("FINISHED\n");
 						this->setEnd(1);
 						return;
 					}
@@ -251,6 +271,8 @@ void			Request::parseRequest(void) {
 						this->_current.append(std::string("\r\n"));
 						this->_body_size -= 2;
 					}
+
+					Message::debug("CHUNK BODY [" + this->_current.str() + "]\n");
 
 					this->_content_length += this->_current.length();
 					this->appendTemporary("request", this->_current);
@@ -268,9 +290,11 @@ void			Request::parseRequest(void) {
 
 				this->_body_size -= this->_current.length();
 
+				Message::debug("LENGTH BODY [" + toString(this->_body_size) + "] - [" + this->_current.str() + "]\n");
 				this->appendTemporary("request", this->_current);
 
 				if (this->_body_size <= 0) {
+					Message::debug("FINISHED\n");
 					this->setEnd(1);
 					return;
 				}
@@ -290,6 +314,7 @@ std::ostream	&operator<<(std::ostream &os, Request &req) {
 	os << "version : [" << req.getVersion() << "]" << std::endl;
 	for (it = req.getHeader().begin(); it != req.getHeader().end(); it++)
 		os << "[" << it->first << "] : [" << it->second << "]" << std::endl;
+	// os << "body : [" << req.getBody() << "]" << std::endl;
 	return os;
 }
 
@@ -304,6 +329,8 @@ void			Request::checkPort(void) {
 	{
 		this->_host = this->_header["host"].substr(0, i);
 		this->_port = this->_header["host"].substr(i + 1, this->_header["host"].size() - i);
+//		if (tmp.size() > 0 && ft_atoi(tmp.c_str()) >= 0 && ft_isalpha(tmp.c_str()) != 1)    si on le veut comme int le port
+//			_port = ft_atoi(tmp.c_str());
 	}
 }
 
@@ -562,7 +589,7 @@ Config::location_type	Request::selectLocation(Config::configuration_type server)
 		}
 	}
 
-	if (firstTime)
+	if (firstTime) // no location found
 		throw Config::LocationNotFoundException();
 
 	if (!checkMethodBylocation(ret->methods))
@@ -577,6 +604,7 @@ void					Request::checkBody(Config::configuration_type server) {
 
 	if (max_size >= 0 && current_size > max_size) {
 		this->setStatus(STATUS_REQUEST_ENTITY_TOO_LARGE);
+		std::cerr << RED << "body too large !! [" << current_size << "] [" << max_size << "]" << std::endl;
 	}
 }
 
@@ -614,10 +642,10 @@ bool					Request::isCgi(Config::configuration_type server, std::string path) {
 	}
 	
 	if (it != server->cgi_extentions.end()) {
-		if (server->cgi_path.size() == 0)
+		if(server->cgi_path.size() == 0)
 			this->setStatus(STATUS_INTERNAL_SERVER_ERROR);
 		return true;
 	}
-	return false;
 
+	return false;
 }

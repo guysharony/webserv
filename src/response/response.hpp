@@ -74,7 +74,7 @@ class Response {
 		Descriptors::poll_type			getPoll(void);
 		std::string					getUrl(std::string dirent, bool isFolder);
 		int							getListOfDirectories(const char *path, STRBinary & packet);
-		std::string					getPathAfterReplacingLocationByRoot(void);
+		std::string					getPathAfterReplacingLocationByRoot(bool index = true);
 
 		/* Methods */
 		void							initialize(void);
