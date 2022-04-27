@@ -136,7 +136,6 @@ class TestRequests(unittest.TestCase):
 		self.assertEqual(ret.status_code, 404)
 		self.assertTrue(ret.content.decode('utf-8').find("404") >= 0)
 
-	@unittest.skip("Crashes Server")
 	def test_request_with_invalid_host(self):
 		url = "http://localhost:8081/hello.htm"
 		headers = {
@@ -144,6 +143,9 @@ class TestRequests(unittest.TestCase):
 		}
 		ret = r.get(url, headers=headers)
 		self.assertEqual(ret.status_code, 404)
+		url = "http://localhost:8081/index.html"
+		ret = r.get(url, headers=headers)
+		self.assertEqual(ret.status_code, 200)
 
 
 if __name__ == '__main__':
