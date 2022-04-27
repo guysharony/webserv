@@ -861,7 +861,7 @@ int					Response::write(STRBinary & value)
 		return !this->_body_write;
 	}
 
-	pos = ::write(this->_body_fd, value.data(), value.length());
+	pos = ::write(this->_body_fd, value.c_str(), value.length());
 
 	this->_body_write = true;
 
