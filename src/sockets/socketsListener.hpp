@@ -2,10 +2,10 @@
 # define SOCKET_LISTENER_HPP
 
 # include <iostream>
-# include <string>
-# include <sys/socket.h>
-# include <netinet/in.h>
-# include <arpa/inet.h>
+# include <string> // string
+# include <sys/socket.h> // inet_addr
+# include <netinet/in.h> // inet_addr
+# include <arpa/inet.h>	// inet_addr
 
 class SocketsListener
 {

@@ -17,6 +17,7 @@ class CgiParser {
 		/* Getters */
 		int									getStatus();
 		const std::map<std::string, std::string>	&getHeaders() const;
+		// std::string							getBody();
 		int									getEvent(void);
 		int									getEnd(void);
 
@@ -27,6 +28,7 @@ class CgiParser {
 		/* Methods */
 		void									append(STRBinary packet);
 		void									parseCgiResponse(void);
+		// void								parseCgiBuffer(std::string buffer);
 
 	private:
 		Request								*_request;
@@ -46,9 +48,12 @@ class CgiParser {
 
 		/* Getters */
 		int									getLine(void);
+		//std::string							getNextLine(std::string str, size_t *i);
 
+		//size_t								parseHeaders(std::string buffer);
 		int									checkHeaders(void);
 		int									checkHeader(STRBinary source, std::string & key, std::string & value);
+		// void								parseStatus(void);
 };
 
 

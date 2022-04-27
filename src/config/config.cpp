@@ -10,7 +10,61 @@ Config::~Config()
 { }
 
 int			Config::load(std::string filename)
-{ return this->_parseConfiguration(filename); }
+{
+	int result = this->_parseConfiguration(filename);
+
+	#ifdef DEBUG
+		for (configuration_type it = this->configuration.begin(); it != this->configuration.end(); it++)
+		{
+			if (it->server_names.size()) {
+				std::cout << "[ server names: ]" << std::endl;
+				for (std::vector<std::string>::iterator it2 = it->server_names.begin(); it2 != it->server_names.end(); it2++) {
+					std::cout << "[    " << *it2 << "]" << std::endl;
+				}
+			}
+
+			if (it->listen.size()) {
+				std::cout << "[ listen: ]" << std::endl;
+				for (listen_type::iterator it2 = it->listen.begin(); it2 != it->listen.end(); it2++) {
+					std::cout << "[    (" << it2->first << ") => ";
+					for (ports_type::iterator it3 = it2->second.begin(); it3 != it2->second.end(); it3++) {
+						std::cout << *it3 << ", ";
+					}
+					std::cout << "]" << std::endl;
+				}
+			}
+
+			std::cout << "[ root => (" << it->root << ") ]" << std::endl;
+
+			if (it->redirect.compare(""))
+				std::cout << "[ redirect => (" << it->redirect << ") ]" << std::endl;
+			std::cout << "[ cgi_path => (" << it->cgi_path << ") ]" << std::endl;
+
+			std::cout << "[ cgi_extentions: => (";
+			for (std::vector<std::string>::iterator it2 = it->cgi_extentions.begin(); it2 != it->cgi_extentions.end(); it2++)
+				std::cout << *it2 << ", ";
+			std::cout << ") ]" << std::endl;
+
+			std::cout << "[ auto_index => (" << it->auto_index << ") ]" << std::endl;
+
+			if (it->index.size()) {
+				std::cout << "[ index: ]" << std::endl;
+				for (std::vector<std::string>::iterator it2 = it->index.begin(); it2 != it->index.end(); it2++) {
+					std::cout << "[    " << *it2 << "]" << std::endl;
+				}
+			}
+
+			if (it->error_page.size()) {
+				std::cout << "[ error_page: ]" << std::endl;
+				for (error_pages_type::iterator it2 = it->error_page.begin(); it2 != it->error_page.end(); it2++) {
+					std::cout << "[    (" << it2->first << " => " << it2->second << ") ]" << std::endl;
+				}
+			}
+		}
+	#endif
+
+	return result;
+}
 
 int			Config::load(char *filename)
 {
