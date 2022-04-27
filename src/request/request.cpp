@@ -161,7 +161,10 @@ void			Request::execute(void) {
 		try {
 			server = this->selectServer();
 			this->checkBody(server);
-		} catch(const Config::ServerNotFoundException & e) { }
+		} catch(const Config::ServerNotFoundException & e) {
+			// Handle error here
+			// throw e; // delete this once error is handled properly
+		}
 	}
 }
 
@@ -207,6 +210,7 @@ void			Request::parseRequest(void) {
 					}
 					return;
 				}
+
 
 				if (!this->checkHeaders()) {
 					this->setStatus(STATUS_BAD_REQUEST);
@@ -286,6 +290,7 @@ std::ostream	&operator<<(std::ostream &os, Request &req) {
 	os << "version : [" << req.getVersion() << "]" << std::endl;
 	for (it = req.getHeader().begin(); it != req.getHeader().end(); it++)
 		os << "[" << it->first << "] : [" << it->second << "]" << std::endl;
+	// os << "body : [" << req.getBody() << "]" << std::endl;
 	return os;
 }
 
@@ -309,7 +314,7 @@ void			Request::checkTimeout(void) {
 	if (this->_header.count("connection-timeout")) {
 		tmp = this->_header["connection-timeout"];
 
-		if (tmp.size() > 0 && toInteger(tmp) >= 0 && isAlpha(tmp) != 1)
+		if (tmp.size() > 0 && toInteger(tmp) >= 0 && isAlpha(tmp.c_str()) != 1)
 			this->_timeout = toInteger(tmp);
 	}
 }
