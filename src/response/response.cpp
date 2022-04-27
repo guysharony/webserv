@@ -638,7 +638,7 @@ std::string	Response::getUrl(std::string dirent, bool isFolder) {
 std::string	Response::getPathAfterReplacingLocationByRoot(bool index) {
 	if (this->_status == STATUS_NOT_FOUND)
 		return "";
-	if (this->_status != STATUS_BAD_REQUEST){
+	if (this->_status < STATUS_BAD_REQUEST){
 		std::string loc_p = this->_location->location;
 		std::string p = this->_request->getPath();
 
