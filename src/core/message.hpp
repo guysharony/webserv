@@ -14,6 +14,23 @@ class Message
 		~Message();
 
 		static void	error(std::string const & message);
+		
+		template <class T>
+		static void	debug(T const & message)
+		{
+			#ifdef DEBUG
+			std::cout << message;
+			#else
+			(void)message;
+			#endif
+		}
+
+		template <class T>
+		static void	debugln(T const & message)
+		{
+			debug(message);
+			debug("\n");
+		}
 
 		static void	bindError(std::string host, int port, int error);
 

@@ -1,21 +1,21 @@
 #ifndef SOCKETS_HPP
 # define SOCKETS_HPP
 
-# include <iostream>
-# include <sys/types.h>
-# include <sys/socket.h>
-# include <cstring>
-# include <string>
-# include <netinet/in.h>
-# include <arpa/inet.h>
-# include <unistd.h>
-# include <vector>
-# include <sys/poll.h>
+# include <iostream>	// std::cout
+# include <sys/types.h>	// socket - included for portability
+# include <sys/socket.h> // socket, AF_LOCAL, SOCK_STREAM, inet_addr
+# include <cstring>		// memset
+# include <string>		// string
+# include <netinet/in.h> // sockaddr_in, inet_addr
+# include <arpa/inet.h>	// htons, inet_addr
+# include <unistd.h>	// close
+# include <vector>		// vector
+# include <sys/poll.h>	// poll
 # include <sys/ioctl.h>
-# include <set>
+# include <set>		// set
 # include <errno.h>
-# include <map>
-# include <queue>
+# include <map>		// map
+# include <queue>		// queue
 
 # include "../config/config.hpp"
 # include "../descriptors/descriptors.hpp"
