@@ -94,7 +94,7 @@ STRBinary	STRBinary::substr(size_t from, size_t to)
 	STRBinary	tmp;
 	size_t	i;
 
-	for (i = from; i < to; ++i)
+	for (i = from; i < (to > this->_data.size() ? this->_data.size() : to); ++i)
 		tmp.append(this->_data[i]);
 
 	return tmp;
