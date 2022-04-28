@@ -208,7 +208,6 @@ void			Request::parseRequest(void) {
 				this->createTemporary("request");
 
 				if (!this->firstLineParsing()) {
-					std::cout << "test 10" << std::endl;
 					this->setEnd(1);
 					return;
 				}
@@ -218,7 +217,6 @@ void			Request::parseRequest(void) {
 					checkTimeout();
 					if (this->_host.empty()) {
 						this->setStatus(STATUS_BAD_REQUEST);
-						std::cout << "test 1" << std::endl;
 						this->setEnd(1);
 						return;
 					}
