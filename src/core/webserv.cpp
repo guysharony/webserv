@@ -155,6 +155,11 @@ bool			Webserv::handleClient(void) {
 				return false;
 			}
 
+			if ((*this->context.client)->getClose()) {
+				this->_clientReject();
+				return true;
+			}
+
 			this->context.poll->events = POLLIN;
 			(*this->context.client)->closeResponse();
 		}
@@ -200,9 +205,7 @@ int				Webserv::clientReceive(void) {
 
 	res = recv(this->context.poll->fd, packet.data(), packet.size(), 0);
 
-	if (res == 0)
-		(*this->context.client)->setClose(true);
-	else if (res > 0) {
+	if (res > 0) {
 		if (static_cast<int>(packet.size()) > res) {
 			packet.resize(res);
 		}
@@ -224,10 +227,7 @@ int				Webserv::clientSend(STRBinary value) {
 
 	int rc = send(this->context.poll->fd, value.c_str(), value.length(), 0);
 	if (rc < 0)
-	{
-		(*this->context.client)->setClose(true);
 		return 0;
-	}
 
 	return rc;
 }

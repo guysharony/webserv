@@ -124,7 +124,19 @@ int			Request::getLine(void) {
 
 	if (this->getEvent() == EVT_REQUEST_BODY && this->_encoding == CHUNKED) {
 		this->_current = this->_temp.substr(0, this->_body_size > static_cast<ssize_t>(this->_temp.length()) ? this->_temp.length() : this->_body_size);
-		this->_temp = this->_temp.substr(this->_body_size > static_cast<ssize_t>(this->_temp.length()) ? this->_current.length() : this->_body_size + 2);
+		if (this->_body_size > static_cast<ssize_t>(this->_temp.length()))
+			this->_temp = this->_temp.substr(this->_current.length());
+		else {
+			this->_temp = this->_temp.substr(this->_body_size);
+			if (this->_temp.length() > 0 && (end = this->_temp.find(CRLF)) != 0) {
+				this->setStatus(STATUS_BAD_REQUEST);
+				this->setEnd(1);
+				this->setClose(true);
+				return (0);
+			}
+
+			this->_temp = this->_temp.substr(2);
+		}
 
 		this->_body_size -= this->_current.length();
 		return (1);
@@ -209,6 +221,7 @@ void			Request::parseRequest(void) {
 
 				if (!this->firstLineParsing()) {
 					this->setEnd(1);
+					this->setClose(true);
 					return;
 				}
 			} else if (this->getEvent() == EVT_REQUEST_HEADERS) {
@@ -218,12 +231,14 @@ void			Request::parseRequest(void) {
 					if (this->_host.empty()) {
 						this->setStatus(STATUS_BAD_REQUEST);
 						this->setEnd(1);
+						this->setClose(true);
 						return;
 					}
 
 					this->_event = EVT_REQUEST_BODY;
 					if (this->_encoding == NONE) {
 						this->setEnd(1);
+						this->setClose(true);
 						return;
 					}
 					return;
@@ -232,6 +247,7 @@ void			Request::parseRequest(void) {
 				if (!this->checkHeaders()) {
 					this->setStatus(STATUS_BAD_REQUEST);
 					this->setEnd(1);
+					this->setClose(true);
 					return;
 				}
 			}
@@ -247,6 +263,7 @@ void			Request::parseRequest(void) {
 					if (!isPositiveBase16(this->_current.str())) {
 						this->setStatus(STATUS_BAD_REQUEST);
 						this->setEnd(1);
+						this->setClose(true);
 						return;
 					}
 
@@ -270,6 +287,7 @@ void			Request::parseRequest(void) {
 				if (this->_current.length() > static_cast<size_t>(this->_body_size)) {
 					this->setStatus(STATUS_BAD_REQUEST);
 					this->setEnd(1);
+					this->setClose(true);
 					return;
 				}
 
