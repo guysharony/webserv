@@ -561,7 +561,6 @@ int		Response::readResponse(STRBinary & packet) {
 		if (this->_request->readTemporary("body", packet) > 0)
 			return 1;
 
-		packet = CRLF;
 		this->_event = EVT_INITIALIZE;
 		this->_request->closeTemporary("body");
 		return 1;
