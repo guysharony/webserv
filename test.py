@@ -74,7 +74,7 @@ class TestIndexLinks(unittest.TestCase):
 
 			}
 			ret = r.post(url, files=files, data=data)
-		self.assertEqual(ret.status_code, 200)
+		self.assertEqual(ret.status_code, 201)
 		url = "http://localhost:8081/php/uploads/del.html"
 		ret = r.get(url)
 		self.assertEqual(ret.status_code, 200)
