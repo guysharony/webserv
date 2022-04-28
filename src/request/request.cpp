@@ -128,7 +128,8 @@ int			Request::getLine(void) {
 			this->_temp = this->_temp.substr(this->_current.length());
 		else {
 			this->_temp = this->_temp.substr(this->_body_size);
-			if (this->_temp.length() > 0 && (end = this->_temp.find(CRLF)) != 0) {
+
+			if (this->_body_size > 0 && this->_temp.length() > 0 && (end = this->_temp.find(CRLF)) != 0) {
 				this->setStatus(STATUS_BAD_REQUEST);
 				this->setEnd(1);
 				this->setClose(true);
@@ -192,7 +193,7 @@ void			Request::execute(void) {
 		try {
 			server = this->selectServer();
 			this->checkBody(server);
-		} catch(const Config::ServerNotFoundException & e) { 
+		} catch(const Config::ServerNotFoundException & e) {
 			this->_status = STATUS_BAD_REQUEST;
 		}
 	}
@@ -215,6 +216,7 @@ void			Request::parseRequest(void) {
 				this->_content_length = -1;
 				this->_body_size = -1;
 				this->_chunk_size = -1;
+				this->_close = 0;
 				this->_end = 0;
 				this->closeTemporary("request");
 				this->createTemporary("request");
