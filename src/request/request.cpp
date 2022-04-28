@@ -311,6 +311,8 @@ void			Request::checkPort(void) {
 	i = this->_header["host"].find_first_of(':');
 	if (i != std::string::npos)
 		this->_host = this->_header["host"].substr(0, i);
+	else
+		this->_host = this->_header["host"];
 
 	this->_port = toString(this->_server_port);
 }
