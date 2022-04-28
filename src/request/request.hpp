@@ -22,6 +22,15 @@ class Request {
 		Request(Config *config, Descriptors *descriptors);
 		~Request();
 
+		struct 								range_struct
+		{
+			ssize_t							from;
+			ssize_t							to;
+		};
+
+		typedef std::vector<range_struct>			ranges_type;
+		typedef ranges_type::iterator				range_type;
+
 		/* Getters */
 		std::string							getMethod(void);
 		std::string							getVersion(void);
@@ -36,6 +45,7 @@ class Request {
 		std::string							getURI(void);
 		std::string							getHost(void);
 		std::string							getPort(void);
+		ranges_type							getRanges(void);
 		Config								*getConfig(void);
 		int									getClose(void);
 		int									getTimeout(void);
@@ -88,6 +98,7 @@ class Request {
 		std::string							_parameters;
 		std::string							_port;
 		std::string							_host;
+		ranges_type							_ranges;
 		std::string							_client_address;
 		int									_client_port;
 		std::string							_server_address;
@@ -120,6 +131,7 @@ class Request {
 		void									checkBody(Config::configuration_type server);
 		int									checkHeaders(void);
 		int									checkHeader(std::string source, std::string & key, std::string & value);
+		int									checkRanges(std::string source);
 		void									checkPort(void);
 		void									checkTimeout(void);
 		bool									checkMethodBylocation(std::vector<int> methosds_type);

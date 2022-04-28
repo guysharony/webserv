@@ -15,6 +15,7 @@ int				isHttpStatus(int status)
 	|| status == STATUS_MOVED_PERMANENTLY
 	|| status == STATUS_REQUEST_ENTITY_TOO_LARGE
 	|| status == STATUS_REQUEST_URI_TOO_LARGE
+	|| status == STATUS_RANGE_NOT_SATISFIABLE
 	|| status == STATUS_INTERNAL_SERVER_ERROR
 	|| status == STATUS_HTTP_VERSION_NOT_SUPPORTED);
 }
@@ -33,6 +34,7 @@ std::string		getHttpStatusMessage(int status)
 	if (status == STATUS_MOVED_PERMANENTLY) return ("Moved Permanently");
 	if (status == STATUS_REQUEST_ENTITY_TOO_LARGE) return ("Request Entity Too Large");
 	if (status == STATUS_REQUEST_URI_TOO_LARGE) return ("Request-URI Too Large");
+	if (status == STATUS_RANGE_NOT_SATISFIABLE) return ("Requested Range Not Satisfiable");
 	if (status == STATUS_INTERNAL_SERVER_ERROR) return ("Internal Server Error");
 	if (status == STATUS_HTTP_VERSION_NOT_SUPPORTED) return ("Http Version Not Supported");
 

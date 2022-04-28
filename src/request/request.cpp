@@ -84,6 +84,9 @@ std::string	Request::getUserAgent(void)
 int			Request::getStatus(void)
 { return (this->_status); }
 
+ranges_type	Request::getRanges(void)
+{ return (this->_ranges); }
+
 int			Request::getEvent(void)
 { return (this->_event); }
 
@@ -230,7 +233,6 @@ void			Request::parseRequest(void) {
 				}
 
 				if (!this->checkHeaders()) {
-					this->setStatus(STATUS_BAD_REQUEST);
 					this->setEnd(1);
 					return;
 				}
@@ -438,8 +440,10 @@ int			Request::checkHeaders(void)
 	std::string key;
 	std::string value;
 
-	if (this->_current.length() >= 7999)
+	if (this->_current.length() >= 7999) {
+		this->setStatus(STATUS_BAD_REQUEST);
 		return 0;
+	}
 
 	if (this->checkHeader(this->_current.str(), key, value)) {
 		if (!key.compare("connection")) {
@@ -449,8 +453,10 @@ int			Request::checkHeaders(void)
 			if (!value.compare("keep-alive")) this->_connection = KEEP_ALIVE;
 		}
 		else if (!key.compare("content-length")) {
-			if (this->_content_length >= 0 || !isPositiveBase10(value))
-				return 0;
+			if (this->_content_length >= 0 || !isPositiveBase10(value)) {
+				this->setStatus(STATUS_BAD_REQUEST);
+				return 1;
+			}
 
 			this->_encoding = LENGTH;
 			this->_content_length = toInteger(value);
@@ -462,6 +468,17 @@ int			Request::checkHeaders(void)
 				this->_content_length = 0;
 				this->_body_size = 0;
 				this->_chunked = 0;
+			}
+		}
+		else if (!key.compare("range")) {
+			if (!this->checkRanges(value)) {
+				this->setStatus(STATUS_RANGE_NOT_SATISFIABLE);
+				return (1);
+			}
+
+			range_type ite = this->_ranges.end();
+			for (range_type it = this->_ranges.begin(); it != ite; ++it) {
+				std::cout << "[" << it->from << "] - [" << it->to << "]" << std::endl;
 			}
 		}
 		else {
@@ -491,6 +508,55 @@ int			Request::checkHeader(std::string source, std::string & key, std::string & 
 
 		key = toLowercase(tmp_key);
 		value = tmp_value;
+
+		return (1);
+	}
+
+	return (0);
+}
+
+int					Request::checkRanges(std::string source)
+{
+	size_t	pos = source.find("=");
+
+	std::string tmp_key;
+	std::string tmp_value;
+
+	if (pos != std::string::npos)
+	{
+		tmp_key = source.substr(0, pos);
+		tmp_value = source.substr(pos + 1);
+
+		if (tmp_key.compare("bytes"))
+			return (0);
+
+		std::vector<std::string>	tmp;
+
+		tmp = split(tmp_value, ",");
+		for (std::vector<std::string>::iterator it = tmp.begin(); it != tmp.end(); ++it) {
+			trim(*it);
+
+			std::vector<std::string>	bytes = split(*it, "-");
+
+			if (bytes.size() != 2 || (!bytes[0].length() && !bytes[1].length()))
+				return (0);
+
+			range_struct* new_range_struct = new range_struct;
+			if (!(!bytes[0].length() || (bytes[0].length() > 0 && isPositiveBase10(bytes[0]))))
+				return (0);
+			new_range_struct->from = bytes[0].length() <= 0 ? -1 : toInteger(bytes[0]);
+
+			if (!(!bytes[1].length() || (bytes[1].length() > 0 && isPositiveBase10(bytes[1]))))
+				return (0);
+			new_range_struct->to = bytes[1].length() <= 0 ? -1 : toInteger(bytes[1]);
+			if (!bytes[0].length() && new_range_struct->to > 0) {
+				new_range_struct->to *= -1;
+			}
+
+			this->_ranges.push_back(*new_range_struct);
+
+			delete new_range_struct;
+		}
 
 		return (1);
 	}
