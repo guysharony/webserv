@@ -577,14 +577,11 @@ int		Response::getListOfDirectories(const char *path, STRBinary & packet) {
 				<title>" + this->_request->getPath() + "</title>\n\
 		</head>\n<body>\n<h1>Index of "+ this->_request->getPath() +"</h1>\n<p>\n<hr><table>";
 
-		if (dir == NULL) {
-			std::cerr << RED << "Error: could not open " << this->_request->getPath() << RESET << std::endl;
+		if (dir == NULL)
 			return 0;
-		}
 
-		for (struct dirent *dirent = readdir(dir); dirent; dirent = readdir(dir)) {
+		for (struct dirent *dirent = readdir(dir); dirent; dirent = readdir(dir))
 			this->_directory_list.push_back(dirent->d_name);
-		}
 
 		std::sort(this->_directory_list.begin(), this->_directory_list.end());
 		this->_directory_list.erase(std::find(this->_directory_list.begin(), this->_directory_list.end(), "."));
@@ -598,7 +595,7 @@ int		Response::getListOfDirectories(const char *path, STRBinary & packet) {
 	std::string p = getPathAfterReplacingLocationByRoot();
 
 	for (std::vector<std::string>::iterator it = this->_directory_list.begin(); it != this->_directory_list.end(); it++) {
-		if (isDirectory(p + "/" + *it)) {
+		if (isDirectory(secureAddress(p, *it))) {
 			packet = getUrl(*it, true) + (this->_directory_list.size() == 1 ? "</table>\n</body>\n</html>\n" : "");
 			this->_directory_list.erase(it);
 			return 1;
@@ -606,7 +603,7 @@ int		Response::getListOfDirectories(const char *path, STRBinary & packet) {
 	}
 
 	for (std::vector<std::string>::iterator it = this->_directory_list.begin(); it != this->_directory_list.end(); it++) {
-		if (isFile(p + "/" + *it)) {
+		if (isFile(secureAddress(p, *it))) {
 			packet = getUrl(*it, false) + (this->_directory_list.size() == 1 ? "</table>\n</body>\n</html>\n" : "");
 			this->_directory_list.erase(it);
 			return 1;
