@@ -84,7 +84,7 @@ std::string	Request::getUserAgent(void)
 int			Request::getStatus(void)
 { return (this->_status); }
 
-ranges_type	Request::getRanges(void)
+Request::ranges_type	Request::getRanges(void)
 { return (this->_ranges); }
 
 int			Request::getEvent(void)
