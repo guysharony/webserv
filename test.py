@@ -136,6 +136,9 @@ class TestIndexLinks(unittest.TestCase):
 		url = "http://localhost:8081/redirect"
 		ret = r.get(url, allow_redirects=False)
 		self.assertEqual(ret.status_code, 301)
+
+	def test_redirect_follow(self):
+		url = "http://localhost:8081/redirect"
 		ret = r.get(url, allow_redirects=True)
 		self.assertEqual(ret.status_code, 200)
 		self.assertTrue(ret.content.decode().find("Welcome to my web server") >= 0)
@@ -224,6 +227,16 @@ class TestRequests(unittest.TestCase):
 		url = "http://localhost:8085/index.html"
 		ret = r.get(url, headers=headers)
 		self.assertEqual(ret.status_code, 200)
+
+	def test_post_not_allowed(self):
+		url = "http://localhost:8081/root/test"
+		data = {
+			"name": "bob",
+			"email": "bob@example.com"
+		}
+		ret = r.post(url, data=data)
+		self.assertEqual(ret.status_code, 405)
+		self.assertTrue(ret.content.decode('utf-8').find("405 method not allowed") >= 0)
 
 
 if __name__ == '__main__':
