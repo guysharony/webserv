@@ -30,7 +30,6 @@
 # define STATUS_OK 						200
 # define STATUS_CREATED 					201
 # define STATUS_NO_CONTENT				204
-# define STATUS_PARTIAL_CONTENT 			206
 # define STATUS_MOVED_PERMANENTLY			301
 # define STATUS_BAD_REQUEST 				400
 # define STATUS_NOT_FOUND 				404

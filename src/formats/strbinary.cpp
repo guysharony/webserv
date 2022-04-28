@@ -48,9 +48,6 @@ char			STRBinary::operator[](size_t n)
 std::size_t	STRBinary::find(std::string str)
 { return this->str().find(str); }
 
-char			*STRBinary::data(void)
-{ return this->_data.data(); }
-
 
 void		STRBinary::append(std::string str)
 {
@@ -97,7 +94,7 @@ STRBinary	STRBinary::substr(size_t from, size_t to)
 	STRBinary	tmp;
 	size_t	i;
 
-	for (i = from; i < to; ++i)
+	for (i = from; i < (to > this->_data.size() ? this->_data.size() : to); ++i)
 		tmp.append(this->_data[i]);
 
 	return tmp;
