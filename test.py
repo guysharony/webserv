@@ -230,11 +230,7 @@ class TestRequests(unittest.TestCase):
 
 	def test_post_not_allowed(self):
 		url = "http://localhost:8081/root/test"
-		data = {
-			"name": "bob",
-			"email": "bob@example.com"
-		}
-		ret = r.post(url, data=data)
+		ret = r.post(url)
 		self.assertEqual(ret.status_code, 405)
 		self.assertTrue(ret.content.decode('utf-8').find("405 method not allowed") >= 0)
 
