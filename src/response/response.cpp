@@ -37,7 +37,7 @@ std::string			Response::getMethod(void)
 { return this->_request->getMethod(); }
 
 std::string			Response::getContentLength(void)
-{ return toString(this->_request->sizeTemporary("body") + 2); }
+{ return toString(this->_request->sizeTemporary("body")); }
 
 std::string			Response::getPath(void)
 { return this->_request->getPath(); }
@@ -128,7 +128,7 @@ void					Response::createHeaders(void) {
 
 	this->_headers["Server"] = SERVER_NAME;
 	this->_headers["Date"] = findDate();
-	this->_headers["Content-Length"] = toString(body_length + 2);
+	this->_headers["Content-Length"] = toString(body_length);
 
 	if (this->_status == STATUS_MOVED_PERMANENTLY) {
 		this->_headers["Location"] = this->_location->redirect;
