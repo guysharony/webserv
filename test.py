@@ -170,18 +170,6 @@ class TestRequests(unittest.TestCase):
 		for test in tests:
 			self.assertEqual(_get(url + test[0], redirect=False), test[1])
 
-	@unittest.skip("Not implemented for files that do not exist")
-	def test_create_file(self):
-		url = "http://localhost:8081/delete/newfiletodelete"
-		files = {
-			'fileToUpload': open('test.py', 'rb'),
-		}
-		data = {
-
-		}
-		ret = r.post(url, files=files, data=data)
-		self.assertEqual(ret.status_code, 201)
-
 	def test_get_query_string(self):
 		url = "http://localhost:8081/php/w3_get_welcome.php?name=Test&email=greg@example.com"
 		ret = r.get(url)
