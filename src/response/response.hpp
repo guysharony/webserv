@@ -89,6 +89,7 @@ class Response {
 		void							postMethod(void);
 
 		void							checkPath(void);
+		void							checkRequestBody(void);
 };
 
 #endif

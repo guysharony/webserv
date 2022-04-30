@@ -117,7 +117,6 @@ class Request {
 		int									checkMethod(std::string & source);
 		int									checkPath(std::string & source);
 		int									checkVersion(std::string & source);
-		void									checkBody(Config::configuration_type server);
 		int									checkHeaders(void);
 		int									checkHeader(std::string source, std::string & key, std::string & value);
 		void									checkPort(void);

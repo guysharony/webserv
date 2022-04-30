@@ -79,7 +79,6 @@ void					Response::initialize(void) {
 	this->_status = this->_request->getStatus();
 	this->_request->createTemporary("body");
 
-	Config::location_type location;
 	if (this->_status < STATUS_BAD_REQUEST && this->_status != STATUS_NOT_ALLOWED) {
 		try {
 			this->_server = this->_request->selectServer();
@@ -89,9 +88,8 @@ void					Response::initialize(void) {
 
 		this->_path = this->_request->getPath();
 		try {
-			location = this->_request->selectLocation(this->_server);
-			this->_location = location;
-			this->_autoIndex = this->_location->auto_index;
+			this->_location = this->_request->selectLocation(this->_server);
+			this->checkRequestBody();
 		} catch (Config::MethodNotAllowed const & e) {
 			this->_status = STATUS_NOT_ALLOWED;
 		} catch (Config::LocationNotFoundException const & e) {
@@ -121,6 +119,18 @@ std::string			Response::findDate(void) {
 	gettimeofday(&tv, NULL);
 	strftime(buffer, 80, "%a, %d %b %Y %H:%M:%S GMT", gmtime(&tv.tv_sec));
 	return (std::string(buffer));
+}
+
+void					Response::checkRequestBody(void) {
+	ssize_t			max_size = static_cast<ssize_t>(this->_location->client_max_body_size);
+	ssize_t			current_size = this->_request->sizeTemporary("request");
+
+	if (max_size >= 0 && current_size > max_size) {
+		this->_status = STATUS_REQUEST_ENTITY_TOO_LARGE;
+		return;
+	}
+
+	this->_autoIndex = this->_location->auto_index;
 }
 
 void					Response::createHeaders(void) {

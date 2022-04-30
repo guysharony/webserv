@@ -184,15 +184,12 @@ void			Request::append(std::vector<char> & packet)
 { this->_temp.append(packet); }
 
 void			Request::execute(void) {
-	Config::configuration_type server;
-
 	if (!this->getEnd())
 		this->parseRequest();
 
 	if (this->getEnd()) {
 		try {
-			server = this->selectServer();
-			this->checkBody(server);
+			this->selectServer();
 		} catch(const Config::ServerNotFoundException & e) {
 			this->_status = STATUS_BAD_REQUEST;
 		}
@@ -581,15 +578,6 @@ Config::location_type	Request::selectLocation(Config::configuration_type server)
 		throw Config::MethodNotAllowed();
 
 	return (ret);
-}
-
-void					Request::checkBody(Config::configuration_type server) {
-	ssize_t			max_size = static_cast<ssize_t>(server->client_max_body_size);
-	ssize_t			current_size = this->sizeTemporary("request");
-
-	if (max_size >= 0 && current_size > max_size) {
-		this->setStatus(STATUS_REQUEST_ENTITY_TOO_LARGE);
-	}
 }
 
 int					Request::convertMethodToValue(std::string method) {
